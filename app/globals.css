@@ -1,64 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Round+Gothic:wght@400;700;800&display=swap');
+
 :root {
-  /* ── Instagram palette ── */
-  --ig-blue:        #0095f6;
-  --ig-blue-dk:     #0070c9;
-  --ig-border:      #dbdbdb;
-  --ig-border-soft: #efefef;
-  --ig-bg:          #fafafa;
-  --ig-white:       #ffffff;
-  --ig-text:        #262626;
-  --ig-text2:       #8e8e8e;
-  --ig-text3:       #c7c7c7;
-  --ig-like:        #ed4956;
-  --ig-grad: linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+  /* ── 교과서 파스텔 팔레트 ── */
+  --cream:       #FFF9F2;
+  --cream-deep:  #FFEFD8;
 
-  /* ── Step accent colors ── */
-  --s1: #F97316; --s1-bg: #FFF7ED; --s1-bd: #FED7AA; --s1-dk: #C2410C;
-  --s2: #0095f6; --s2-bg: #EFF6FF; --s2-bd: #BFDBFE; --s2-dk: #0070c9;
-  --s3: #10B981; --s3-bg: #ECFDF5; --s3-bd: #A7F3D0; --s3-dk: #047857;
-  --s4: #8B5CF6; --s4-bg: #F5F3FF; --s4-bd: #DDD6FE; --s4-dk: #6D28D9;
+  /* Step 색상 — 교과서 단계별 색 */
+  --s1:    #FF8C42;  --s1-bg: #FFF3E8;  --s1-bd: #FFCB96;  --s1-dk: #D4601A;  --s1-lt: #FFE4C4;
+  --s2:    #4EACD9;  --s2-bg: #EBF7FF;  --s2-bd: #93D1F5;  --s2-dk: #2785B5;  --s2-lt: #C8E9F8;
+  --s3:    #5BBF7A;  --s3-bg: #EDFAF2;  --s3-bd: #90DDB0;  --s3-dk: #2D9950;  --s3-lt: #C0F0D4;
+  --s4:    #C97DE8;  --s4-bg: #F8EFFE;  --s4-bd: #D9A4F5;  --s4-dk: #9A45C2;  --s4-lt: #EAD0F8;
 
-  --blue:        #0095f6;
-  --blue-bg:     #EFF6FF;
-  --blue-bd:     #BFDBFE;
-  --green:       #10B981;
-  --green-bg:    #ECFDF5;
-  --green-bd:    #A7F3D0;
-  --purple:      #8B5CF6;
-  --purple-bg:   #F5F3FF;
-  --red:         #ed4956;
-  --red-bg:      #FEF2F2;
-  --amber:       #F59E0B;
-  --amber-bg:    #FFFBEB;
+  /* 일반 UI 색 */
+  --blue:        #4EACD9;
+  --blue-bg:     #EBF7FF;
+  --blue-bd:     #93D1F5;
+  --green:       #5BBF7A;
+  --green-bg:    #EDFAF2;
+  --green-bd:    #90DDB0;
+  --purple:      #C97DE8;
+  --purple-bg:   #F8EFFE;
+  --red:         #FF6B7A;
+  --red-bg:      #FFF0F1;
+  --amber:       #FF8C42;
+  --amber-bg:    #FFF3E8;
 
-  --border:      #dbdbdb;
-  --border-soft: #efefef;
-  --text:        #262626;
-  --text-2:      #8e8e8e;
-  --text-3:      #c7c7c7;
-  --bg:          #fafafa;
-  --white:       #ffffff;
+  --border:      #E6D8C8;
+  --border-soft: #F0E8DC;
+  --text:        #3D2B1F;
+  --text-2:      #8C7B6E;
+  --text-3:      #C4B4A8;
+  --bg:          #FFF9F2;
+  --white:       #FFFFFF;
 
-  /* ── Layout ── */
-  --header-h:  54px;
-  --stories-h: 68px;
-  --strip-h:   24px;
-  --main-w:    420px;
-  --panel-w:   240px;
+  /* ── 그림자 ── */
+  --shadow-xs: 0 2px 6px rgba(140,90,50,.06);
+  --shadow-sm: 0 3px 12px rgba(140,90,50,.09);
+  --shadow:    0 5px 18px rgba(140,90,50,.11);
+  --shadow-md: 0 8px 28px rgba(140,90,50,.14);
+  --shadow-lg: 0 12px 40px rgba(140,90,50,.16);
 
-  --touch:   44px;
-  --pad:     16px;
-  --pad-sm:  10px;
-  --r-xs:    4px;
-  --r-sm:    8px;
-  --r:       12px;
-  --r-lg:    16px;
-  --r-pill:  999px;
+  /* ── 모서리 ── */
+  --r-xs:   6px;
+  --r-sm:   12px;
+  --r:      18px;
+  --r-lg:   24px;
+  --r-xl:   32px;
+  --r-pill: 999px;
 
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.04);
-  --shadow-sm: 0 1px 4px rgba(0,0,0,.06);
-  --shadow:    0 2px 8px rgba(0,0,0,.08);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.10);
+  /* ── 레이아웃 ── */
+  --header-h:  62px;
+  --strip-h:   30px;
+  --touch:     44px;
+  --pad:       18px;
+  --pad-sm:    12px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -73,11 +68,11 @@ body {
   width: 1024px;
   height: 768px;
   overflow: hidden;
-  font-family: 'Nanum Gothic', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  background: var(--ig-bg);
-  color: var(--ig-text);
+  font-family: 'Nanum Round Gothic', 'Nanum Gothic', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: var(--cream);
+  color: var(--text);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
@@ -85,35 +80,44 @@ body {
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
 input, textarea, select { font-family: inherit; font-size: 14px; }
 
-::-webkit-scrollbar { width: 3px; height: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--ig-border); border-radius: 99px; }
-::placeholder { color: var(--ig-text3); }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #FFF3E8; border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: #FFCB96; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #FF8C42; }
+::placeholder { color: var(--text-3); }
 
-/* ── Animations ── */
-@keyframes fadeUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
-@keyframes slideIn  { from{opacity:0;transform:translateX(10px)} to{opacity:1;transform:none} }
-@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.35} }
-@keyframes pop      { 0%{transform:scale(1)} 40%{transform:scale(1.3)} 100%{transform:scale(1)} }
-@keyframes spin     { to{transform:rotate(360deg)} }
-@keyframes heartPop { 0%{transform:scale(1)} 30%{transform:scale(1.5)} 100%{transform:scale(1)} }
+/* ── 키프레임 ── */
+@keyframes fadeUp    { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+@keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+@keyframes slideIn   { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+@keyframes pulse     { 0%,100%{opacity:1} 50%{opacity:.25} }
+@keyframes pop       { 0%{transform:scale(1)} 40%{transform:scale(1.35)} 100%{transform:scale(1)} }
+@keyframes bounce    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes spin      { to{transform:rotate(360deg)} }
+@keyframes wobble    { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
+@keyframes floatUp   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes heartPop  { 0%{transform:scale(1)} 30%{transform:scale(1.5)} 60%{transform:scale(.9)} 100%{transform:scale(1)} }
+@keyframes starSpin  { 0%{transform:rotate(0) scale(1)} 50%{transform:rotate(180deg) scale(1.2)} 100%{transform:rotate(360deg) scale(1)} }
+@keyframes ripple    { from{transform:scale(0.8);opacity:1} to{transform:scale(2.2);opacity:0} }
+@keyframes shimmer   { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
 
-.fade-up  { animation: fadeUp  .22s ease both; }
-.slide-in { animation: slideIn .18s ease both; }
+/* ── 유틸 클래스 ── */
+.fade-up  { animation: fadeUp  .28s cubic-bezier(.34,1.3,.64,1) both; }
+.slide-in { animation: slideIn .22s cubic-bezier(.34,1.3,.64,1) both; }
+.bounce   { animation: bounce 2s ease-in-out infinite; }
+.float    { animation: floatUp 3s ease-in-out infinite; }
 
-/* ── Floating Toolbar ── */
+/* ── 툴바 버튼 ── */
 .toolbar-btn {
-  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease;
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease;
 }
 .toolbar-btn:hover {
-  transform: translateY(-4px) scale(1.12);
-  box-shadow: 0 6px 20px rgba(30,41,59,.18) !important;
+  transform: translateY(-5px) scale(1.14);
+  box-shadow: 0 9px 24px rgba(140,90,50,.22) !important;
 }
-.toolbar-btn:active {
-  transform: translateY(-1px) scale(1.05);
-}
+.toolbar-btn:active { transform: translateY(-1px) scale(1.05); }
 
-/* ── PostCard (Post-it style) ── */
+/* ── PostCard (포스트잇 스타일) ── */
 .postcard-close {
   opacity: 0;
   transition: opacity .15s ease;
@@ -124,25 +128,170 @@ input, textarea, select { font-family: inherit; font-size: 14px; }
   pointer-events: auto;
 }
 .postcard-wrap {
-  transition: transform .15s ease, box-shadow .15s ease;
+  transition: transform .2s cubic-bezier(.34,1.3,.64,1), box-shadow .2s ease;
 }
 .postcard-wrap:hover {
-  transform: translateY(-2px) rotate(0.5deg);
-  box-shadow: 0 6px 18px rgba(0,0,0,.12) !important;
+  transform: translateY(-4px) rotate(0.5deg);
+  box-shadow: 0 10px 26px rgba(140,90,50,.20) !important;
 }
 
-.card {
-  background: var(--ig-white);
-  border: 1px solid var(--ig-border);
-  border-radius: var(--r);
+/* ── 교과서 카드 ── */
+.edu-card {
+  background: var(--white);
+  border: 2.5px solid var(--border);
+  border-radius: var(--r-lg);
   padding: var(--pad);
+  box-shadow: var(--shadow-sm);
 }
 
+/* ── 단계 뱃지 ── */
+.step-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(0,0,0,.15);
+}
+
+/* ── 입력창 포커스 링 ── */
+.edu-input:focus {
+  outline: none;
+  border-color: var(--s2) !important;
+  box-shadow: 0 0 0 4px rgba(78,172,217,.18) !important;
+}
+
+/* ── 점선 구분선 ── */
+.dotted-sep {
+  border: none;
+  border-top: 2.5px dashed var(--border);
+  margin: 14px 0;
+}
+
+/* ── 말풍선 ── */
+.speech-bubble {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  padding: 9px 15px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: var(--shadow-xs);
+  border: 2px solid var(--border);
+}
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 18px;
+  border-width: 10px 8px 0;
+  border-style: solid;
+  border-color: #fff transparent transparent;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.05));
+}
+
+/* ── 물결 배경 장식 ── */
+.wave-bg {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255,140,66,.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 15%, rgba(78,172,217,.10) 0%, transparent 40%),
+    radial-gradient(circle at 50% 82%, rgba(91,191,122,.09) 0%, transparent 40%),
+    radial-gradient(circle at 88% 78%, rgba(201,125,232,.08) 0%, transparent 35%);
+}
+
+/* ── 교과서 배경 패턴 ── */
+.textbook-bg {
+  background-color: #FFF9F2;
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(255,140,66,.10) 0%, transparent 45%),
+    radial-gradient(circle at 80% 12%, rgba(78,172,217,.09) 0%, transparent 42%),
+    radial-gradient(circle at 55% 85%, rgba(91,191,122,.08) 0%, transparent 45%),
+    radial-gradient(circle at 90% 70%, rgba(201,125,232,.07) 0%, transparent 38%),
+    radial-gradient(circle at 5% 75%, rgba(247,201,72,.07) 0%, transparent 35%);
+}
+
+/* ── 체크박스 커스텀 ── */
+input[type="checkbox"] { accent-color: var(--s3); }
+input[type="radio"]    { accent-color: var(--s2); }
+input[type="range"]    { accent-color: var(--s2); }
+
+/* ── 섹션 라벨 ── */
 .sec-label {
   font-size: 11px;
-  font-weight: 700;
-  color: var(--ig-text2);
-  letter-spacing: .5px;
+  font-weight: 800;
+  color: var(--text-2);
+  letter-spacing: .8px;
   text-transform: uppercase;
   margin-bottom: 8px;
+}
+
+/* ── 교과서 스타일 버튼 ── */
+.edu-btn {
+  transition: transform .18s cubic-bezier(.34,1.4,.64,1), box-shadow .18s ease, filter .18s;
+}
+.edu-btn:not(:disabled):hover {
+  transform: translateY(-3px);
+  filter: brightness(1.06);
+  box-shadow: 0 6px 18px rgba(140,90,50,.20) !important;
+}
+.edu-btn:not(:disabled):active {
+  transform: translateY(0);
+  filter: brightness(.97);
+}
+
+/* ── 수업 스텝 카드 ── */
+.step-card {
+  border-radius: var(--r-lg);
+  background: #fff;
+  border: 2.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.step-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── 교과서 섹션 ── */
+.edu-sec {
+  background: #fff;
+  border-radius: var(--r-lg);
+  border: 2.5px solid var(--border);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── 단계별 색상 클래스 ── */
+.s1-pill { background: var(--s1-bg); color: var(--s1-dk); border: 2px solid var(--s1-bd); border-radius: var(--r-pill); padding: 4px 12px; font-size: 12px; font-weight: 800; }
+.s2-pill { background: var(--s2-bg); color: var(--s2-dk); border: 2px solid var(--s2-bd); border-radius: var(--r-pill); padding: 4px 12px; font-size: 12px; font-weight: 800; }
+.s3-pill { background: var(--s3-bg); color: var(--s3-dk); border: 2px solid var(--s3-bd); border-radius: var(--r-pill); padding: 4px 12px; font-size: 12px; font-weight: 800; }
+.s4-pill { background: var(--s4-bg); color: var(--s4-dk); border: 2px solid var(--s4-bd); border-radius: var(--r-pill); padding: 4px 12px; font-size: 12px; font-weight: 800; }
+
+/* ── 빛나는 선정 카드 ── */
+.selected-glow {
+  box-shadow: 0 0 0 3px rgba(91,191,122,.25), 0 6px 24px rgba(91,191,122,.20);
+  animation: fadeUp .3s ease;
+}
+
+/* ── 네온 포인트 ── */
+.neon-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+/* ── 모눈종이 그리드 배경 ── */
+.grid-paper {
+  background-color: #fff;
+  background-image:
+    linear-gradient(rgba(78,172,217,.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(78,172,217,.12) 1px, transparent 1px);
+  background-size: 20px 20px;
 }

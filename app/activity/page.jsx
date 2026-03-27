@@ -23,10 +23,10 @@ const STEPS = [
   { n:4, label:'그래프 해석하기',   short:'해석',      emoji:'💡', c:'var(--s4)', bg:'var(--s4-bg)', bd:'var(--s4-bd)', dk:'var(--s4-dk)' },
 ]
 
-const CHART_COLORS = ['#F97316','#3B82F6','#10B981','#8B5CF6','#F59E0B','#EF4444','#14B8A6','#EC4899']
-const AV_BG = ['#FFF7ED','#EFF6FF','#ECFDF5','#F5F3FF','#FFFBEB','#FEF2F2']
-const AV_FG = ['#C2410C','#1D4ED8','#047857','#6D28D9','#B45309','#DC2626']
-const DRAW_COLORS = ['#1C1917','#EF4444','#F97316','#3B82F6','#10B981','#8B5CF6','#F59E0B','#FFFFFF']
+const CHART_COLORS = ['#FF8C42','#4EACD9','#5BBF7A','#C97DE8','#F7C948','#FF6B7A','#4DD9C0','#FF9FBB']
+const AV_BG = ['#FFF3E8','#EBF7FF','#EDFAF2','#F8EFFE','#FFFAE8','#FFF0F1']
+const AV_FG = ['#D4601A','#2785B5','#2D9950','#9A45C2','#A07C10','#C0364A']
+const DRAW_COLORS = ['#3D2B1F','#FF6B7A','#FF8C42','#4EACD9','#5BBF7A','#C97DE8','#F7C948','#FFFFFF']
 const CHECKLIST = [
   '그래프 제목이 명확하게 작성되었나요?',
   '조사 목적에 알맞은 그래프 유형을 선택했나요?',
@@ -34,18 +34,19 @@ const CHECKLIST = [
   '백분율(%)이 올바르게 계산되었나요?',
   '그래프에서 알 수 있는 내용을 잘 정리했나요?',
 ]
-const IG_GRAD = 'linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)'
+const EDU_GRAD = 'linear-gradient(135deg,#FF8C42 0%,#FFB347 30%,#FF6B7A 55%,#C97DE8 80%,#4EACD9 100%)'
+const IG_GRAD = EDU_GRAD  // alias for backward compat
 
-// Post-it pastel backgrounds — randomly assigned per author name
+// 교과서 파스텔 포스트잇 색상
 const POSTIT_COLORS = [
-  { bg: '#FFF9C4', shadow: 'rgba(255,236,32,.35)' },
-  { bg: '#FFE0F0', shadow: 'rgba(255,105,180,.25)' },
-  { bg: '#D0F4FF', shadow: 'rgba(3,169,244,.22)' },
-  { bg: '#DCFCE7', shadow: 'rgba(34,197,94,.22)' },
-  { bg: '#FFF0D9', shadow: 'rgba(249,115,22,.22)' },
-  { bg: '#F0EAFF', shadow: 'rgba(139,92,246,.22)' },
-  { bg: '#FFE4E4', shadow: 'rgba(239,68,68,.22)' },
-  { bg: '#E8F4FF', shadow: 'rgba(59,130,246,.22)' },
+  { bg: '#FFF8DC', border: '#FFD966', shadow: 'rgba(255,200,50,.30)' },
+  { bg: '#FFE8F4', border: '#FFB3D9', shadow: 'rgba(255,105,180,.22)' },
+  { bg: '#E0F4FF', border: '#90D8F9', shadow: 'rgba(78,172,217,.22)' },
+  { bg: '#E4F9ED', border: '#7FE0A2', shadow: 'rgba(91,191,122,.22)' },
+  { bg: '#FFF0DC', border: '#FFBD7A', shadow: 'rgba(255,140,66,.22)' },
+  { bg: '#F3EAFF', border: '#D9AAFF', shadow: 'rgba(201,125,232,.22)' },
+  { bg: '#FFE8E8', border: '#FFB0B0', shadow: 'rgba(255,107,122,.22)' },
+  { bg: '#E6F8FF', border: '#99D9F5', shadow: 'rgba(78,172,217,.18)' },
 ]
 const postitColor = (name) => POSTIT_COLORS[(name || '').charCodeAt(0) % POSTIT_COLORS.length]
 
@@ -68,14 +69,15 @@ function useDb(fn, delay) {
 function Avatar({ name, size = 30, gradient = false }) {
   return (
     <div style={{ width: size, height: size, borderRadius: '50%', flexShrink: 0,
-      padding: gradient ? 2 : 0,
-      background: gradient ? IG_GRAD : 'transparent',
+      padding: gradient ? 2.5 : 0,
+      background: gradient ? EDU_GRAD : 'transparent',
     }}>
       <div style={{ width: '100%', height: '100%', borderRadius: '50%',
         background: avBg(name), color: avFg(name),
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: size * (gradient ? 0.38 : 0.4), fontWeight: 700,
-        border: gradient ? '2px solid #fff' : `1.5px solid ${avFg(name)}25`,
+        fontSize: size * (gradient ? 0.38 : 0.42), fontWeight: 800,
+        border: gradient ? '2.5px solid #fff' : `2.5px solid ${avFg(name)}25`,
+        boxShadow: gradient ? 'none' : `0 2px 8px ${avFg(name)}25`,
       }}>{(name || '?')[0]}</div>
     </div>
   )
@@ -84,27 +86,28 @@ function Avatar({ name, size = 30, gradient = false }) {
 function Btn({ children, onClick, color = 'blue', pill = false, sm = false,
   outline = false, disabled = false, style: ex = {}, full = false }) {
   const m = {
-    blue:   ['#0095f6', '#fff', '#0095f6'],
-    orange: ['#F97316', '#fff', '#F97316'],
-    green:  ['#10B981', '#fff', '#10B981'],
-    purple: ['#8B5CF6', '#fff', '#8B5CF6'],
-    red:    ['#ed4956', '#fff', '#ed4956'],
-    gray:   ['#f5f5f5', '#262626', '#dbdbdb'],
-    dark:   ['#262626', '#fff', '#262626'],
+    blue:   ['#4EACD9', '#fff', '#4EACD9', '0 4px 12px rgba(78,172,217,.35)'],
+    orange: ['#FF8C42', '#fff', '#FF8C42', '0 4px 12px rgba(255,140,66,.35)'],
+    green:  ['#5BBF7A', '#fff', '#5BBF7A', '0 4px 12px rgba(91,191,122,.35)'],
+    purple: ['#C97DE8', '#fff', '#C97DE8', '0 4px 12px rgba(201,125,232,.35)'],
+    red:    ['#FF6B7A', '#fff', '#FF6B7A', '0 4px 12px rgba(255,107,122,.35)'],
+    gray:   ['#F2EAE0', '#8C7B6E', '#E8DFD4', 'none'],
+    dark:   ['#3D2B1F', '#fff', '#3D2B1F', '0 4px 12px rgba(61,43,31,.25)'],
   }
-  const [bg, txt, bd] = m[color] || m.blue
+  const [bg, txt, bd, sh] = m[color] || m.blue
   return (
-    <button onClick={disabled ? undefined : onClick} style={{
+    <button onClick={disabled ? undefined : onClick} className={disabled ? '' : 'edu-btn'} style={{
       padding: sm ? '7px 16px' : '11px 22px',
       minHeight: sm ? 36 : 44,
-      borderRadius: pill ? 999 : 8,
+      borderRadius: pill ? 999 : 12,
       fontSize: sm ? 13 : 15,
-      fontWeight: 700,
+      fontWeight: 800,
       cursor: disabled ? 'not-allowed' : 'pointer',
-      border: `1.5px solid ${bd}`,
-      background: outline ? '#ffffff' : bg,
+      border: `2px solid ${bd}`,
+      background: outline ? '#fff' : bg,
       color: outline ? bd : txt,
       opacity: disabled ? .45 : 1,
+      boxShadow: disabled || outline ? 'none' : sh,
       transition: 'all .15s',
       fontFamily: 'inherit',
       display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -117,35 +120,41 @@ function Btn({ children, onClick, color = 'blue', pill = false, sm = false,
 
 function Inp({ value, onChange, placeholder, multi = false, rows = 3, style: ex = {}, onKeyDown, type = 'text' }) {
   const base = {
-    width: '100%', padding: '11px 14px', borderRadius: 8,
-    border: '1px solid #dbdbdb', fontSize: 15, color: '#262626',
-    background: '#fafafa', outline: 'none', fontFamily: 'inherit',
-    resize: multi ? 'vertical' : 'none', lineHeight: 1.7,
-    transition: 'border-color .15s', ...ex,
+    width: '100%', padding: '12px 16px', borderRadius: 14,
+    border: '2.5px solid #E6D8C8', fontSize: 14, color: '#3D2B1F',
+    background: '#FFFDF9', outline: 'none', fontFamily: 'inherit',
+    resize: multi ? 'vertical' : 'none', lineHeight: 1.7, fontWeight: 600,
+    transition: 'border-color .15s, box-shadow .15s', ...ex,
   }
   return multi
-    ? <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows} style={base} />
-    : <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={base} onKeyDown={onKeyDown} />
+    ? <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows} style={base}
+        onFocus={e => { e.target.style.borderColor='#4EACD9'; e.target.style.boxShadow='0 0 0 4px rgba(78,172,217,.15)' }}
+        onBlur={e  => { e.target.style.borderColor='#E6D8C8'; e.target.style.boxShadow='none' }} />
+    : <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={base} onKeyDown={onKeyDown}
+        onFocus={e => { e.target.style.borderColor='#4EACD9'; e.target.style.boxShadow='0 0 0 4px rgba(78,172,217,.15)' }}
+        onBlur={e  => { e.target.style.borderColor='#E6D8C8'; e.target.style.boxShadow='none' }} />
 }
 
 function Lbl({ children, mt = 12 }) {
-  return <div style={{ fontSize: 13, fontWeight: 700, color: '#8e8e8e', marginBottom: 7, marginTop: mt }}>{children}</div>
+  return <div style={{ fontSize: 13, fontWeight: 800, color: '#7B6858', marginBottom: 8, marginTop: mt, letterSpacing: '0.2px', display:'flex', alignItems:'center', gap:5 }}>{children}</div>
 }
 
 function Sec({ children, style: ex = {} }) {
   return (
     <div style={{
-      background: '#fff', border: '1px solid #dbdbdb',
-      borderRadius: 12, padding: 16, marginBottom: 12, ...ex,
+      background: '#fff', border: '2.5px solid #E6D8C8',
+      borderRadius: 20, padding: '16px 18px', marginBottom: 14,
+      boxShadow: '0 4px 16px rgba(140,90,50,.08)', ...ex,
     }}>{children}</div>
   )
 }
 
-function Tag({ children, color = '#F97316' }) {
+function Tag({ children, color = '#FF8C42' }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px',
-      borderRadius: 999, background: color + '15', color, border: `1px solid ${color}35`,
-      fontSize: 13, fontWeight: 700, gap: 4 }}>{children}</span>
+    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 14px',
+      borderRadius: 999, background: color + '15', color, border: `2px solid ${color}35`,
+      fontSize: 12, fontWeight: 800, gap: 4, boxShadow: `0 2px 8px ${color}20`,
+      letterSpacing: '0.1px' }}>{children}</span>
   )
 }
 
@@ -159,67 +168,85 @@ function VoteModal({ vote, myName, onAgree, onClose, onCancel, isRequester }) {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)',
+      position: 'fixed', inset: 0,
+      background: 'rgba(61,43,31,.52)',
+      backdropFilter: 'blur(3px)',
       zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
     }}>
       <div style={{
-        background: '#fff', borderRadius: 20, padding: '28px 28px 24px',
-        maxWidth: 380, width: '100%',
-        boxShadow: '0 12px 48px rgba(0,0,0,.25)',
-        animation: 'fadeUp .22s ease',
-        border: '2px solid #10B981',
+        background: '#fff', borderRadius: 28, padding: '32px 28px 26px',
+        maxWidth: 390, width: '100%',
+        boxShadow: '0 20px 60px rgba(61,43,31,.28)',
+        animation: 'fadeUp .25s cubic-bezier(.34,1.3,.64,1)',
+        border: '3px solid #A8ECC0',
         position: 'relative',
+        overflow: 'hidden',
       }}>
+        {/* 배경 장식 */}
+        <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, borderRadius:'50%',
+          background:'rgba(91,191,122,.08)', pointerEvents:'none' }} />
+        <div style={{ position:'absolute', bottom:-15, left:-15, width:60, height:60, borderRadius:'50%',
+          background:'rgba(78,172,217,.08)', pointerEvents:'none' }} />
+
         {/* 닫기(X) 버튼 — 항상 표시 */}
         <button onClick={onClose} style={{
-          position: 'absolute', top: 14, right: 14,
-          width: 28, height: 28, borderRadius: '50%',
-          background: '#F1F5F9', color: '#64748B',
-          border: '1.5px solid #E2E8F2', fontSize: 14, fontWeight: 800,
+          position: 'absolute', top: 16, right: 16,
+          width: 30, height: 30, borderRadius: '50%',
+          background: '#F2EAE0', color: '#8C7B6E',
+          border: '2px solid #E6D8C8', fontSize: 14, fontWeight: 800,
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'inherit', lineHeight: 1,
+          fontFamily: 'inherit', lineHeight: 1, transition: 'all .15s',
         }}>✕</button>
 
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 40, marginBottom: 8 }}>🗳️</div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: '#1E293B' }}>탐구 문제 선정 투표</div>
-          <div style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>
-            <b style={{ color: '#0095f6' }}>{vote?.requestedBy}</b>님이 선정을 요청했어요
+        <div style={{ textAlign: 'center', marginBottom: 22 }}>
+          <div style={{ fontSize: 44, marginBottom: 10 }}>🗳️</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: '#3D2B1F', letterSpacing:'-0.3px' }}>탐구 문제 선정 투표</div>
+          <div style={{ fontSize: 13, color: '#8C7B6E', marginTop: 6, fontWeight:600 }}>
+            <span style={{
+              display:'inline-block', padding:'3px 10px', borderRadius:999,
+              background:'#EBF7FF', color:'#2785B5', fontWeight:800, fontSize:13,
+            }}>{vote?.requestedBy}</span>님이 선정을 요청했어요
           </div>
         </div>
 
         {/* Post content preview */}
         <div style={{
-          background: '#F0FDF4', border: '1.5px solid #86EFAC',
-          borderRadius: 12, padding: '14px 16px', marginBottom: 20,
+          background: 'linear-gradient(135deg,#EDFAF2,#E0F8EA)', border: '2px solid #90DDB0',
+          borderRadius: 16, padding: '14px 16px', marginBottom: 20,
+          boxShadow: '0 3px 10px rgba(91,191,122,.12)',
         }}>
-          <div style={{ fontSize: 12, color: '#16A34A', fontWeight: 700, marginBottom: 6 }}>선정 후보 내용</div>
-          <div style={{ fontSize: 14, lineHeight: 1.7, color: '#1E293B', whiteSpace: 'pre-line' }}>
+          <div style={{ fontSize: 11, color: '#2D9950', fontWeight: 800, marginBottom: 7,
+            letterSpacing:'0.5px', textTransform:'uppercase' }}>📋 선정 후보 내용</div>
+          <div style={{ fontSize: 14, lineHeight: 1.75, color: '#3D2B1F', whiteSpace: 'pre-line', fontWeight:600 }}>
             {vote?.postData?.content}
           </div>
         </div>
 
         {/* Progress */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748B', marginBottom: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#8C7B6E', marginBottom: 8, fontWeight:700 }}>
             <span>찬성 현황</span>
-            <span style={{ fontWeight: 700 }}>{agreedCount} / {totalVoters}명</span>
+            <span style={{ background:'#EDFAF2', color:'#2D9950', padding:'2px 10px',
+              borderRadius:999, border:'1.5px solid #90DDB0', fontWeight:800 }}>{agreedCount} / {totalVoters}명</span>
           </div>
-          <div style={{ height: 8, borderRadius: 999, background: '#E2E8F2', overflow: 'hidden' }}>
+          <div style={{ height: 10, borderRadius: 999, background: '#F0E8DC', overflow: 'hidden',
+            border:'1.5px solid #E6D8C8' }}>
             <div style={{
               width: `${(agreedCount / totalVoters) * 100}%`, height: '100%',
-              background: 'linear-gradient(90deg, #10B981, #059669)',
-              borderRadius: 999, transition: 'width .4s ease',
+              background: 'linear-gradient(90deg, #5BBF7A, #2D9950)',
+              borderRadius: 999, transition: 'width .5s cubic-bezier(.34,1.3,.64,1)',
             }} />
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 12 }}>
             {vote?.voters?.map(name => (
               <div key={name} style={{
-                padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600,
-                background: vote?.agreed?.includes(name) ? '#DCFCE7' : '#F1F5F9',
-                color:      vote?.agreed?.includes(name) ? '#166534' : '#94A3B8',
-                border: `1px solid ${vote?.agreed?.includes(name) ? '#86EFAC' : '#E2E8F2'}`,
+                padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700,
+                background: vote?.agreed?.includes(name) ? '#EDFAF2' : '#FFF9F2',
+                color:      vote?.agreed?.includes(name) ? '#2D9950' : '#C4B4A8',
+                border: `2px solid ${vote?.agreed?.includes(name) ? '#90DDB0' : '#E6D8C8'}`,
+                boxShadow: vote?.agreed?.includes(name) ? '0 2px 6px rgba(91,191,122,.18)' : 'none',
+                transition: 'all .2s',
               }}>
                 {vote?.agreed?.includes(name) ? '✅ ' : '⏳ '}{name}
               </div>
@@ -229,45 +256,46 @@ function VoteModal({ vote, myName, onAgree, onClose, onCancel, isRequester }) {
 
         {/* Buttons */}
         {allAgreed ? (
-          /* 전원 찬성인데 아직 자동처리 안 됐을 경우 안내 */
           <div style={{
-            textAlign: 'center', padding: '12px', background: '#F0FDF4',
-            borderRadius: 10, fontSize: 14, fontWeight: 700, color: '#16A34A',
+            textAlign: 'center', padding: '14px', background: 'linear-gradient(135deg,#EDFAF2,#D4F5E0)',
+            borderRadius: 14, fontSize: 15, fontWeight: 800, color: '#2D9950',
+            border: '2px solid #90DDB0', boxShadow: '0 3px 10px rgba(91,191,122,.15)',
           }}>
             🎉 전원 찬성! 잠시 후 자동으로 선정돼요...
           </div>
         ) : alreadyAgreed ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
             <div style={{
-              textAlign: 'center', padding: '12px', background: '#F0FDF4',
-              borderRadius: 10, fontSize: 14, fontWeight: 700, color: '#16A34A',
+              textAlign: 'center', padding: '13px', background: 'linear-gradient(135deg,#EDFAF2,#D4F5E0)',
+              borderRadius: 14, fontSize: 14, fontWeight: 800, color: '#2D9950',
+              border: '2px solid #90DDB0',
             }}>
               ✅ 찬성 완료! 다른 모둠원을 기다리는 중...
             </div>
-            {/* 요청자는 투표 취소/재요청 가능 */}
             {isRequester && (
               <button onClick={onCancel} style={{
-                padding: '10px', borderRadius: 10,
-                background: '#FEF2F2', color: '#DC2626',
-                border: '1.5px solid #FECACA', fontSize: 13, fontWeight: 700,
+                padding: '11px', borderRadius: 14,
+                background: '#FFF0F1', color: '#C0364A',
+                border: '2px solid #FFB0B0', fontSize: 13, fontWeight: 800,
                 cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 2px 8px rgba(192,54,74,.12)',
               }}>🔄 투표 취소하고 다시 요청하기</button>
             )}
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onClose} style={{
-              flex: 1, padding: '12px', borderRadius: 10,
-              background: '#F1F5F9', color: '#64748B',
-              border: '1.5px solid #E2E8F2', fontSize: 14, fontWeight: 700,
+              flex: 1, padding: '13px', borderRadius: 14,
+              background: '#F2EAE0', color: '#8C7B6E',
+              border: '2px solid #E6D8C8', fontSize: 14, fontWeight: 700,
               cursor: 'pointer', fontFamily: 'inherit',
             }}>나중에</button>
-            <button onClick={onAgree} style={{
-              flex: 2, padding: '12px', borderRadius: 10,
-              background: 'linear-gradient(135deg, #10B981, #059669)',
-              color: '#fff', border: 'none', fontSize: 14, fontWeight: 700,
+            <button onClick={onAgree} className="edu-btn" style={{
+              flex: 2, padding: '13px', borderRadius: 14,
+              background: 'linear-gradient(135deg, #5BBF7A, #2D9950)',
+              color: '#fff', border: 'none', fontSize: 14, fontWeight: 800,
               cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 4px 12px rgba(16,185,129,.35)',
+              boxShadow: '0 5px 16px rgba(91,191,122,.40)',
             }}>👍 찬성하기</button>
           </div>
         )}
@@ -277,23 +305,33 @@ function VoteModal({ vote, myName, onAgree, onClose, onCancel, isRequester }) {
 }
 
 function Toast({ msg, onDone }) {
-  useEffect(() => { const t = setTimeout(onDone, 2600); return () => clearTimeout(t) }, []) // eslint-disable-line
+  useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t) }, []) // eslint-disable-line
   return (
-    <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-      background: '#262626', color: '#fff', borderRadius: 999, padding: '12px 24px',
-      fontSize: 15, fontWeight: 700, zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,.25)',
-      animation: 'fadeUp .2s ease', whiteSpace: 'nowrap' }}>{msg}</div>
+    <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+      background: 'linear-gradient(135deg,#3D2B1F,#5C3D28)', color: '#fff',
+      borderRadius: 999, padding: '13px 28px',
+      fontSize: 14, fontWeight: 800, zIndex: 9999,
+      boxShadow: '0 8px 28px rgba(61,43,31,.36)',
+      animation: 'fadeUp .26s cubic-bezier(.34,1.3,.64,1)',
+      whiteSpace: 'nowrap',
+      border: '2px solid rgba(255,255,255,.18)',
+      backdropFilter: 'blur(8px)',
+      letterSpacing: '0.1px',
+    }}>{msg}</div>
   )
 }
 
 function Modal({ children, onClose }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 10000,
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(61,43,31,.50)',
+      backdropFilter: 'blur(4px)', zIndex: 10000,
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 24,
-        maxWidth: 420, width: '100%', boxShadow: '0 8px 40px rgba(0,0,0,.2)',
-        animation: 'fadeUp .22s ease' }}>
+      <div style={{ background: '#fff', borderRadius: 26, padding: 26,
+        maxWidth: 420, width: '100%',
+        boxShadow: '0 16px 52px rgba(61,43,31,.24)',
+        animation: 'fadeUp .26s cubic-bezier(.34,1.3,.64,1)',
+        border: '2.5px solid #E6D8C8' }}>
         {children}
       </div>
     </div>
@@ -318,15 +356,15 @@ function SurveyModal({ survey, userName, surveyCode, onClose }) {
 
   return (
     <Modal onClose={onClose}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: '#0095f6', marginBottom: 4, letterSpacing: .3 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: '#4EACD9', marginBottom: 6, letterSpacing: .3 }}>
         📋 {survey.groupName || surveyCode} 모둠의 설문조사
       </div>
       <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>{survey.topic}</div>
-      <div style={{ fontSize: 14, color: '#8e8e8e', marginBottom: 18, lineHeight: 1.6 }}>📌 {survey.question}</div>
+      <div style={{ fontSize: 14, color: '#8C7B6E', marginBottom: 18, lineHeight: 1.6 }}>📌 {survey.question}</div>
       {done ? (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{ fontSize: 40 }}>✅</div>
-          <div style={{ fontWeight: 700, marginTop: 10, color: '#10B981', fontSize: 15 }}>참여 완료!</div>
+          <div style={{ fontWeight: 700, marginTop: 10, color: '#5BBF7A', fontSize: 15 }}>참여 완료!</div>
         </div>
       ) : (
         <>
@@ -334,13 +372,13 @@ function SurveyModal({ survey, userName, surveyCode, onClose }) {
             {survey.items?.map((item, i) => (
               <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 12,
                 padding: '11px 14px', borderRadius: 10,
-                border: `2px solid ${selected === item ? '#0095f6' : '#dbdbdb'}`,
-                background: selected === item ? '#EFF6FF' : '#fff',
+                border: `2px solid ${selected === item ? '#4EACD9' : '#E6D8C8'}`,
+                background: selected === item ? '#EBF7FF' : '#fff',
                 cursor: 'pointer', fontWeight: selected === item ? 700 : 400,
                 transition: 'all .15s', minHeight: 44 }}>
                 <input type="radio" name="sv" value={item} checked={selected === item}
                   onChange={() => setSelected(item)}
-                  style={{ accentColor: '#0095f6', width: 17, height: 17 }} />
+                  style={{ accentColor: '#4EACD9', width: 17, height: 17 }} />
                 <span style={{ fontSize: 15 }}>{item}</span>
               </label>
             ))}
@@ -361,7 +399,7 @@ function SurveyModal({ survey, userName, surveyCode, onClose }) {
 
 function NoData({ msg = '2단계에서 데이터를 입력하면\n그래프가 나타나요' }) {
   return (
-    <div style={{ textAlign: 'center', padding: '28px 16px', color: '#8e8e8e', fontSize: 13, lineHeight: 1.8 }}>
+    <div style={{ textAlign: 'center', padding: '28px 16px', color: '#8C7B6E', fontSize: 13, lineHeight: 1.8 }}>
       <div style={{ fontSize: 32, marginBottom: 8 }}>📊</div>
       {msg}
     </div>
@@ -443,7 +481,7 @@ function PieChart({ data }) {
         {slices.map((s, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
             <div style={{ width: 11, height: 11, borderRadius: 3, background: s.color, flexShrink: 0 }} />
-            <span style={{ color: '#8e8e8e' }}>{s.label}</span>
+            <span style={{ color: '#8C7B6E' }}>{s.label}</span>
             <span style={{ fontWeight: 700 }}>{s.pct}%</span>
           </div>
         ))}
@@ -473,7 +511,7 @@ function StripChart({ data }) {
         {segs.map((s, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
             <div style={{ width: 10, height: 10, borderRadius: 3, background: s.color }} />
-            <span style={{ color: '#8e8e8e' }}>{s.label}</span>
+            <span style={{ color: '#8C7B6E' }}>{s.label}</span>
             <span style={{ fontWeight: 700 }}>{Math.round(s.pct)}%</span>
           </div>
         ))}
@@ -776,10 +814,10 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
   }
 
   const toolBtns = [
-    { id: 'pen',     label: '✏️ 펜',    clr: '#0095f6' },
+    { id: 'pen',     label: '✏️ 펜',    clr: '#4EACD9' },
     { id: 'ruler',   label: '📏 자',    clr: '#F97316' },
     { id: 'compass', label: '🔵 컴퍼스', clr: '#8B5CF6' },
-    { id: 'eraser',  label: '🧹 지우개', clr: '#ed4956' },
+    { id: 'eraser',  label: '🧹 지우개', clr: '#FF6B7A' },
   ]
 
   const cursorMap = { pen: 'crosshair', ruler: 'crosshair', compass: 'crosshair', eraser: 'cell' }
@@ -792,8 +830,8 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
           <button key={tb.id} onClick={() => setTool(tb.id)} style={{
             padding: '5px 13px', borderRadius: 8, fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
             background: tool === tb.id ? tb.clr + '18' : 'transparent',
-            border: `1.5px solid ${tool === tb.id ? tb.clr : '#dbdbdb'}`,
-            color: tool === tb.id ? tb.clr : '#8e8e8e', cursor: 'pointer',
+            border: `1.5px solid ${tool === tb.id ? tb.clr : '#E6D8C8'}`,
+            color: tool === tb.id ? tb.clr : '#8C7B6E', cursor: 'pointer',
             transition: 'all .15s',
           }}>{tb.label}</button>
         ))}
@@ -817,20 +855,20 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
             <button key={c} onClick={() => { setColor(c); if (tool === 'eraser') setTool('pen') }} style={{
               width: 26, height: 26, borderRadius: '50%',
               background: c === '#FFFFFF' ? '#f5f5f5' : c,
-              border: `3px solid ${color === c && tool !== 'eraser' ? '#262626' : 'transparent'}`,
+              border: `3px solid ${color === c && tool !== 'eraser' ? '#3D2B1F' : 'transparent'}`,
               cursor: 'pointer', transition: 'border .1s',
               boxShadow: c === '#FFFFFF' ? 'inset 0 0 0 1px #dbdbdb' : 'none',
             }} />
           ))}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#8e8e8e' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#8C7B6E' }}>
           굵기
           <input type="range" min="2" max="18" value={width} step="1"
             onChange={e => setWidth(+e.target.value)}
-            style={{ width: 64, accentColor: '#0095f6' }} />
+            style={{ width: 64, accentColor: '#4EACD9' }} />
           <div style={{
             width: Math.max(eraser ? width*3 : width, 6), height: Math.max(eraser ? width*3 : width, 6),
-            borderRadius: '50%', background: eraser ? '#dbdbdb' : color, flexShrink: 0,
+            borderRadius: '50%', background: eraser ? '#E6D8C8' : color, flexShrink: 0,
             border: '1px solid #dbdbdb', minWidth: 6, transition: 'all .1s',
           }} />
         </div>
@@ -849,15 +887,15 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
       {/* 작성자 표시 영역 — 항상 고정 높이로 확보하여 레이아웃 흔들림 방지 */}
       <div style={{
         height: 28, display: 'flex', alignItems: 'center',
-        marginBottom: 4, fontSize: 13, color: '#8e8e8e',
+        marginBottom: 4, fontSize: 13, color: '#8C7B6E',
       }}>
         {currentDrawer ? (
           <>
             <span style={{
-              width: 7, height: 7, borderRadius: '50%', background: '#10B981',
+              width: 7, height: 7, borderRadius: '50%', background: '#5BBF7A',
               animation: 'pulse 1s infinite', display: 'inline-block', flexShrink: 0, marginRight: 6,
             }} />
-            <b style={{ color: '#262626' }}>{currentDrawer}</b>님이 그리는 중...
+            <b style={{ color: '#3D2B1F' }}>{currentDrawer}</b>님이 그리는 중...
           </>
         ) : (
           <span style={{ opacity: 0 }}>placeholder</span>
@@ -884,7 +922,7 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
             borderRadius: 10, pointerEvents: 'none',
           }} />
       </div>
-      <div style={{ fontSize: 13, color: '#8e8e8e', marginTop: 7, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 13, color: '#8C7B6E', marginTop: 7, lineHeight: 1.6 }}>
         💡 모눈종이 위에 그래프를 직접 그려보세요. 친구들의 그림이 실시간으로 반영돼요.
       </div>
     </div>
@@ -893,14 +931,14 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
 
 // ─── Post-it PostCard ────────────────────────────────────────────────────
 
-const MY_POSTIT  = { bg: '#FFF0A0', border: '#F59E0B', shadow: 'rgba(245,158,11,.30)' }
+const MY_POSTIT  = { bg: '#FFF8DC', border: '#FFD966', shadow: 'rgba(255,200,50,.28)' }
 const OTHER_POSTIT_COLORS = [
-  { bg: '#E0F2FE', border: '#7DD3FC', shadow: 'rgba(14,165,233,.22)' },
-  { bg: '#FCE7F3', border: '#F9A8D4', shadow: 'rgba(236,72,153,.22)' },
-  { bg: '#DCFCE7', border: '#86EFAC', shadow: 'rgba(34,197,94,.22)' },
-  { bg: '#F3E8FF', border: '#D8B4FE', shadow: 'rgba(139,92,246,.22)' },
-  { bg: '#FFEDD5', border: '#FDB97A', shadow: 'rgba(249,115,22,.22)' },
-  { bg: '#E0FEF8', border: '#5EEAD4', shadow: 'rgba(20,184,166,.22)' },
+  { bg: '#E0F4FF', border: '#90D8F9', shadow: 'rgba(78,172,217,.22)' },
+  { bg: '#FFE8F4', border: '#FFB3D9', shadow: 'rgba(255,105,180,.22)' },
+  { bg: '#E4F9ED', border: '#7FE0A2', shadow: 'rgba(91,191,122,.22)' },
+  { bg: '#F3EAFF', border: '#D9AAFF', shadow: 'rgba(201,125,232,.22)' },
+  { bg: '#FFF0DC', border: '#FFBD7A', shadow: 'rgba(255,140,66,.22)' },
+  { bg: '#E6F8F5', border: '#7FD8CC', shadow: 'rgba(77,217,192,.22)' },
 ]
 const otherPostitColor = (name) =>
   OTHER_POSTIT_COLORS[(name || '').charCodeAt(0) % OTHER_POSTIT_COLORS.length]
@@ -916,7 +954,7 @@ function PostCard({ post, myName, code, onLike, onComment, onSelectRequest, onDe
   const isSelected = !!post.selected
 
   const color = isSelected
-    ? { bg: '#ECFDF5', border: '#10B981', shadow: 'rgba(16,185,129,.30)' }
+    ? { bg: '#EDFAF2', border: '#5BBF7A', shadow: 'rgba(91,191,122,.30)' }
     : isMyPost
       ? MY_POSTIT
       : otherPostitColor(post.name)
@@ -941,9 +979,9 @@ function PostCard({ post, myName, code, onLike, onComment, onSelectRequest, onDe
     <div className="slide-in postcard-wrap" style={{
       position: 'relative',
       background: color.bg,
-      border: `1.5px solid ${color.border}`,
-      borderRadius: 12,
-      margin: '0 10px 12px',
+      border: `2px solid ${color.border}`,
+      borderRadius: 16,
+      margin: '0 10px 14px',
       boxShadow: `0 3px 12px ${color.shadow}`,
       overflow: 'visible',
     }}>
@@ -993,39 +1031,39 @@ function PostCard({ post, myName, code, onLike, onComment, onSelectRequest, onDe
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#1E293B' }}>{post.name}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#3D2B1F' }}>{post.name}</span>
             {isCrown && <span title="좋아요 1위!">👑</span>}
             {isSelected && (
               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
-                background: '#10B981', color: '#fff' }}>✅ 선정됨</span>
+                background: '#5BBF7A', color: '#fff' }}>✅ 선정됨</span>
             )}
           </div>
-          <div style={{ fontSize: 11, color: '#94A3B8' }}>{post.time}</div>
+          <div style={{ fontSize: 11, color: '#C4B4A8' }}>{post.time}</div>
         </div>
 
         {/* 선정 버튼 — 투표 요청 방식 */}
         {onSelectRequest && !isSelected && (
           <button onClick={() => onSelectRequest(post)} style={{
             fontSize: 12, fontWeight: 700, padding: '6px 12px', borderRadius: 8,
-            border: '1.5px solid #10B981', background: '#fff', color: '#10B981',
+            border: '1.5px solid #10B981', background: '#fff', color: '#5BBF7A',
             cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit',
             transition: 'all .15s',
           }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#10B981'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#fff';    e.currentTarget.style.color = '#10B981' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#5BBF7A'; e.currentTarget.style.color = '#fff' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#fff';    e.currentTarget.style.color = '#5BBF7A' }}
           >선정</button>
         )}
       </div>
 
       {/* Content */}
-      <div style={{ padding: '0 12px 8px', fontSize: 13, lineHeight: 1.75, color: '#1E293B', whiteSpace: 'pre-line' }}>
+      <div style={{ padding: '0 12px 8px', fontSize: 13, lineHeight: 1.75, color: '#3D2B1F', whiteSpace: 'pre-line' }}>
         {post.content}
       </div>
 
       {/* Comments */}
       {post.comments?.map((c, i) => (
         <div key={i} style={{
-          fontSize: 12, color: '#64748B', padding: '3px 12px 3px 16px',
+          fontSize: 12, color: '#8C7B6E', padding: '3px 12px 3px 16px',
           borderLeft: `2px solid ${color.border}`, margin: '2px 12px', lineHeight: 1.6,
         }}>{c}</div>
       ))}
@@ -1034,20 +1072,20 @@ function PostCard({ post, myName, code, onLike, onComment, onSelectRequest, onDe
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px 9px' }}>
         <button onClick={toggleLike} style={{
           background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1,
-          color: isLiked ? '#ed4956' : '#94A3B8', transition: 'transform .15s', padding: '2px 4px',
+          color: isLiked ? '#FF6B7A' : '#C4B4A8', transition: 'transform .15s', padding: '2px 4px',
         }}>{isLiked ? '❤️' : '🤍'}</button>
         <button onClick={() => setShowCmt(!showCmt)} style={{
           background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, lineHeight: 1,
-          color: '#94A3B8', padding: '2px 4px',
+          color: '#C4B4A8', padding: '2px 4px',
         }}>💬</button>
         {(post.likes > 0 || post.comments?.length > 0) && (
-          <span style={{ fontSize: 11, color: '#94A3B8' }}>
-            {post.likes > 0 && <><b style={{ color: '#475569' }}>♥ {post.likes}</b>{' '}</>}
+          <span style={{ fontSize: 11, color: '#C4B4A8' }}>
+            {post.likes > 0 && <><b style={{ color: '#8C7B6E' }}>♥ {post.likes}</b>{' '}</>}
             {post.comments?.length > 0 && `댓글 ${post.comments.length}`}
           </span>
         )}
         {/* 작성자 이름 — 우측 */}
-        <div style={{ marginLeft: 'auto', fontSize: 10, color: '#94A3B8', fontWeight: 600 }}>
+        <div style={{ marginLeft: 'auto', fontSize: 10, color: '#C4B4A8', fontWeight: 600 }}>
           ✍️ {post.name}
         </div>
       </div>
@@ -1068,7 +1106,7 @@ function PostCard({ post, myName, code, onLike, onComment, onSelectRequest, onDe
           />
           <button onClick={submitCmt} style={{
             fontSize: 13, fontWeight: 700, color: '#fff',
-            background: '#0095f6', border: 'none', borderRadius: 8,
+            background: '#4EACD9', border: 'none', borderRadius: 8,
             cursor: 'pointer', padding: '8px 14px', fontFamily: 'inherit',
           }}>게시</button>
         </div>
@@ -1082,15 +1120,27 @@ function PostCard({ post, myName, code, onLike, onComment, onSelectRequest, onDe
 function FeedPanel({ posts, myName, code, onLike, onComment, onSelectRequest, onDelete }) {
   const maxLikes = Math.max(...posts.map(p => p.likes || 0), 0)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ padding: '10px 14px 9px', borderBottom: '1px solid #efefef',
-        fontSize: 13, fontWeight: 700, color: '#262626', flexShrink: 0 }}>
-        모둠원 공유 피드
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background:'#FFF9F2' }}>
+      <div style={{ padding: '12px 14px 11px',
+        borderBottom: '2.5px solid #E6D8C8',
+        background:'#fff',
+        fontSize: 13, fontWeight: 800, color: '#3D2B1F', flexShrink: 0,
+        display:'flex', alignItems:'center', gap:7 }}>
+        <span style={{ fontSize:16 }}>📌</span> 모둠원 공유 피드
+        {posts.length > 0 && (
+          <span style={{
+            marginLeft:'auto', fontSize:11, fontWeight:800,
+            background:'#FFF3E8', color:'#D4601A',
+            padding:'2px 8px', borderRadius:999, border:'1.5px solid #FFCB96',
+          }}>{posts.length}</span>
+        )}
       </div>
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: 14 }}>
         {posts.length === 0
-          ? <div style={{ textAlign: 'center', padding: '28px 14px', color: '#8e8e8e', fontSize: 13, lineHeight: 2 }}>
-              아직 공유된 내용이 없어요 🙈<br /><b style={{ color: '#262626' }}>공유하기</b>를 눌러보세요!
+          ? <div style={{ textAlign: 'center', padding: '32px 14px', color: '#C4B4A8', fontSize: 13, lineHeight: 2 }}>
+              <div style={{ fontSize:32, marginBottom:8 }}>🌱</div>
+              아직 공유된 내용이 없어요<br />
+              <span style={{ fontWeight:800, color:'#FF8C42' }}>공유하기</span>를 눌러보세요!
             </div>
           : posts.map(p => (
             <PostCard key={p.id} post={p} myName={myName} code={code}
@@ -1120,11 +1170,11 @@ function OnlineUsers({ users }) {
         ))}
         {extra > 0 && (
           <div style={{ marginLeft: -7, width: 24, height: 24, borderRadius: '50%',
-            background: '#efefef', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 9, fontWeight: 700, color: '#8e8e8e', border: '1.5px solid #fff' }}>+{extra}</div>
+            background: '#F2EAE0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 9, fontWeight: 700, color: '#8C7B6E', border: '1.5px solid #fff' }}>+{extra}</div>
         )}
       </div>
-      <span style={{ fontSize: 11, color: '#8e8e8e' }}>{users.length}명</span>
+      <span style={{ fontSize: 11, color: '#8C7B6E' }}>{users.length}명</span>
     </div>
   )
 }
@@ -1183,31 +1233,38 @@ function Step1({ user, code, posts, selectedPost, onToast }) {
     <div>
       {/* ── 우리 모둠의 탐구 문제 (강조) ── */}
       {selectedPost && (
-        <div style={{
-          background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
-          border: '2px solid #10B981',
-          borderRadius: 16,
-          padding: '18px 20px',
+        <div className="selected-glow" style={{
+          background: 'linear-gradient(135deg, #EDFAF2, #D4F5E0)',
+          border: '2.5px solid #90DDB0',
+          borderRadius: 20,
+          padding: '18px 22px',
           marginBottom: 16,
-          boxShadow: '0 4px 16px rgba(16,185,129,.20)',
+          position: 'relative', overflow: 'hidden',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <div style={{ position:'absolute', top:-15, right:-15, width:70, height:70,
+            borderRadius:'50%', background:'rgba(91,191,122,.10)', pointerEvents:'none' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
             <div style={{
-              width: 28, height: 28, borderRadius: '50%',
-              background: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: 14, flexShrink: 0,
+              width: 30, height: 30, borderRadius: '50%',
+              background: 'linear-gradient(135deg,#5BBF7A,#2D9950)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: 15, flexShrink: 0,
+              boxShadow: '0 3px 10px rgba(91,191,122,.35)',
             }}>✓</div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#047857', letterSpacing: '-0.3px' }}>
-              우리 모둠의 탐구 문제
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#2D9950', letterSpacing: '-0.2px' }}>
+              ⭐ 우리 모둠의 탐구 문제
             </div>
+            <div style={{ marginLeft:'auto', fontSize:11, fontWeight:800,
+              background:'#fff', color:'#2D9950', padding:'3px 10px',
+              borderRadius:999, border:'1.5px solid #90DDB0' }}>만장일치 선정!</div>
           </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#1E293B', lineHeight: 1.4 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#3D2B1F', lineHeight: 1.45 }}>
             {selectedPost.topic}
           </div>
-          <div style={{ fontSize: 13, color: '#065F46', marginTop: 6, lineHeight: 1.6, fontWeight: 500 }}>
+          <div style={{ fontSize: 13, color: '#2D9950', marginTop: 8, lineHeight: 1.65, fontWeight: 700 }}>
             📌 {selectedPost.question}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 12 }}>
             {selectedPost.items?.map((item, i) => (
               <Tag key={i} color={CHART_COLORS[i % CHART_COLORS.length]}>{item}</Tag>
             ))}
@@ -1218,7 +1275,7 @@ function Step1({ user, code, posts, selectedPost, onToast }) {
       {/* ── 탐구 문제 작성 폼 ── */}
       <Sec>
         <Lbl mt={0}>📌 조사 주제
-          <span style={{ fontSize: 12, fontWeight: 400, color: '#8e8e8e', marginLeft: 6 }}>
+          <span style={{ fontSize: 12, fontWeight: 400, color: '#8C7B6E', marginLeft: 6 }}>
             공유 버튼을 눌러야 친구들에게 보여요
           </span>
         </Lbl>
@@ -1230,7 +1287,7 @@ function Step1({ user, code, posts, selectedPost, onToast }) {
           placeholder="예: 가장 자주 먹는 간식은 무엇인가요?" />
 
         <Lbl>📋 조사 항목
-          <span style={{ fontSize: 12, fontWeight: 400, color: '#8e8e8e', marginLeft: 6 }}>
+          <span style={{ fontSize: 12, fontWeight: 400, color: '#8C7B6E', marginLeft: 6 }}>
             Enter로 추가 · 최대 8개
           </span>
         </Lbl>
@@ -1345,10 +1402,10 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '10px 16px', fontSize: 14, fontWeight: tab === t.id ? 700 : 400,
-            color: tab === t.id ? '#262626' : '#8e8e8e',
-            borderBottom: `2px solid ${tab === t.id ? '#262626' : 'transparent'}`,
+            color: tab === t.id ? '#3D2B1F' : '#8C7B6E',
+            borderBottom: `2px solid ${tab === t.id ? '#3D2B1F' : 'transparent'}`,
             marginBottom: -1, background: 'none', border: 'none',
-            borderBottom: `2px solid ${tab === t.id ? '#262626' : 'transparent'}`,
+            borderBottom: `2px solid ${tab === t.id ? '#3D2B1F' : 'transparent'}`,
             cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
           }}>{t.label}</button>
         ))}
@@ -1362,7 +1419,7 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
                 ✅ 선정된 탐구 문제
               </div>
               <div style={{ fontSize: 15, fontWeight: 700 }}>{selectedPost.topic}</div>
-              <div style={{ fontSize: 13, color: '#8e8e8e', marginTop: 5, marginBottom: 11, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 13, color: '#8C7B6E', marginTop: 5, marginBottom: 11, lineHeight: 1.6 }}>
                 📌 {selectedPost.question}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -1382,30 +1439,30 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
           {!surveyActive ? (
             <Sec>
               <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>📨 설문조사 시작하기</div>
-              <div style={{ fontSize: 14, color: '#8e8e8e', marginBottom: 14, lineHeight: 1.75 }}>
+              <div style={{ fontSize: 14, color: '#8C7B6E', marginBottom: 14, lineHeight: 1.75 }}>
                 선정된 탐구 문제로 설문조사를 만들어요.<br />
-                모둠 코드 <b style={{ color: '#0095f6', letterSpacing: 1 }}>{code}</b>를 친구들에게 알려 주세요!
+                모둠 코드 <b style={{ color: '#4EACD9', letterSpacing: 1 }}>{code}</b>를 친구들에게 알려 주세요!
               </div>
               <Btn onClick={doCreateSurvey} color="blue" disabled={!selectedPost}>
                 📨 설문조사 생성하기
               </Btn>
             </Sec>
           ) : (
-            <Sec style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+            <Sec style={{ background: '#EBF7FF', border: '1px solid #BFDBFE' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ fontSize: 28 }}>📋</div>
                 <div>
-                  <div style={{ fontSize: 14, color: '#0095f6', fontWeight: 700 }}>설문조사 진행 중!</div>
+                  <div style={{ fontSize: 14, color: '#4EACD9', fontWeight: 700 }}>설문조사 진행 중!</div>
                   <div style={{ fontSize: 13, marginTop: 3 }}>
                     코드 <b style={{ color: '#F97316', fontSize: 16, letterSpacing: 2 }}>{code}</b>를 친구들에게 알려 주세요
                   </div>
                 </div>
               </div>
               {surveyResponses.length > 0 && (
-                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: '#0095f6' }}>
+                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: '#4EACD9' }}>
                   {surveyResponses.length}명 참여 완료 →{' '}
                   <button onClick={() => setTab('results')} style={{
-                    color: '#0095f6', textDecoration: 'underline', background: 'none',
+                    color: '#4EACD9', textDecoration: 'underline', background: 'none',
                     border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
                   }}>응답 확인하기</button>
                 </div>
@@ -1419,7 +1476,7 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
         <div>
           {items.length === 0 ? (
             <Sec>
-              <div style={{ textAlign: 'center', padding: 24, color: '#8e8e8e', fontSize: 14 }}>
+              <div style={{ textAlign: 'center', padding: 24, color: '#8C7B6E', fontSize: 14 }}>
                 💡 Step 1에서 탐구 문제를 선정하면 여기에 항목이 나타나요
               </div>
             </Sec>
@@ -1431,8 +1488,8 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
               </div>
 
               {surveyActive && surveyResponses.length > 0 && (
-                <Sec style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', marginBottom: 12 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0095f6', marginBottom: 10 }}>
+                <Sec style={{ background: '#EBF7FF', border: '1px solid #BFDBFE', marginBottom: 12 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#4EACD9', marginBottom: 10 }}>
                     📊 실시간 응답 ({surveyResponses.length}명)
                   </div>
                   {items.map(item => {
@@ -1442,10 +1499,10 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
                       <div key={item} style={{ marginBottom: 10 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
                           <span>{item}</span>
-                          <span style={{ fontWeight: 700, color: '#0095f6' }}>{cnt}명 ({pct}%)</span>
+                          <span style={{ fontWeight: 700, color: '#4EACD9' }}>{cnt}명 ({pct}%)</span>
                         </div>
-                        <div style={{ height: 10, borderRadius: 999, background: '#BFDBFE', overflow: 'hidden' }}>
-                          <div style={{ width: `${pct}%`, height: '100%', background: '#0095f6',
+                        <div style={{ height: 10, borderRadius: 999, background: '#93D1F5', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: '#4EACD9',
                             borderRadius: 999, transition: 'width .5s' }} />
                         </div>
                       </div>
@@ -1473,20 +1530,20 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
                           border: '1.5px solid #dbdbdb', fontSize: 17, fontWeight: 700,
                           textAlign: 'center', fontFamily: 'inherit', outline: 'none',
                           background: '#fafafa' }} />
-                      <span style={{ fontSize: 14, color: '#8e8e8e', width: 22 }}>명</span>
+                      <span style={{ fontSize: 14, color: '#8C7B6E', width: 22 }}>명</span>
                     </div>
                   ))}
                 </div>
 
                 {total > 0 && (
-                  <div style={{ marginTop: 14, padding: '11px 14px', background: '#ECFDF5',
+                  <div style={{ marginTop: 14, padding: '11px 14px', background: '#EDFAF2',
                     borderRadius: 10, border: '1px solid #A7F3D0' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid #A7F3D0' }}>
                           {['항목', '명수', '백분율(%)'].map(h => (
                             <th key={h} style={{ padding: '6px 8px', textAlign: h === '항목' ? 'left' : 'right',
-                              color: '#047857', fontWeight: 700 }}>{h}</th>
+                              color: '#2D9950', fontWeight: 700 }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -1498,14 +1555,14 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
                             <tr key={i} style={{ borderBottom: '1px solid #D1FAE5' }}>
                               <td style={{ padding: '6px 8px' }}>{item}</td>
                               <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 700 }}>{v}</td>
-                              <td style={{ padding: '6px 8px', textAlign: 'right', color: '#10B981', fontWeight: 700 }}>{pct}%</td>
+                              <td style={{ padding: '6px 8px', textAlign: 'right', color: '#5BBF7A', fontWeight: 700 }}>{pct}%</td>
                             </tr>
                           )
                         })}
                         <tr>
                           <td style={{ padding: '7px 8px', fontWeight: 700 }}>합계</td>
                           <td style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700 }}>{total}</td>
-                          <td style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700, color: '#10B981' }}>100%</td>
+                          <td style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700, color: '#5BBF7A' }}>100%</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1520,8 +1577,8 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
       {tab === 'join' && (
         <Sec>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 9 }}>🙋 다른 모둠 설문 참여하기</div>
-          <div style={{ fontSize: 14, color: '#8e8e8e', marginBottom: 14, lineHeight: 1.75 }}>
-            다른 모둠에서 공유한 <b style={{ color: '#262626' }}>6자리 코드</b>를 입력하면 해당 설문에 참여할 수 있어요.
+          <div style={{ fontSize: 14, color: '#8C7B6E', marginBottom: 14, lineHeight: 1.75 }}>
+            다른 모둠에서 공유한 <b style={{ color: '#3D2B1F' }}>6자리 코드</b>를 입력하면 해당 설문에 참여할 수 있어요.
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input value={lookupCode} onChange={e => setLookupCode(e.target.value.toUpperCase())}
@@ -1533,7 +1590,7 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
                 textAlign: 'center', outline: 'none', background: '#fafafa' }} />
             <Btn onClick={doLookupSurvey} color="blue" style={{ padding: '12px 22px' }}>참여하기</Btn>
           </div>
-          <div style={{ fontSize: 13, color: '#8e8e8e', marginTop: 10 }}>
+          <div style={{ fontSize: 13, color: '#8C7B6E', marginTop: 10 }}>
             💡 설문 코드는 다른 모둠의 참여 코드와 동일해요
           </div>
         </Sec>
@@ -1563,8 +1620,8 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
   return (
     <div>
       {total > 0 && (
-        <Sec style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '12px 16px', marginBottom: 12 }}>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#047857', marginBottom: 9 }}>
+        <Sec style={{ background: '#EDFAF2', border: '1px solid #A7F3D0', padding: '12px 16px', marginBottom: 12 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#2D9950', marginBottom: 9 }}>
             📊 2단계 항목별 조사 결과
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -1572,7 +1629,7 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
               <tr style={{ borderBottom: '1px solid #A7F3D0' }}>
                 {['항목', '명수', '백분율(%)'].map(h => (
                   <th key={h} style={{ padding: '5px 8px', textAlign: h === '항목' ? 'left' : 'right',
-                    color: '#047857', fontWeight: 700 }}>{h}</th>
+                    color: '#2D9950', fontWeight: 700 }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -1588,7 +1645,7 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
                       {item}
                     </td>
                     <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 700 }}>{v}</td>
-                    <td style={{ padding: '5px 8px', textAlign: 'right', color: '#10B981', fontWeight: 700 }}>{pct}%</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', color: '#5BBF7A', fontWeight: 700 }}>{pct}%</td>
                   </tr>
                 )
               })}
@@ -1599,13 +1656,13 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
 
       {/* Mode toggle */}
       <div style={{ display: 'flex', gap: 7, marginBottom: 14 }}>
-        {[['auto','📊 자동 그래프','#10B981'], ['draw','✏️ 직접 그리기','#8B5CF6']].map(([mode, label, clr]) => (
+        {[['auto','📊 자동 그래프','#5BBF7A'], ['draw','✏️ 직접 그리기','#C97DE8']].map(([mode, label, clr]) => (
           <button key={mode} type="button" onClick={() => onDrawMode(mode)} style={{
             padding: '9px 20px', minHeight: 42, borderRadius: 999, fontSize: 14, fontWeight: 700,
             cursor: 'pointer', border: '1.5px solid', fontFamily: 'inherit', transition: 'all .15s',
             background: drawMode === mode ? clr : '#ffffff',
-            color: drawMode === mode ? '#fff' : '#8e8e8e',
-            borderColor: drawMode === mode ? clr : '#dbdbdb',
+            color: drawMode === mode ? '#fff' : '#8C7B6E',
+            borderColor: drawMode === mode ? clr : '#E6D8C8',
           }}>{label}</button>
         ))}
       </div>
@@ -1618,9 +1675,9 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
               <button type="button" key={c.type} onClick={() => onChartConfig({ type: c.type })} style={{
                 padding: '8px 18px', minHeight: 40, borderRadius: 999, fontSize: 14, fontWeight: 700,
                 cursor: 'pointer', border: '1.5px solid', fontFamily: 'inherit', transition: 'all .15s',
-                background: chartConfig.type === c.type ? '#10B981' : '#fff',
-                color: chartConfig.type === c.type ? '#fff' : '#8e8e8e',
-                borderColor: chartConfig.type === c.type ? '#10B981' : '#dbdbdb',
+                background: chartConfig.type === c.type ? '#5BBF7A' : '#fff',
+                color: chartConfig.type === c.type ? '#fff' : '#8C7B6E',
+                borderColor: chartConfig.type === c.type ? '#5BBF7A' : '#E6D8C8',
               }}>{c.emoji} {c.label}</button>
             ))}
           </div>
@@ -1628,7 +1685,7 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
           <Inp value={chartConfig.title} onChange={v => onChartConfig({ title: v })}
             placeholder="예: 우리 반 좋아하는 간식 조사 결과" style={{ marginBottom: 14 }} />
           {chartConfig.title && (
-            <div style={{ fontWeight: 700, fontSize: 16, textAlign: 'center', marginBottom: 12, color: '#262626' }}>
+            <div style={{ fontWeight: 700, fontSize: 16, textAlign: 'center', marginBottom: 12, color: '#3D2B1F' }}>
               {chartConfig.title}
             </div>
           )}
@@ -1638,7 +1695,7 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
         <Sec>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
             ✏️ 모둠 공동 그리기
-            <span style={{ fontSize: 13, fontWeight: 400, color: '#8e8e8e', marginLeft: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 400, color: '#8C7B6E', marginLeft: 8 }}>
               모눈종이 위에 모두가 함께 그릴 수 있어요
             </span>
           </div>
@@ -1694,13 +1751,13 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
           {chartConfig.title || '완성된 그래프'}
         </div>
         {hasData ? <ChartComp data={chartData} /> : (
-          <div style={{ textAlign: 'center', padding: '14px 0', color: '#8e8e8e', fontSize: 14 }}>
+          <div style={{ textAlign: 'center', padding: '14px 0', color: '#8C7B6E', fontSize: 14 }}>
             2단계에서 데이터를 입력하면 그래프가 나타나요
           </div>
         )}
         <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #efefef',
           display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 13, color: '#8e8e8e' }}>✏️ Step 3 직접 그린 그래프</span>
+          <span style={{ fontSize: 13, color: '#8C7B6E' }}>✏️ Step 3 직접 그린 그래프</span>
           <Btn onClick={doLoadCanvas} color="gray" sm disabled={loadingImg}>
             {loadingImg ? '불러오는 중...' : '📂 불러오기'}
           </Btn>
@@ -1731,7 +1788,7 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
                 animation: 'fadeUp .3s ease' }}>{n.text}</div>
             ))}
           </div>
-          : <div style={{ fontSize: 14, color: '#8e8e8e', textAlign: 'center', padding: 16 }}>
+          : <div style={{ fontSize: 14, color: '#8C7B6E', textAlign: 'center', padding: 16 }}>
             그래프를 보고 알 수 있는 것을 적어 보세요
           </div>
         }
@@ -1750,14 +1807,14 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
             marginBottom: 14, cursor: 'pointer' }}>
             <input type="checkbox" checked={!!checks[i]}
               onChange={e => onStep4State({ checks: { ...checks, [i]: e.target.checked } })}
-              style={{ marginTop: 3, accentColor: '#10B981', width: 18, height: 18, flexShrink: 0 }} />
-            <span style={{ fontSize: 14, color: checks[i] ? '#047857' : '#8e8e8e',
+              style={{ marginTop: 3, accentColor: '#5BBF7A', width: 18, height: 18, flexShrink: 0 }} />
+            <span style={{ fontSize: 14, color: checks[i] ? '#2D9950' : '#8C7B6E',
               fontWeight: checks[i] ? 700 : 400, lineHeight: 1.6, transition: 'all .15s' }}>
               {item}
             </span>
           </label>
         ))}
-        <div style={{ fontSize: 13, color: '#8e8e8e', marginTop: 4 }}>
+        <div style={{ fontSize: 13, color: '#8C7B6E', marginTop: 4 }}>
           {Object.values(checks).filter(Boolean).length}/{CHECKLIST.length}개 완료
         </div>
       </Sec>
@@ -2000,14 +2057,17 @@ export default function ActivityPage() {
   }
 
   if (loading || !user) return (
-    <div style={{ width: 1024, height: 768, display: 'flex', alignItems: 'center',
-      justifyContent: 'center', flexDirection: 'column', gap: 14, background: '#fafafa' }}>
-      <div style={{ width: 56, height: 56, borderRadius: '50%', padding: 3, background: IG_GRAD }}>
-        <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>📝</div>
+    <div className="textbook-bg" style={{ width: 1024, height: 768, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', flexDirection: 'column', gap: 18 }}>
+      <div style={{ position:'relative' }}>
+        <div className="bounce" style={{ fontSize: 60 }}>📚</div>
+        <div style={{ position:'absolute', top:-4, right:-8, width:20, height:20, borderRadius:'50%',
+          background:'#FF8C42', animation:'pulse 1s infinite', boxShadow:'0 2px 8px rgba(255,140,66,.4)' }} />
       </div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: '#262626' }}>연결 중...</div>
-      <div style={{ fontSize: 12, color: '#8e8e8e' }}>잠시만 기다려 주세요</div>
+      <div style={{ fontSize: 17, fontWeight: 800, color: '#3D2B1F', letterSpacing:'-0.3px' }}>연결 중...</div>
+      <div style={{ fontSize: 13, color: '#8C7B6E', fontWeight: 700,
+        background:'#fff', padding:'8px 20px', borderRadius:999,
+        border:'2.5px solid #E6D8C8', boxShadow:'0 3px 10px rgba(140,90,50,.08)' }}>잠시만 기다려 주세요 😊</div>
     </div>
   )
 
@@ -2027,157 +2087,178 @@ export default function ActivityPage() {
 
   const hasSidepanel = activeStep === 1 || activeStep === 4
 
-  // Heights: 54 + 68 + 24 + body = 768; body = 622
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: 1024, height: 768,
-      overflow: 'hidden', background: '#fafafa' }}>
+    <div className="textbook-bg" style={{ display: 'flex', flexDirection: 'column', width: 1024, height: 768,
+      overflow: 'hidden' }}>
 
-      {/* ── Top Navigation Bar (고정 해제 — flexShrink:0, 그림자 없음) ── */}
+      {/* ── Top Navigation Bar ── */}
       <header style={{
         background: '#fff',
-        height: 54, display: 'flex', alignItems: 'center',
-        padding: '0 16px', gap: 10, flexShrink: 0,
-        borderBottom: '1px solid #E2E8F2',
+        height: 62, display: 'flex', alignItems: 'center',
+        padding: '0 18px', gap: 12, flexShrink: 0,
+        borderBottom: '3px solid #E6D8C8',
+        boxShadow: '0 3px 12px rgba(140,90,50,.07)',
       }}>
-
-        {/* Left: 📝 icon + group name (bold) + user name */}
+        {/* Left */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <div style={{ width: 34, height: 34, borderRadius: '50%', padding: 2.5, background: IG_GRAD, flexShrink: 0 }}>
+          <div style={{ width: 38, height: 38, borderRadius: '50%', padding: 2.5,
+            background: EDU_GRAD, flexShrink: 0,
+            boxShadow: '0 3px 10px rgba(255,140,66,.30)' }}>
             <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📝</div>
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📚</div>
           </div>
-          <div style={{ lineHeight: 1.25 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#1E293B', whiteSpace: 'nowrap', letterSpacing: '-0.3px' }}>
+          <div style={{ lineHeight: 1.3 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#3D2B1F', whiteSpace: 'nowrap' }}>
               {user.groupName}
             </div>
-            <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 500 }}>{user.name}</div>
+            <div style={{ fontSize: 11, color: '#8C7B6E', fontWeight: 700 }}>✏️ {user.name}</div>
           </div>
         </div>
 
-        {/* Center: app title */}
+        {/* Center */}
         <div style={{ flex: 1, textAlign: 'center' }}>
           <span style={{
-            fontSize: 18, fontWeight: 800, letterSpacing: -0.5,
-            background: IG_GRAD,
+            fontSize: 17, fontWeight: 800, letterSpacing: -0.5,
+            background: EDU_GRAD,
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>메모 보드</span>
+          }}>📊 자료를 수집하여 그래프로 나타내고 해석해요!</span>
         </div>
 
-        {/* Right: online + 코드 + 복사 + 나가기 */}
+        {/* Right */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
           <OnlineUsers users={onlineUsers} />
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            padding: '5px 10px 5px 12px', borderRadius: 999,
-            background: '#F1F5F9', border: '1.5px solid #E2E8F2',
+            padding: '5px 10px 5px 13px', borderRadius: 999,
+            background: '#FFF3E8', border: '2.5px solid #FFCB96',
+            boxShadow: '0 2px 8px rgba(255,140,66,.14)',
           }}>
-            <span style={{ fontSize: 11, color: '#64748B', fontWeight: 600 }}>🔑</span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#1E293B', letterSpacing: 2 }}>{user.code}</span>
+            <span style={{ fontSize: 11, color: '#D4601A', fontWeight: 800 }}>🔑</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#3D2B1F', letterSpacing: 2.5 }}>{user.code}</span>
             <button
               onClick={() => navigator.clipboard.writeText(user.code).then(() => setToast('✅ 코드가 복사되었어요!'))}
               style={{
-                marginLeft: 2, padding: '3px 8px', borderRadius: 6,
-                background: '#3B82F6', color: '#fff', border: 'none',
-                fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                marginLeft: 2, padding: '4px 10px', borderRadius: 10,
+                background: '#FF8C42', color: '#fff', border: 'none',
+                fontSize: 11, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 2px 8px rgba(255,140,66,.38)',
+                transition: 'all .15s',
               }}>복사</button>
           </div>
           <button
             onClick={() => { sessionStorage.removeItem('gts_user'); router.push('/') }}
             style={{
-              padding: '6px 14px', borderRadius: 8,
-              background: '#fff', color: '#64748B',
-              border: '1.5px solid #E2E8F2', fontSize: 12, fontWeight: 700,
+              padding: '7px 16px', borderRadius: 12,
+              background: '#fff', color: '#8C7B6E',
+              border: '2.5px solid #E6D8C8', fontSize: 12, fontWeight: 800,
               cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.color = '#DC2626'; e.currentTarget.style.borderColor = '#FECACA' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#fff';    e.currentTarget.style.color = '#64748B'; e.currentTarget.style.borderColor = '#E2E8F2' }}
+            onMouseEnter={e => { e.currentTarget.style.background='#FFF0F1'; e.currentTarget.style.color='#C0364A'; e.currentTarget.style.borderColor='#FFB0B0' }}
+            onMouseLeave={e => { e.currentTarget.style.background='#fff'; e.currentTarget.style.color='#8C7B6E'; e.currentTarget.style.borderColor='#E6D8C8' }}
           >나가기 →</button>
         </div>
       </header>
 
       {/* ── Sync Strip ── */}
-      <div style={{ height: 28, flexShrink: 0, display: 'flex', alignItems: 'center',
-        padding: '0 14px', gap: 8,
+      <div style={{ height: 30, flexShrink: 0, display: 'flex', alignItems: 'center',
+        padding: '0 16px', gap: 8,
         background: hasSyncLead
-          ? iAmLeader ? '#ECFDF5' : '#EFF6FF'
-          : freeMode ? '#FFFBEB' : '#fafafa',
-        borderBottom: `1px solid ${hasSyncLead ? iAmLeader ? '#A7F3D0' : '#BFDBFE' : freeMode ? '#FCD34D' : '#efefef'}`,
+          ? iAmLeader ? '#EDFAF2' : '#EBF7FF'
+          : freeMode ? '#FFF3E8' : '#FFF9F2',
+        borderBottom: `2.5px solid ${hasSyncLead ? iAmLeader ? '#90DDB0' : '#93D1F5' : freeMode ? '#FFCB96' : '#E6D8C8'}`,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1,
-          fontSize: 12, fontWeight: 700,
-          color: hasSyncLead ? iAmLeader ? '#047857' : '#0095f6' : freeMode ? '#B45309' : '#8e8e8e' }}>
+          fontSize: 11, fontWeight: 800,
+          color: hasSyncLead ? iAmLeader ? '#2D9950' : '#2785B5' : freeMode ? '#D4601A' : '#8C7B6E' }}>
           {hasSyncLead && (
             <span style={{ width: 7, height: 7, borderRadius: '50%',
-              background: iAmLeader ? '#10B981' : '#0095f6',
+              background: iAmLeader ? '#5BBF7A' : '#4EACD9',
               animation: 'pulse 1.5s infinite', display: 'inline-block', flexShrink: 0 }} />
           )}
           {hasSyncLead
-            ? iAmLeader ? '내 화면으로 모둠원이 동기화 중' : `${room.syncLeader}님 화면과 동기화 중`
+            ? iAmLeader ? '👑 내 화면으로 모둠원이 동기화 중' : `📡 ${room.syncLeader}님 화면과 동기화 중`
             : freeMode  ? '🔓 자유 탐색 모드' : '동기화 없음'
           }
         </div>
         <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
           {freeMode ? (
             <button onClick={() => { setFreeMode(false); setActiveStep(remoteStep.current) }} style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 700,
-              background: '#F59E0B', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
+              background: '#FF8C42', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
             }}>← 합류</button>
           ) : (
             <button onClick={() => setFreeMode(true)} style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 700,
-              background: '#fff', color: '#8e8e8e', border: '1px solid #dbdbdb',
+              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
+              background: '#fff', color: '#8C7B6E', border: '1.5px solid #E8DFD4',
               cursor: 'pointer', fontFamily: 'inherit',
             }}>자유 탐색</button>
           )}
           {!hasSyncLead ? (
             <button onClick={takeSyncLead} style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 700,
-              background: '#10B981', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
+              background: '#5BBF7A', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
             }}>🔗 화면 동기화</button>
           ) : iAmLeader ? (
             <button onClick={releaseSyncLead} style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 700,
-              background: '#10B981', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
+              background: '#5BBF7A', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
             }}>동기화 해제</button>
           ) : (
             <button disabled style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 700,
-              background: '#efefef', color: '#8e8e8e', border: 'none', cursor: 'not-allowed', fontFamily: 'inherit',
+              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
+              background: '#F2EAE0', color: '#8C7B6E', border: 'none', cursor: 'not-allowed', fontFamily: 'inherit',
             }}>동기화 중</button>
           )}
         </div>
       </div>
 
       {/* ── Step Nav ── */}
-      <div style={{ height: 70, flexShrink: 0, background: '#fff',
-        borderBottom: '1px solid #dbdbdb',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, padding: '0 16px' }}>
-        {STEPS.map(s => {
+      <div style={{ height: 74, flexShrink: 0, background: '#fff',
+        borderBottom: '3px solid #E6D8C8',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '0 16px',
+        boxShadow: '0 3px 10px rgba(140,90,50,.06)',
+      }}>
+        {STEPS.map((s, idx) => {
           const isActive = activeStep === s.n
           const isDone   = done[s.n] && !isActive
+          const stepColors = ['#FF8C42','#4EACD9','#5BBF7A','#C97DE8']
+          const sc = stepColors[idx]
           return (
             <button key={s.n} onClick={() => changeStep(s.n)} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-              background: 'none', border: 'none', cursor: 'pointer', padding: '2px 8px',
-            }}>
+              background: isActive ? s.bg : 'none',
+              border: isActive ? `2px solid ${s.bd}` : '2px solid transparent',
+              borderRadius: 16, cursor: 'pointer',
+              padding: '5px 12px 5px 10px',
+              transition: 'all .2s cubic-bezier(.34,1.3,.64,1)',
+              boxShadow: isActive ? `0 4px 14px ${sc}25` : 'none',
+            }}
+            onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background='#F0E8DC'; e.currentTarget.style.transform='translateY(-2px)' }}}
+            onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background='none'; e.currentTarget.style.transform='none' }}}>
               <div style={{
-                width: 44, height: 44, borderRadius: '50%', padding: 2.5,
-                background: isActive ? IG_GRAD : isDone ? 'linear-gradient(135deg,#A7F3D0,#10B981)' : '#efefef',
-                transition: 'background .2s',
+                width: 38, height: 38, borderRadius: '50%', padding: 2.5,
+                background: isActive ? `linear-gradient(135deg, ${sc}, ${sc}bb)` :
+                             isDone  ? 'linear-gradient(135deg,#90DDB0,#5BBF7A)' : '#EDE4D8',
+                transition: 'all .2s', boxShadow: isActive ? `0 5px 14px ${sc}40` : isDone ? '0 3px 8px rgba(91,191,122,.30)' : 'none',
               }}>
                 <div style={{ width: '100%', height: '100%', borderRadius: '50%',
-                  padding: 2, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: '100%', height: '100%', borderRadius: '50%',
-                    background: isActive ? s.bg : isDone ? '#ECFDF5' : '#f5f5f5',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>
-                    {isDone ? '✓' : s.emoji}
-                  </div>
+                  background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: isActive ? 18 : 15, transition:'font-size .2s' }}>{isDone ? '✓' : s.emoji}</span>
                 </div>
               </div>
-              <span style={{ fontSize: 11, fontWeight: isActive ? 700 : 400,
-                color: isActive ? '#262626' : '#8e8e8e', whiteSpace: 'nowrap' }}>
-                {s.n} {s.short}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <span style={{
+                  width: 16, height: 16, borderRadius: '50%',
+                  background: isActive ? sc : isDone ? '#5BBF7A' : '#C4B4A8',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 9, color: '#fff', fontWeight: 800, flexShrink: 0,
+                  boxShadow: isActive ? `0 2px 6px ${sc}50` : 'none',
+                }}>{s.n}</span>
+                <span style={{ fontSize: 10, fontWeight: isActive ? 800 : 600,
+                  color: isActive ? sc : '#8C7B6E', whiteSpace: 'nowrap' }}>
+                  {s.short}
+                </span>
+              </div>
             </button>
           )
         })}
@@ -2186,24 +2267,44 @@ export default function ActivityPage() {
       {/* ── Body ── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
-        {/* ② 캔버스 배경 — 따뜻한 크림 톤 */}
+        {/* 메인 영역 — 크림 파스텔 배경 */}
         <main ref={mainRef} style={{
-          flex: 1, overflowY: 'auto', padding: 14, minWidth: 0,
-          background: '#FDFCF7',
+          flex: 1, overflowY: 'auto', padding: 16, minWidth: 0,
+          background: '#FFF9F2',
           backgroundImage: `
-            radial-gradient(circle at 15% 25%, rgba(251,191,36,.07) 0%, transparent 45%),
-            radial-gradient(circle at 85% 75%, rgba(16,185,129,.06) 0%, transparent 45%),
-            radial-gradient(circle at 50% 50%, rgba(59,130,246,.04) 0%, transparent 60%)
+            radial-gradient(circle at 10% 15%, rgba(255,140,66,.07) 0%, transparent 40%),
+            radial-gradient(circle at 88% 12%, rgba(78,172,217,.06) 0%, transparent 40%),
+            radial-gradient(circle at 52% 82%, rgba(91,191,122,.05) 0%, transparent 40%),
+            radial-gradient(circle at 20% 70%, rgba(201,125,232,.04) 0%, transparent 35%)
           `,
         }}>
-          {/* Step header badge */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14,
-            padding: '9px 16px', borderRadius: 10,
-            background: step.bg, border: `1px solid ${step.bd}` }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: step.c,
+          {/* Step 헤더 뱃지 — 교과서 스타일 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16,
+            padding: '12px 20px', borderRadius: 20,
+            background: `linear-gradient(135deg, ${step.bg}, #fff)`,
+            border: `2.5px solid ${step.bd}`,
+            boxShadow: `0 4px 16px ${step.c}18`,
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ position:'absolute', right:-10, top:-10, width:60, height:60,
+              borderRadius:'50%', background:`${step.c}12`, pointerEvents:'none' }} />
+            <div style={{ width: 36, height: 36, borderRadius: '50%',
+              background: `linear-gradient(135deg, ${step.c}, ${step.dk})`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{step.n}</div>
-            <span style={{ fontWeight: 700, fontSize: 16, color: step.dk }}>{step.emoji} {step.label}</span>
+              color: '#fff', fontSize: 15, fontWeight: 800, flexShrink: 0,
+              boxShadow: `0 4px 10px ${step.c}45` }}>{step.n}</div>
+            <div style={{ lineHeight: 1.3 }}>
+              <div style={{ fontWeight: 800, fontSize: 16, color: step.dk, letterSpacing: '-0.3px' }}>{step.emoji} {step.label}</div>
+              <div style={{ fontSize: 11, color: step.c, fontWeight: 700, marginTop: 1, opacity:.75 }}>Step {step.n} of 4</div>
+            </div>
+            <div style={{ marginLeft: 'auto', display:'flex', gap:4 }}>
+              {[1,2,3,4].map(n => (
+                <div key={n} style={{ width: n <= activeStep ? 20 : 8, height:8, borderRadius:999,
+                  background: n <= activeStep ? step.c : '#E6D8C8',
+                  transition:'all .3s', boxShadow: n <= activeStep ? `0 2px 6px ${step.c}40` : 'none',
+                }} />
+              ))}
+            </div>
           </div>
 
           {activeStep === 1 && (
@@ -2232,9 +2333,9 @@ export default function ActivityPage() {
         {/* Side panel — Step 1 & 4 only */}
         {hasSidepanel && (
           <aside style={{
-            width: 240, borderLeft: '1px solid #dbdbdb',
+            width: 244, borderLeft: '2.5px solid #E6D8C8',
             display: 'flex', flexDirection: 'column',
-            background: '#fff', flexShrink: 0, overflow: 'hidden',
+            background: '#FFF9F2', flexShrink: 0, overflow: 'hidden',
           }}>
             {activeStep === 1 ? (
               <FeedPanel posts={step1Posts} myName={user.name} code={user.code}

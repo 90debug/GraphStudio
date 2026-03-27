@@ -8,6 +8,9 @@ function randCode() {
   ).join('')
 }
 
+// 귀여운 캐릭터 이모지 배열
+const MASCOTS = ['🌱', '🦁', '💧', '🌸', '🌈', '⭐']
+
 export default function JoinPage() {
   const router = useRouter()
   const [mode,      setMode]      = useState('new')
@@ -16,12 +19,15 @@ export default function JoinPage() {
   const [joinCode,  setJoinCode]  = useState('')
   const [error,     setError]     = useState('')
   const [lastGroup, setLastGroup] = useState(null)
+  const [mascot,    setMascot]    = useState(0)
 
   useEffect(() => {
     try {
       const s = localStorage.getItem('gts_last')
       if (s) setLastGroup(JSON.parse(s))
     } catch {}
+    const t = setInterval(() => setMascot(m => (m + 1) % MASCOTS.length), 2500)
+    return () => clearInterval(t)
   }, [])
 
   function save(user) {
@@ -32,319 +38,274 @@ export default function JoinPage() {
 
   function handleNew(e) {
     e.preventDefault()
-    if (!name.trim()) return setError('이름을 입력해 주세요')
-    if (!groupName.trim()) return setError('모둠 이름을 입력해 주세요')
+    if (!name.trim()) return setError('이름을 입력해 주세요 😊')
+    if (!groupName.trim()) return setError('모둠 이름을 입력해 주세요 😊')
     save({ name: name.trim(), groupName: groupName.trim(), code: randCode(), role: 'leader' })
   }
 
   function handleJoin(e) {
     e.preventDefault()
-    if (!name.trim()) return setError('이름을 입력해 주세요')
-    if (!joinCode.trim()) return setError('참여 코드를 입력해 주세요')
+    if (!name.trim()) return setError('이름을 입력해 주세요 😊')
+    if (!joinCode.trim()) return setError('참여 코드를 입력해 주세요 😊')
     const code = joinCode.toUpperCase().trim()
     save({ name: name.trim(), groupName: code, code, role: 'member' })
   }
 
-  const C = {
-    pageBg:        '#EEF2F8',
-    cardBg:        '#FFFFFF',
-    border:        '#E2E8F2',
-    primary:       '#3B82F6',
-    primaryDark:   '#2563EB',
-    primaryLight:  '#EFF6FF',
-    text:          '#1E293B',
-    textMuted:     '#64748B',
-    inputBg:       '#F8FAFC',
-    inputBorder:   '#CBD5E1',
-    errorText:     '#DC2626',
-    errorBg:       '#FEF2F2',
-    errorBorder:   '#FECACA',
-  }
-
-  const inputStyle = {
+  const inputBase = {
     width: '100%',
     padding: '13px 16px',
-    borderRadius: 10,
-    border: `1.5px solid ${C.inputBorder}`,
+    borderRadius: 14,
+    border: '2.5px solid #E8DFD4',
     fontSize: 15,
-    color: C.text,
-    background: C.inputBg,
+    color: '#3D2B1F',
+    background: '#FFFCF8',
     outline: 'none',
     marginTop: 8,
     transition: 'border-color .15s, box-shadow .15s',
     boxSizing: 'border-box',
+    fontFamily: 'inherit',
+    fontWeight: 600,
   }
 
-  const labelStyle = {
+  const labelBase = {
     fontSize: 13,
-    fontWeight: 700,
-    color: C.textMuted,
+    fontWeight: 800,
+    color: '#8C7B6E',
     display: 'block',
     letterSpacing: '0.3px',
   }
 
-  const btnStyle = {
-    width: '100%',
-    padding: '15px',
-    borderRadius: 12,
-    background: `linear-gradient(135deg, ${C.primary}, ${C.primaryDark})`,
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: 700,
-    border: 'none',
-    marginTop: 4,
-    cursor: 'pointer',
-    letterSpacing: '-0.2px',
-    transition: 'opacity .15s, transform .1s',
-    boxShadow: '0 4px 12px rgba(59,130,246,.35)',
-  }
-
   return (
-    <div style={{
-      width: 1024,
-      height: 768,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: C.pageBg,
-      position: 'relative',
-      overflow: 'hidden',
+    <div className="wave-bg" style={{
+      width: 1024, height: 768,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#FFF8F0',
+      position: 'relative', overflow: 'hidden',
     }}>
-      {/* ① 연한 파스텔 장식 배경 */}
-      <div style={{
-        position: 'absolute', top: -60, left: '35%',
-        width: 340, height: 260, borderRadius: '50%',
-        background: 'linear-gradient(135deg, rgba(59,130,246,.09), rgba(139,92,246,.07))',
-        filter: 'blur(40px)', pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute', bottom: -40, right: '25%',
-        width: 280, height: 200, borderRadius: '50%',
-        background: 'linear-gradient(135deg, rgba(16,185,129,.07), rgba(59,130,246,.07))',
-        filter: 'blur(36px)', pointerEvents: 'none',
-      }} />
 
-      <div style={{ width: '100%', maxWidth: 400, padding: '0 16px' }}>
+      {/* ── 배경 장식 도형들 ── */}
+      <div style={{ position:'absolute', top:40, left:60, width:90, height:90, borderRadius:'50%',
+        background:'rgba(255,140,66,.13)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', top:120, right:80, width:60, height:60, borderRadius:'50%',
+        background:'rgba(78,172,217,.14)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', bottom:80, left:100, width:70, height:70, borderRadius:'50%',
+        background:'rgba(91,191,122,.12)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', bottom:60, right:120, width:80, height:80, borderRadius:'50%',
+        background:'rgba(201,125,232,.11)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', top:200, left:180, fontSize:28, opacity:.18, pointerEvents:'none' }}>★</div>
+      <div style={{ position:'absolute', top:100, right:240, fontSize:20, opacity:.14, pointerEvents:'none' }}>✦</div>
+      <div style={{ position:'absolute', bottom:160, left:300, fontSize:22, opacity:.12, pointerEvents:'none' }}>◆</div>
+      <div style={{ position:'absolute', bottom:120, right:200, fontSize:18, opacity:.16, pointerEvents:'none' }}>●</div>
 
-        {/* ② 헤더 – 중앙 정렬, 시각적 위계 */}
-        <div style={{ textAlign: 'center', marginBottom: 22 }}>
-          <div style={{
-            width: 66, height: 66, borderRadius: '50%', margin: '0 auto 14px',
-            padding: 3,
-            background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
-          }}>
-            <div style={{
-              width: '100%', height: '100%', borderRadius: '50%',
-              background: '#fff', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', fontSize: 28,
-            }}>📝</div>
+      {/* ── 왼쪽: 타이틀 영역 ── */}
+      <div style={{ width: 420, padding: '0 40px', flexShrink: 0 }}>
+        {/* 마스코트 + 말풍선 */}
+        <div style={{ marginBottom: 24, display:'flex', alignItems:'flex-end', gap:10 }}>
+          <div style={{ position:'relative' }}>
+            <div className="speech-bubble" style={{ marginBottom: 10, fontSize:13, fontWeight:700,
+              background:'#fff', color:'#3D2B1F', padding:'8px 14px', borderRadius:14,
+              boxShadow:'0 3px 10px rgba(150,100,60,.10)',
+              border:'2px solid #E8DFD4',
+            }}>
+              함께 탐구해 봐요! 🔍
+              <div style={{ position:'absolute', bottom:-10, left:18,
+                width:0, height:0,
+                borderLeft:'8px solid transparent', borderRight:'8px solid transparent',
+                borderTop:'10px solid #fff',
+              }} />
+            </div>
+            <div style={{ fontSize:52, lineHeight:1, transition:'all .4s', display:'block' }}>
+              {MASCOTS[mascot]}
+            </div>
           </div>
-          <div style={{
-            fontSize: 28,
-            fontWeight: 800,
-            color: C.text,
-            letterSpacing: '-0.5px',
-            lineHeight: 1.2,
-          }}>메모 보드</div>
-          <div style={{
-            fontSize: 13,
-            color: C.textMuted,
-            marginTop: 6,
-            fontWeight: 400,
-          }}>초등 수학 5단원 · 여러 가지 그래프</div>
         </div>
 
-        {/* Quick rejoin */}
+        {/* 메인 타이틀 */}
+        <div style={{ marginBottom: 18 }}>
+          <div style={{
+            display:'inline-block', padding:'5px 16px', borderRadius:999,
+            background:'#FF8C42', color:'#fff',
+            fontSize:12, fontWeight:800, letterSpacing:1.5, marginBottom:10,
+          }}>초등 수학 5단원</div>
+          <h1 style={{
+            fontSize: 32, fontWeight: 800, color:'#3D2B1F',
+            lineHeight: 1.25, letterSpacing:'-0.5px',
+          }}>
+            자료를 수집하여<br />
+            <span style={{ color:'#4EACD9' }}>알맞은 그래프로</span><br />
+            나타내고 해석해요!
+          </h1>
+          <p style={{ fontSize:14, color:'#8C7B6E', marginTop:10, lineHeight:1.7, fontWeight:600 }}>
+            모둠원과 함께 탐구 주제를 정하고,<br />
+            자료를 모아 그래프로 표현해 보세요 📊
+          </p>
+        </div>
+
+        {/* 단계 안내 */}
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+          {[
+            { n:'①', label:'탐구 주제', color:'#FF8C42', bg:'#FFF3E8' },
+            { n:'②', label:'자료 수집', color:'#4EACD9', bg:'#EBF7FF' },
+            { n:'③', label:'그래프 그리기', color:'#5BBF7A', bg:'#EDFAF2' },
+            { n:'④', label:'해석 발표', color:'#C97DE8', bg:'#F8EFFE' },
+          ].map(s => (
+            <div key={s.n} style={{
+              display:'flex', alignItems:'center', gap:5,
+              padding:'5px 12px', borderRadius:999,
+              background:s.bg, border:`2px solid ${s.color}30`,
+            }}>
+              <span style={{ color:s.color, fontWeight:800, fontSize:13 }}>{s.n}</span>
+              <span style={{ fontSize:12, color:s.color, fontWeight:700 }}>{s.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 오른쪽: 입장 카드 ── */}
+      <div style={{ width: 400, padding: '0 16px' }}>
+
+        {/* 이전 모둠 빠른 재참여 */}
         {lastGroup && (
           <div onClick={() => {
             sessionStorage.setItem('gts_user', JSON.stringify({ ...lastGroup, role: 'member' }))
             router.push('/activity')
           }} style={{
-            marginBottom: 12, padding: '12px 16px',
-            background: C.cardBg,
-            border: `1px solid ${C.border}`,
-            borderRadius: 14,
-            display: 'flex', alignItems: 'center',
-            gap: 12, cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,.06)',
-          }}>
+            marginBottom: 14, padding:'12px 16px',
+            background:'#fff', borderRadius:16,
+            border:'2.5px solid #E8DFD4',
+            display:'flex', alignItems:'center', gap:12,
+            cursor:'pointer', boxShadow:'0 3px 10px rgba(150,100,60,.08)',
+            transition:'transform .15s, box-shadow .15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(150,100,60,.14)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 3px 10px rgba(150,100,60,.08)' }}
+          >
             <div style={{
-              width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg,#10B981,#3B82F6)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+              width:38, height:38, borderRadius:'50%', flexShrink:0,
+              background:'linear-gradient(135deg,#5BBF7A,#4EACD9)',
+              display:'flex', alignItems:'center', justifyContent:'center', fontSize:18,
             }}>🔁</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:'#3D2B1F',
+                whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                 {lastGroup.name} · {lastGroup.groupName}
               </div>
-              <div style={{ fontSize: 11, color: C.textMuted, letterSpacing: 1 }}>{lastGroup.code}</div>
+              <div style={{ fontSize:11, color:'#8C7B6E', letterSpacing:1.5, fontWeight:700 }}>{lastGroup.code}</div>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.primary, whiteSpace: 'nowrap' }}>다시 참여 →</div>
+            <div style={{
+              fontSize:12, fontWeight:800, color:'#4EACD9',
+              background:'#EBF7FF', padding:'4px 10px', borderRadius:999,
+              border:'1.5px solid #B3DFFB', whiteSpace:'nowrap',
+            }}>다시 참여 →</div>
           </div>
         )}
 
-        {/* ① 카드 컨테이너 – 흰색, 둥근 모서리, 드롭 섀도우 */}
+        {/* 메인 카드 */}
         <div style={{
-          background: C.cardBg,
-          borderRadius: 20,
-          padding: '28px 28px 24px',
-          boxShadow: '0 4px 24px rgba(30,41,59,.10), 0 1px 4px rgba(30,41,59,.06)',
-          border: `1px solid ${C.border}`,
+          background:'#fff', borderRadius:24, padding:'28px 28px 24px',
+          boxShadow:'0 6px 28px rgba(150,100,60,.12), 0 2px 6px rgba(150,100,60,.06)',
+          border:'2.5px solid #E8DFD4',
         }}>
-
-          {/* ③ 탭 UI – 세그먼트 컨트롤 스타일, 포인트 컬러 Active */}
+          {/* 탭 */}
           <div style={{
-            display: 'flex',
-            gap: 4,
-            marginBottom: 24,
-            background: '#F1F5F9',
-            borderRadius: 12,
-            padding: 4,
+            display:'flex', gap:4, marginBottom:24,
+            background:'#FFF3E8', borderRadius:14, padding:4,
           }}>
-            {[['new', '새 모둠 만들기'], ['join', '코드로 참여']].map(([m, label]) => (
-              <button
-                key={m}
-                onClick={() => { setMode(m); setError('') }}
+            {[['new','🏠 새 모둠 만들기'], ['join','🔑 코드로 참여']].map(([m, label]) => (
+              <button key={m} onClick={() => { setMode(m); setError('') }}
                 style={{
-                  flex: 1,
-                  padding: '9px 0',
-                  fontSize: 13,
-                  fontWeight: mode === m ? 700 : 500,
-                  color: mode === m ? C.primary : C.textMuted,
-                  background: mode === m ? C.cardBg : 'transparent',
-                  border: 'none',
-                  borderRadius: 9,
-                  cursor: 'pointer',
-                  transition: 'all .18s ease',
-                  boxShadow: mode === m ? '0 1px 4px rgba(30,41,59,.10)' : 'none',
-                }}
-              >{label}</button>
+                  flex:1, padding:'10px 0',
+                  fontSize:13, fontWeight: mode === m ? 800 : 600,
+                  color: mode === m ? '#fff' : '#8C7B6E',
+                  background: mode === m ? '#FF8C42' : 'transparent',
+                  border:'none', borderRadius:11,
+                  cursor:'pointer', transition:'all .18s ease',
+                  boxShadow: mode === m ? '0 3px 10px rgba(255,140,66,.35)' : 'none',
+                  fontFamily:'inherit',
+                }}>{label}</button>
             ))}
           </div>
 
-          {/* 에러 메시지 */}
+          {/* 에러 */}
           {error && (
             <div style={{
-              fontSize: 12,
-              color: C.errorText,
-              padding: '10px 14px',
-              background: C.errorBg,
-              borderRadius: 10,
-              marginBottom: 18,
-              border: `1px solid ${C.errorBorder}`,
-            }}>
-              {error}
-            </div>
+              fontSize:13, color:'#D4601A', padding:'10px 14px',
+              background:'#FFF3E8', borderRadius:12, marginBottom:16,
+              border:'2px solid #FFDAB9', fontWeight:700,
+            }}>⚠️ {error}</div>
           )}
 
           {mode === 'new' ? (
             <form onSubmit={handleNew}>
-
-              {/* ④ 이름 입력 그룹 – 라벨 위, 입력창 아래, 여유 간격 */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>이름</label>
-                <input
-                  style={inputStyle}
+              <div style={{ marginBottom:18 }}>
+                <label style={labelBase}>✏️ 이름</label>
+                <input className="edu-input" style={inputBase}
                   placeholder="예: 김민준"
                   value={name}
-                  onChange={e => { setName(e.target.value); setError('') }}
-                  onFocus={e => { e.target.style.borderColor = C.primary; e.target.style.boxShadow = `0 0 0 3px ${C.primaryLight}` }}
-                  onBlur={e =>  { e.target.style.borderColor = C.inputBorder; e.target.style.boxShadow = 'none' }}
-                />
+                  onChange={e => { setName(e.target.value); setError('') }} />
               </div>
-
-              {/* ④ 모둠 이름 입력 그룹 */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>모둠 이름</label>
-                <input
-                  style={inputStyle}
+              <div style={{ marginBottom:20 }}>
+                <label style={labelBase}>🏷️ 모둠 이름</label>
+                <input className="edu-input" style={inputBase}
                   placeholder="예: 2모둠"
                   value={groupName}
-                  onChange={e => { setGroupName(e.target.value); setError('') }}
-                  onFocus={e => { e.target.style.borderColor = C.primary; e.target.style.boxShadow = `0 0 0 3px ${C.primaryLight}` }}
-                  onBlur={e =>  { e.target.style.borderColor = C.inputBorder; e.target.style.boxShadow = 'none' }}
-                />
+                  onChange={e => { setGroupName(e.target.value); setError('') }} />
               </div>
 
-              {/* ⑤ CTA 버튼 – Full-width, 포인트 컬러 */}
-              <button
-                type="submit"
-                style={btnStyle}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.91'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '1';    e.currentTarget.style.transform = 'none' }}
-              >시작하기</button>
+              <button type="submit" className="edu-btn" style={{
+                width:'100%', padding:'15px',
+                borderRadius:16, fontSize:16, fontWeight:800, fontFamily:'inherit',
+                background:'linear-gradient(135deg, #FF8C42, #FF6520)',
+                color:'#fff', border:'none', cursor:'pointer', letterSpacing:'-0.2px',
+                boxShadow:'0 5px 16px rgba(255,140,66,.40)',
+              }}>🚀 모둠 활동 시작하기!</button>
 
-              {/* ⑥ 도움말 텍스트 – 버튼 바로 아래, 작고 옅게, 중앙 정렬 */}
-              <div style={{
-                marginTop: 12,
-                textAlign: 'center',
-                fontSize: 12,
-                color: C.textMuted,
-                lineHeight: 1.6,
-              }}>
-                💡 모둠을 만들면 <span style={{ fontWeight: 700, color: C.primary }}>참여 코드</span>가 생성돼요
+              <div style={{ marginTop:12, textAlign:'center', fontSize:12, color:'#8C7B6E', lineHeight:1.6, fontWeight:600 }}>
+                💡 모둠을 만들면 <span style={{ fontWeight:800, color:'#FF8C42' }}>참여 코드</span>가 생성돼요
               </div>
-
             </form>
           ) : (
             <form onSubmit={handleJoin}>
-
-              {/* ④ 이름 입력 그룹 */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>이름</label>
-                <input
-                  style={inputStyle}
+              <div style={{ marginBottom:18 }}>
+                <label style={labelBase}>✏️ 이름</label>
+                <input className="edu-input" style={inputBase}
                   placeholder="예: 이서연"
                   value={name}
-                  onChange={e => { setName(e.target.value); setError('') }}
-                  onFocus={e => { e.target.style.borderColor = C.primary; e.target.style.boxShadow = `0 0 0 3px ${C.primaryLight}` }}
-                  onBlur={e =>  { e.target.style.borderColor = C.inputBorder; e.target.style.boxShadow = 'none' }}
-                />
+                  onChange={e => { setName(e.target.value); setError('') }} />
               </div>
-
-              {/* ④ 참여 코드 입력 그룹 */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>참여 코드 (6자리)</label>
-                <input
+              <div style={{ marginBottom:20 }}>
+                <label style={labelBase}>🔑 참여 코드 (6자리)</label>
+                <input className="edu-input"
                   style={{
-                    ...inputStyle,
-                    textTransform: 'uppercase',
-                    letterSpacing: 10,
-                    fontWeight: 800,
-                    fontSize: 22,
-                    textAlign: 'center',
-                    padding: '14px 16px',
+                    ...inputBase,
+                    textTransform:'uppercase', letterSpacing:10,
+                    fontWeight:800, fontSize:22, textAlign:'center',
+                    padding:'14px 16px',
                   }}
                   placeholder="ABC123"
                   maxLength={6}
                   value={joinCode}
-                  onChange={e => { setJoinCode(e.target.value.toUpperCase()); setError('') }}
-                  onFocus={e => { e.target.style.borderColor = C.primary; e.target.style.boxShadow = `0 0 0 3px ${C.primaryLight}` }}
-                  onBlur={e =>  { e.target.style.borderColor = C.inputBorder; e.target.style.boxShadow = 'none' }}
-                />
+                  onChange={e => { setJoinCode(e.target.value.toUpperCase()); setError('') }} />
               </div>
 
-              {/* ⑤ CTA 버튼 */}
-              <button
-                type="submit"
-                style={btnStyle}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.91'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '1';    e.currentTarget.style.transform = 'none' }}
-              >참여하기</button>
+              <button type="submit" className="edu-btn" style={{
+                width:'100%', padding:'15px',
+                borderRadius:16, fontSize:16, fontWeight:800, fontFamily:'inherit',
+                background:'linear-gradient(135deg, #4EACD9, #2785B5)',
+                color:'#fff', border:'none', cursor:'pointer', letterSpacing:'-0.2px',
+                boxShadow:'0 5px 16px rgba(78,172,217,.40)',
+              }}>🙋 모둠 활동 참여하기!</button>
 
-              {/* ⑥ 도움말 텍스트 */}
-              <div style={{
-                marginTop: 12,
-                textAlign: 'center',
-                fontSize: 12,
-                color: C.textMuted,
-                lineHeight: 1.6,
-              }}>
-                💡 모둠장에게 받은 <span style={{ fontWeight: 700, color: C.primary }}>6자리 코드</span>를 입력하세요
+              <div style={{ marginTop:12, textAlign:'center', fontSize:12, color:'#8C7B6E', lineHeight:1.6, fontWeight:600 }}>
+                💡 모둠장에게 받은 <span style={{ fontWeight:800, color:'#4EACD9' }}>6자리 코드</span>를 입력하세요
               </div>
-
             </form>
           )}
+        </div>
+
+        {/* 하단 출처 */}
+        <div style={{ textAlign:'center', marginTop:14, fontSize:11, color:'#C4B4A8', fontWeight:600 }}>
+          📘 초등 수학 · 여러 가지 그래프 모둠 활동
         </div>
       </div>
     </div>
