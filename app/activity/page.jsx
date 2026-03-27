@@ -12,6 +12,7 @@ import {
   saveCanvasSnapshot, loadCanvasSnapshot,
   updateRoomMeta, updateSurveyTopic,
   setSelectionVote, agreeSelectionVote,
+  setLivePreview,
 } from '../../lib/firestore'
 
 // ─── Constants ────────────────────────────────────────────────────────────
@@ -525,7 +526,7 @@ const CHART_CMPS = { bar: BarChart, pie: PieChart, strip: StripChart }
 // ─── Drawing Canvas (with grid paper) ─────────────────────────────────────
 
 // tool: 'pen' | 'eraser' | 'ruler' | 'compass'
-function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
+function DrawingCanvas({ code, userName, strokes, currentDrawer, livePreview }) {
   const canvasRef    = useRef(null)
   const overlayRef   = useRef(null)   // overlay canvas for preview (ruler/compass)
   const drawing      = useRef(false)
@@ -536,8 +537,9 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
   const [tool,     setTool]     = useState('pen')  // pen | eraser | ruler | compass
   const [saving,   setSaving]   = useState(false)
   const [snapshotImg, setSnapshotImg] = useState(null)
-  // compass radius preview
-  const compassRadiusRef = useRef(0)
+
+  // throttle용 — 너무 자주 Firestore에 쓰지 않도록
+  const previewThrottle = useRef(null)
 
   const eraser = tool === 'eraser'
 
@@ -641,62 +643,100 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
     ov.getContext('2d').clearRect(0, 0, ov.width, ov.height)
   }
 
-  function drawRulerPreview(p1, p2) {
-    const ov = overlayRef.current
-    if (!ov) return
-    const ctx = ov.getContext('2d')
-    ctx.clearRect(0, 0, ov.width, ov.height)
+  // 내부 미리보기 렌더 (자)
+  function _renderRulerOnCtx(ctx, p1, p2, clr, lw) {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     ctx.beginPath()
-    ctx.strokeStyle = color
-    ctx.lineWidth = width
+    ctx.strokeStyle = clr
+    ctx.lineWidth = lw
     ctx.lineCap = 'round'
     ctx.setLineDash([8, 6])
     ctx.moveTo(p1.x, p1.y)
     ctx.lineTo(p2.x, p2.y)
     ctx.stroke()
     ctx.setLineDash([])
-    // distance label (in grid units)
     const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y)
     const cells = (dist / 25).toFixed(1)
     const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2
-    ctx.font = 'bold 13px sans-serif'
-    ctx.fillStyle = color
-    ctx.fillText(`${cells}칸`, mx + 6, my - 6)
+    ctx.font = 'bold 14px sans-serif'
+    ctx.fillStyle = clr
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth = 3
+    ctx.setLineDash([])
+    ctx.strokeText(`${cells}칸`, mx + 6, my - 8)
+    ctx.fillText(`${cells}칸`, mx + 6, my - 8)
   }
 
-  function drawCompassPreview(center, edge) {
-    const ov = overlayRef.current
-    if (!ov) return
-    const ctx = ov.getContext('2d')
-    ctx.clearRect(0, 0, ov.width, ov.height)
+  // 내부 미리보기 렌더 (컴퍼스)
+  function _renderCompassOnCtx(ctx, center, edge, clr, lw) {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     const r = Math.hypot(edge.x - center.x, edge.y - center.y)
-    compassRadiusRef.current = r
-    // dashed circle preview
     ctx.beginPath()
-    ctx.strokeStyle = color
-    ctx.lineWidth = width
+    ctx.strokeStyle = clr
+    ctx.lineWidth = lw
     ctx.setLineDash([8, 6])
     ctx.arc(center.x, center.y, r, 0, Math.PI * 2)
     ctx.stroke()
     ctx.setLineDash([])
     // center dot
     ctx.beginPath()
-    ctx.fillStyle = color
-    ctx.arc(center.x, center.y, 4, 0, Math.PI * 2)
+    ctx.fillStyle = clr
+    ctx.arc(center.x, center.y, 5, 0, Math.PI * 2)
     ctx.fill()
     // radius line
     ctx.beginPath()
-    ctx.strokeStyle = color + '80'
-    ctx.lineWidth = 1
+    ctx.strokeStyle = clr + '90'
+    ctx.lineWidth = 1.5
+    ctx.setLineDash([4, 4])
     ctx.moveTo(center.x, center.y)
     ctx.lineTo(edge.x, edge.y)
     ctx.stroke()
+    ctx.setLineDash([])
     // radius label
     const cells = (r / 25).toFixed(1)
-    ctx.font = 'bold 12px sans-serif'
-    ctx.fillStyle = color
-    ctx.fillText(`반지름 ${cells}칸`, center.x + 6, center.y - r - 6)
+    const labelX = center.x + 8, labelY = center.y - r - 8
+    ctx.font = 'bold 14px sans-serif'
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth = 3
+    ctx.strokeText(`반지름 ${cells}칸`, labelX, labelY)
+    ctx.fillStyle = clr
+    ctx.fillText(`반지름 ${cells}칸`, labelX, labelY)
   }
+
+  function drawRulerPreview(p1, p2) {
+    const ov = overlayRef.current
+    if (!ov) return
+    _renderRulerOnCtx(ov.getContext('2d'), p1, p2, color, width)
+  }
+
+  function drawCompassPreview(center, edge) {
+    const ov = overlayRef.current
+    if (!ov) return
+    _renderCompassOnCtx(ov.getContext('2d'), center, edge, color, width)
+  }
+
+  // ── 다른 사람의 livePreview 수신 → overlay에 렌더 ──
+  useEffect(() => {
+    // 내가 그리는 중이면 무시 (내 overlay는 내가 관리)
+    if (drawing.current) return
+    const ov = overlayRef.current
+    if (!ov) return
+    const ctx = ov.getContext('2d')
+
+    if (!livePreview || livePreview.drawer === userName) {
+      // 아무도 미리보기 안 하거나 내 것이면 클리어
+      ctx.clearRect(0, 0, ov.width, ov.height)
+      return
+    }
+    const { type, p1, p2, color: clr, width: lw } = livePreview
+    if (type === 'ruler' && p1 && p2) {
+      _renderRulerOnCtx(ctx, p1, p2, clr, lw)
+    } else if (type === 'compass' && p1 && p2) {
+      _renderCompassOnCtx(ctx, p1, p2, clr, lw)
+    } else {
+      ctx.clearRect(0, 0, ov.width, ov.height)
+    }
+  }, [livePreview]) // eslint-disable-line
 
   useEffect(() => { redrawStrokes(strokes) }, [strokes, snapshotImg]) // eslint-disable-line
 
@@ -715,13 +755,39 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
     const p = getPos(e, canvasRef.current)
 
     if (tool === 'ruler') {
-      curStroke.current = [p]   // track last position
+      curStroke.current = [p]
       drawRulerPreview(startPt.current, p)
+      // Firestore에 throttle 전송 (100ms)
+      if (!previewThrottle.current) {
+        previewThrottle.current = setTimeout(() => {
+          previewThrottle.current = null
+          if (drawing.current && startPt.current) {
+            setLivePreview(code, {
+              type: 'ruler', drawer: userName, color, width,
+              p1: startPt.current,
+              p2: curStroke.current[curStroke.current.length - 1] || startPt.current,
+            }).catch(() => {})
+          }
+        }, 80)
+      }
       return
     }
     if (tool === 'compass') {
-      curStroke.current = [p]   // track last position
+      curStroke.current = [p]
       drawCompassPreview(startPt.current, p)
+      // Firestore에 throttle 전송 (100ms)
+      if (!previewThrottle.current) {
+        previewThrottle.current = setTimeout(() => {
+          previewThrottle.current = null
+          if (drawing.current && startPt.current) {
+            setLivePreview(code, {
+              type: 'compass', drawer: userName, color, width,
+              p1: startPt.current,
+              p2: curStroke.current[curStroke.current.length - 1] || startPt.current,
+            }).catch(() => {})
+          }
+        }, 80)
+      }
       return
     }
 
@@ -784,6 +850,14 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
 
     curStroke.current = []
     startPt.current = null
+    // throttle 취소 및 livePreview 클리어
+    if (previewThrottle.current) {
+      clearTimeout(previewThrottle.current)
+      previewThrottle.current = null
+    }
+    if (tool === 'ruler' || tool === 'compass') {
+      setLivePreview(code, null).catch(() => {})
+    }
     await setCurrentDrawer(code, null)
   }
 
@@ -886,19 +960,36 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer }) {
 
       {/* 작성자 표시 영역 — 항상 고정 높이로 확보하여 레이아웃 흔들림 방지 */}
       <div style={{
-        height: 28, display: 'flex', alignItems: 'center',
+        height: 28, display: 'flex', alignItems: 'center', gap: 10,
         marginBottom: 4, fontSize: 13, color: '#8C7B6E',
       }}>
         {currentDrawer ? (
-          <>
+          <span style={{ display:'flex', alignItems:'center', gap:5 }}>
             <span style={{
               width: 7, height: 7, borderRadius: '50%', background: '#5BBF7A',
-              animation: 'pulse 1s infinite', display: 'inline-block', flexShrink: 0, marginRight: 6,
+              animation: 'pulse 1s infinite', display: 'inline-block', flexShrink: 0,
             }} />
             <b style={{ color: '#3D2B1F' }}>{currentDrawer}</b>님이 그리는 중...
-          </>
+          </span>
         ) : (
           <span style={{ opacity: 0 }}>placeholder</span>
+        )}
+        {/* 자/컴퍼스 실시간 협동 표시 */}
+        {livePreview && livePreview.drawer && livePreview.drawer !== userName && (
+          <span style={{
+            display:'inline-flex', alignItems:'center', gap:5,
+            padding:'2px 10px', borderRadius:999,
+            background: livePreview.type === 'ruler' ? '#FFF3E8' : '#F8EFFE',
+            border: `1.5px solid ${livePreview.type === 'ruler' ? '#FFCB96' : '#D9A4F5'}`,
+            fontSize: 12, fontWeight: 700,
+            color: livePreview.type === 'ruler' ? '#D4601A' : '#9A45C2',
+          }}>
+            <span style={{ animation:'pulse 1s infinite', display:'inline-block',
+              width:6, height:6, borderRadius:'50%',
+              background: livePreview.type === 'ruler' ? '#FF8C42' : '#C97DE8',
+              flexShrink:0 }} />
+            {livePreview.drawer}님이 {livePreview.type === 'ruler' ? '📏 자' : '🔵 컴퍼스'} 사용 중
+          </span>
         )}
       </div>
 
@@ -1606,7 +1697,7 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
 
 // ─── STEP 3 ───────────────────────────────────────────────────────────────
 
-function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strokes, currentDrawer, drawMode, onDrawMode }) {
+function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strokes, currentDrawer, drawMode, onDrawMode, livePreview }) {
   const chartData = items.map((label, i) => ({ label, value: dataTable[i]?.value || 0 }))
   const ChartComp = CHART_CMPS[chartConfig.type] || BarChart
   const total = dataTable.reduce((s, d) => s + (Number(d.value) || 0), 0)
@@ -1699,7 +1790,7 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
               모눈종이 위에 모두가 함께 그릴 수 있어요
             </span>
           </div>
-          <DrawingCanvas code={code} userName={user.name} strokes={strokes} currentDrawer={currentDrawer} />
+          <DrawingCanvas code={code} userName={user.name} strokes={strokes} currentDrawer={currentDrawer} livePreview={livePreview} />
         </Sec>
       )}
     </div>
@@ -1772,11 +1863,19 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
 
       <Sec>
         <Lbl mt={0}>🗒️ 그래프에서 알 수 있는 사실</Lbl>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <Inp value={noteInput} onChange={setNoteInput}
-            onKeyDown={e => e.key === 'Enter' && addNote()}
-            placeholder="예: 과자를 좋아하는 학생이 가장 많다" />
-          <Btn onClick={addNote} color="dark" sm>추가</Btn>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'stretch' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Inp value={noteInput} onChange={setNoteInput}
+              onKeyDown={e => e.key === 'Enter' && addNote()}
+              placeholder="예: 과자를 좋아하는 학생이 가장 많다" />
+          </div>
+          <button onClick={addNote} className="edu-btn" style={{
+            flexShrink: 0, whiteSpace: 'nowrap',
+            padding: '0 18px', borderRadius: 14, fontSize: 14, fontWeight: 800,
+            background: '#3D2B1F', color: '#fff', border: 'none', cursor: 'pointer',
+            fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(61,43,31,.25)',
+            height: 46,
+          }}>추가</button>
         </div>
         {notes.length > 0
           ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
@@ -2321,7 +2420,8 @@ export default function ActivityPage() {
               items={items} dataTable={dataTable}
               chartConfig={chartConfig} onChartConfig={handleChartConfig}
               strokes={strokes} currentDrawer={room.currentDrawer || null}
-              drawMode={drawMode} onDrawMode={handleDrawMode} />
+              drawMode={drawMode} onDrawMode={handleDrawMode}
+              livePreview={room.livePreview || null} />
           )}
           {activeStep === 4 && (
             <Step4 user={user} code={user.code}
