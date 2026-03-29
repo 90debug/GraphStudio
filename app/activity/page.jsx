@@ -2407,6 +2407,7 @@ export default function ActivityPage() {
   const [freeMode,    setFreeMode]    = useState(false)
   const [toast,       setToast]       = useState(null)
   const [voteModal,   setVoteModal]   = useState(false)   // shows vote popup for this user
+  const [drawerOpen,  setDrawerOpen]  = useState(false)
 
   const freeModeRef  = useRef(false); freeModeRef.current = freeMode
   const iAmLeaderRef = useRef(false)
@@ -2648,7 +2649,6 @@ export default function ActivityPage() {
     dataTable.some(d => Number(d.value) > 0),
     (chartConfig.title || strokes.length > 0), true]
 
-  const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
     <div className="textbook-bg" style={{ display: 'flex', flexDirection: 'column', width: 1024, height: 768,
