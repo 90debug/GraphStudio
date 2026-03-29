@@ -383,3 +383,20 @@ input[type="range"]    { accent-color: var(--s2); }
     linear-gradient(90deg, rgba(78,172,217,.12) 1px, transparent 1px);
   background-size: 20px 20px;
 }
+
+/* ── Step4 알 수 있는 사실 chip hover delete ── */
+.note-chip-delete {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
+.note-chip-wrap:hover .note-chip-delete {
+  opacity: 1;
+  pointer-events: auto;
+}
+.note-chip-wrap {
+  transition: box-shadow .15s ease;
+}
+.note-chip-wrap:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,.10);
+}

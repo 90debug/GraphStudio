@@ -161,6 +161,78 @@ function Tag({ children, color = '#FF8C42' }) {
 
 // ─── Selection Vote Modal ─────────────────────────────────────────────────
 
+// ─── Confirm Reset Modal ──────────────────────────────────────────────────
+
+function ConfirmResetModal({ topicName, onConfirm, onCancel }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(61,43,31,.52)',
+      backdropFilter: 'blur(3px)',
+      zIndex: 10002,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: 24, padding: '32px 28px 26px',
+        maxWidth: 400, width: '100%',
+        boxShadow: '0 20px 60px rgba(61,43,31,.28)',
+        animation: 'fadeUp .25s cubic-bezier(.34,1.3,.64,1)',
+        border: '3px solid #FECACA',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* 배경 장식 */}
+        <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80,
+          borderRadius:'50%', background:'rgba(239,68,68,.06)', pointerEvents:'none' }} />
+
+        {/* 경고 아이콘 */}
+        <div style={{ width:52, height:52, borderRadius:'50%',
+          background:'linear-gradient(135deg,#FEF2F2,#FECACA)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:24, margin:'0 auto 16px', boxShadow:'0 4px 12px rgba(239,68,68,.20)' }}>
+          ⚠️
+        </div>
+
+        <div style={{ textAlign:'center', marginBottom:18 }}>
+          <div style={{ fontSize:16, fontWeight:800, color:'#1E293B', marginBottom:10 }}>
+            탐구 문제를 다시 선정할까요?
+          </div>
+          <div style={{ fontSize:13, color:'#64748B', lineHeight:1.75, padding:'10px 14px',
+            background:'#FEF2F2', borderRadius:12, border:'1px solid #FECACA' }}>
+            이미 설문 조사가 진행 중인 탐구 문제가 있습니다.<br />
+            <b style={{ color:'#DC2626' }}>새로운 문제를 선정하면 Step 2~4의<br />모든 내용이 초기화됩니다.</b>
+          </div>
+          {topicName && (
+            <div style={{ marginTop:10, fontSize:12, color:'#94A3B8' }}>
+              현재 선정된 문제: <b style={{ color:'#475569' }}>{topicName}</b>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={onCancel} style={{
+            flex:1, padding:'12px', borderRadius:12,
+            background:'#F8FAFC', color:'#64748B',
+            border:'1.5px solid #E2E8F2', fontSize:14, fontWeight:700,
+            cursor:'pointer', fontFamily:'inherit',
+          }}>
+            취소
+          </button>
+          <button onClick={onConfirm} style={{
+            flex:1, padding:'12px', borderRadius:12,
+            background:'linear-gradient(135deg,#EF4444,#DC2626)',
+            color:'#fff', border:'none', fontSize:14, fontWeight:700,
+            cursor:'pointer', fontFamily:'inherit',
+            boxShadow:'0 4px 12px rgba(239,68,68,.35)',
+          }}>
+            다시 선정하기
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
 function VoteModal({ vote, myName, onAgree, onClose, onCancel, isRequester }) {
   const alreadyAgreed = vote?.agreed?.includes(myName)
   const agreedCount   = vote?.agreed?.length  || 0
@@ -950,7 +1022,7 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer, livePreview }) 
 
       {/* Toolbar row 3: actions */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-        <Btn onClick={doDeleteMine} color="gray" sm>🙋 내 그림만</Btn>
+        <Btn onClick={doDeleteMine} color="gray" sm>🙋 내 그림만 지우기</Btn>
         <Btn onClick={doClearAll}   color="gray" sm>🗑️ 전체 지우기</Btn>
         <Btn onClick={doLoad}       color="gray" sm>📂 불러오기</Btn>
         <Btn onClick={doSave} color="green" sm disabled={saving} style={{ marginLeft: 'auto' }}>
@@ -2240,6 +2312,10 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
     setNoteInput('')
   }
 
+  function removeNote(id) {
+    onStep4State({ notes: notes.filter(n => n.id !== id) })
+  }
+
   async function doShare() {
     setSharing(true)
     const noteTexts = notes.map(n => n.text)
@@ -2364,13 +2440,24 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
               {notes.length > 0 ? (
                 <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
                   {notes.map((n, i) => (
-                    <div key={n.id} style={{ display:'flex', alignItems:'flex-start', gap:5,
+                    <div key={n.id} className="note-chip-wrap" style={{ display:'flex', alignItems:'flex-start', gap:5,
                       padding:'6px 10px', borderRadius:8, fontSize:12, fontWeight:500, lineHeight:1.5,
                       background: CHART_COLORS[i%CHART_COLORS.length]+'12',
-                      border:`1px solid ${CHART_COLORS[i%CHART_COLORS.length]}25` }}>
+                      border:`1px solid ${CHART_COLORS[i%CHART_COLORS.length]}25`,
+                      position:'relative' }}>
                       <div style={{ width:5, height:5, borderRadius:'50%', marginTop:6, flexShrink:0,
                         background: CHART_COLORS[i%CHART_COLORS.length] }} />
-                      {n.text}
+                      <span style={{ flex:1 }}>{n.text}</span>
+                      <button onClick={() => removeNote(n.id)} className="note-chip-delete"
+                        title="삭제" style={{
+                          position:'absolute', top:-7, right:-7,
+                          width:18, height:18, borderRadius:'50%',
+                          background:'#EF4444', color:'#fff',
+                          border:'1.5px solid #fff', fontSize:9, fontWeight:800,
+                          cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+                          boxShadow:'0 1px 4px rgba(239,68,68,.4)',
+                          fontFamily:'inherit', lineHeight:1,
+                        }}>✕</button>
                     </div>
                   ))}
                 </div>
@@ -2499,6 +2586,7 @@ export default function ActivityPage() {
   const [toast,       setToast]       = useState(null)
   const [voteModal,   setVoteModal]   = useState(false)   // shows vote popup for this user
   const [drawerOpen,  setDrawerOpen]  = useState(false)
+  const [resetConfirmPost, setResetConfirmPost] = useState(null) // 재선정 확인 팝업용 post
 
   const freeModeRef  = useRef(false); freeModeRef.current = freeMode
   const iAmLeaderRef = useRef(false)
@@ -2635,20 +2723,66 @@ export default function ActivityPage() {
   }
 
   // 선정 요청 → 모둠원 전체 투표 시작
-  async function handleSelectRequest(post) {
+  async function doSelectVote(post) {
+    // 실제 투표 시작 (확인 후 호출)
     const voters = onlineUsers.map(u => u.name)
-    // 현재 사용자가 onlineUsers에 없을 경우 포함
     if (!voters.includes(user.name)) voters.push(user.name)
     const voteData = {
       postId:      post.id,
       postData:    { content: post.content, topic: post.topic, question: post.question, items: post.items },
       requestedBy: user.name,
       voters,
-      agreed:      [user.name],   // 요청자는 자동 찬성
+      agreed:      [user.name],
     }
     await setSelectionVote(userRef.current?.code, voteData)
     setVoteModal(true)
     setToast('🗳️ 모둠원에게 투표를 요청했어요!')
+  }
+
+  async function handleSelectRequest(post) {
+    // 설문 진행 중이면 재선정 확인 팝업 표시
+    if (room.surveyActive || (room.selectedPost?.postId && room.selectedPost?.postId !== post.id)) {
+      setResetConfirmPost(post)
+      return
+    }
+    await doSelectVote(post)
+  }
+
+  async function handleConfirmReset() {
+    const post = resetConfirmPost
+    setResetConfirmPost(null)
+    if (!post) return
+
+    // Step 2~4 전체 데이터 초기화
+    const code = userRef.current?.code
+    try {
+      await Promise.all([
+        updateRoomMeta(code, {
+          selectedPost:  null,
+          dataTable:     [],
+          chartConfig:   { type: 'bar', title: '' },
+          step4State:    {},
+          drawMode:      'auto',
+          surveyActive:  false,
+          selectionVote: null,
+          currentDrawer: null,
+          livePreview:   null,
+        }),
+        clearStrokes(code),
+      ])
+      // 로컬 상태도 즉시 반영
+      setRoom(r => ({ ...r,
+        selectedPost: null, dataTable: [], chartConfig: { type: 'bar', title: '' },
+        step4State: {}, drawMode: 'auto', surveyActive: false,
+      }))
+      setToast('🔄 모든 데이터가 초기화되었어요!')
+    } catch (e) {
+      console.error('Reset failed:', e)
+      setToast('⚠️ 초기화에 실패했어요. 다시 시도해 주세요.')
+      return
+    }
+    // 초기화 후 투표 시작
+    await doSelectVote(post)
   }
 
   // 내가 찬성 클릭
@@ -3059,6 +3193,15 @@ export default function ActivityPage() {
           )}
         </div>
       </div>
+
+      {/* ── Reset Confirm Modal ── */}
+      {resetConfirmPost && (
+        <ConfirmResetModal
+          topicName={room.selectedPost?.topic}
+          onConfirm={handleConfirmReset}
+          onCancel={() => setResetConfirmPost(null)}
+        />
+      )}
 
       {/* ── Vote Modal ── */}
       {voteModal && room.selectionVote && (
