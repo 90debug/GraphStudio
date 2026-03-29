@@ -1272,7 +1272,177 @@ function OnlineUsers({ users }) {
 
 // ─── STEP 1 ───────────────────────────────────────────────────────────────
 
-function Step1({ user, code, posts, selectedPost, onToast }) {
+// ─── Padlet Step1 Card ────────────────────────────────────────────────────
+
+const PADLET_CARD_PALETTES = [
+  { bg:'#FEFCE8', border:'#FDE68A', hdr:'#FFFBEB', avBg:'#FEF3C7', avFg:'#92400E' }, // 노랑
+  { bg:'#F0F9FF', border:'#BAE6FD', hdr:'#E0F2FE', avBg:'#BFDBFE', avFg:'#1D4ED8' }, // 파랑
+  { bg:'#FFF0F9', border:'#F9A8D4', hdr:'#FCE7F3', avBg:'#FDE8F5', avFg:'#9D174D' }, // 핑크
+  { bg:'#F5F3FF', border:'#C4B5FD', hdr:'#EDE9FE', avBg:'#DDD6FE', avFg:'#5B21B6' }, // 보라
+  { bg:'#F0FDFA', border:'#5EEAD4', hdr:'#CCFBF1', avBg:'#CCFBF1', avFg:'#0F766E' }, // 민트
+  { bg:'#FFF7ED', border:'#FDBA74', hdr:'#FFEDD5', avBg:'#FED7AA', avFg:'#C2410C' }, // 오렌지
+]
+const padletPalette = (name) => PADLET_CARD_PALETTES[(name || '?').charCodeAt(0) % PADLET_CARD_PALETTES.length]
+
+function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSelectRequest, onDelete }) {
+  const [showCmt, setShowCmt] = useState(false)
+  const [cmtText, setCmtText] = useState('')
+  const isMyPost   = post.name === myName
+  const isLiked    = post.likedBy?.includes(myName)
+  const isSelected = selectedPost?.postId === post.id || !!post.selected
+  const pal = isSelected
+    ? { bg:'#F0FDF4', border:'#34D399', hdr:'#DCFCE7', avBg:'#D1FAE5', avFg:'#047857' }
+    : isMyPost
+      ? { bg:'#FEFCE8', border:'#FCD34D', hdr:'#FFFBEB', avBg:'#FEF3C7', avFg:'#92400E' }
+      : padletPalette(post.name)
+
+  async function toggleLike() { await onLike(post.id, !isLiked) }
+  async function submitCmt() {
+    if (!cmtText.trim()) return
+    await onComment(post.id, cmtText.trim())
+    setCmtText(''); setShowCmt(false)
+  }
+
+  return (
+    <div className="padlet-card-item" style={{
+      background: pal.bg,
+      border: `2px solid ${pal.border}`,
+      boxShadow: isSelected
+        ? `0 0 0 3px ${pal.border}55, 0 6px 20px ${pal.border}44`
+        : `0 3px 12px rgba(0,0,0,.08)`,
+    }} className={`padlet-card-item${isSelected ? ' card-selected-pulse' : ''}`}>
+
+      {/* 왕관 게이미피케이션 — 선정된 카드 */}
+      {isSelected && (
+        <div style={{ position:'absolute', top:-18, left:'50%', transform:'translateX(-50%)',
+          zIndex:20, display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+          <span className="crown-icon" style={{ fontSize:24, lineHeight:1, display:'block' }}>👑</span>
+          <span className="card-confetti" style={{ fontSize:9, fontWeight:800,
+            background:'#10B981', color:'#fff', padding:'2px 8px', borderRadius:999,
+            whiteSpace:'nowrap' }}>우리 모둠 탐구 문제!</span>
+        </div>
+      )}
+
+      {/* 내 카드 배지 */}
+      {isMyPost && !isSelected && (
+        <div style={{ position:'absolute', top:-8, left:12, zIndex:10, padding:'2px 8px',
+          borderRadius:999, background:'#F59E0B', color:'#fff', fontSize:10, fontWeight:800,
+          boxShadow:'0 1px 4px rgba(245,158,11,.4)' }}>내 글</div>
+      )}
+
+      {/* 삭제 버튼 (내 글) */}
+      {isMyPost && !isSelected && (
+        <button onClick={() => onDelete && onDelete(post.id)} style={{
+          position:'absolute', top:-8, right:-8, zIndex:10,
+          width:22, height:22, borderRadius:'50%', background:'#EF4444', color:'#fff',
+          border:'2px solid #fff', fontSize:11, fontWeight:800, cursor:'pointer',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          boxShadow:'0 2px 8px rgba(239,68,68,.45)',
+          opacity:0, transition:'opacity .15s',
+        }} className="postcard-close">✕</button>
+      )}
+
+      {/* 선정됨 배지 */}
+      {isSelected && (
+        <div style={{ position:'absolute', top:8, right:10, zIndex:10,
+          padding:'3px 9px', borderRadius:999, background:'#10B981', color:'#fff',
+          fontSize:11, fontWeight:700, boxShadow:'0 2px 8px rgba(16,185,129,.4)' }}>✅ 선정됨</div>
+      )}
+
+      {/* 카드 헤더 */}
+      <div style={{ padding:'10px 12px 8px', display:'flex', alignItems:'center', gap:8,
+        background: pal.hdr, borderRadius:'12px 12px 0 0' }}>
+        <div style={{ width:30, height:30, borderRadius:'50%', flexShrink:0,
+          background: pal.avBg, color: pal.avFg,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:12, fontWeight:700 }}>{(post.name||'?')[0]}</div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:'#1E293B' }}>
+            {post.name}{isMyPost && <span style={{ fontSize:11, color:'#94A3B8', fontWeight:400 }}> (나)</span>}
+          </div>
+          <div style={{ fontSize:11, color:'#94A3B8' }}>{post.time}</div>
+        </div>
+        {/* 선정 버튼 */}
+        {onSelectRequest && !isSelected && (
+          <button onClick={() => onSelectRequest(post)} style={{
+            fontSize:12, fontWeight:700, padding:'5px 11px', borderRadius:8,
+            border:'1.5px solid #10B981', background:'#fff', color:'#10B981',
+            cursor:'pointer', flexShrink:0, fontFamily:'inherit', transition:'all .15s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background='#10B981'; e.currentTarget.style.color='#fff' }}
+            onMouseLeave={e => { e.currentTarget.style.background='#fff'; e.currentTarget.style.color='#10B981' }}>선정</button>
+        )}
+      </div>
+
+      {/* 카드 바디 */}
+      <div style={{ padding:'10px 14px' }}>
+        <div style={{ fontSize:15, fontWeight:800, color:'#1E293B', lineHeight:1.35, marginBottom:5 }}>
+          {post.topic || post.content?.split('\n')[0]?.replace('📌 주제: ','')}
+        </div>
+        {post.question && (
+          <div style={{ fontSize:12, color:'#475569', marginBottom:9, lineHeight:1.55 }}>
+            📌 {post.question}
+          </div>
+        )}
+        {post.items?.length > 0 && (
+          <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+            {post.items.map((item, i) => (
+              <span key={i} style={{ padding:'3px 9px', borderRadius:999, fontSize:11, fontWeight:700,
+                background: CHART_COLORS[i%CHART_COLORS.length]+'18',
+                color: CHART_COLORS[i%CHART_COLORS.length],
+                border:`1.5px solid ${CHART_COLORS[i%CHART_COLORS.length]}30` }}>{item}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 댓글 목록 */}
+      {post.comments?.map((c, i) => (
+        <div key={i} style={{ fontSize:12, color:'#64748B', padding:'2px 14px 2px 18px',
+          borderLeft:`2px solid ${pal.border}`, margin:'0 14px 3px', lineHeight:1.6 }}>{c}</div>
+      ))}
+
+      {/* 카드 푸터 */}
+      <div style={{ padding:'7px 10px 9px', display:'flex', alignItems:'center', gap:5,
+        borderTop:`1px solid ${pal.border}50` }}>
+        <button onClick={toggleLike} style={{ background:'none', border:'none', cursor:'pointer',
+          fontSize:18, lineHeight:1, transition:'transform .15s', padding:'2px 4px' }}
+          onMouseEnter={e=>e.currentTarget.style.transform='scale(1.25)'}
+          onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
+        >{isLiked ? '❤️' : '🤍'}</button>
+        <button onClick={() => setShowCmt(!showCmt)} style={{ background:'none', border:'none',
+          cursor:'pointer', fontSize:15, lineHeight:1, color:'#94A3B8', padding:'2px 4px' }}>💬</button>
+        {(post.likes > 0 || post.comments?.length > 0) && (
+          <span style={{ fontSize:11, color:'#94A3B8' }}>
+            {post.likes > 0 && <b style={{ color:'#475569' }}>♥ {post.likes}</b>}
+            {post.likes > 0 && post.comments?.length > 0 && ' · '}
+            {post.comments?.length > 0 && `댓글 ${post.comments.length}`}
+          </span>
+        )}
+      </div>
+
+      {/* 댓글 입력 */}
+      {showCmt && (
+        <div style={{ padding:'0 12px 12px', display:'flex', gap:7 }}>
+          <input value={cmtText} onChange={e => setCmtText(e.target.value)}
+            onKeyDown={e => e.key==='Enter' && submitCmt()}
+            placeholder="댓글 달기..."
+            style={{ flex:1, padding:'8px 12px', borderRadius:999,
+              border:`1.5px solid ${pal.border}`, fontSize:12, background:'#fff',
+              outline:'none', fontFamily:'inherit' }} />
+          <button onClick={submitCmt} style={{ fontSize:12, fontWeight:700, color:'#fff',
+            background:'#4EACD9', border:'none', borderRadius:8,
+            cursor:'pointer', padding:'8px 12px', fontFamily:'inherit' }}>게시</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── STEP 1 (Padlet Board) ────────────────────────────────────────────────
+
+function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, onSelectRequest, onDelete }) {
+  const [showModal, setShowModal] = useState(false)
   const [form,      setForm]      = useState({ topic: '', question: '', items: [] })
   const [itemInput, setItemInput] = useState('')
   const [sharing,   setSharing]   = useState(false)
@@ -1287,7 +1457,6 @@ function Step1({ user, code, posts, selectedPost, onToast }) {
     setItemInput('')
   }
   function removeItem(i) { setForm(f => ({ ...f, items: f.items.filter((_, idx) => idx !== i) })) }
-
   function onDragStart(i) { setDragIdx(i) }
   function onDragEnter(i) {
     if (dragIdx === null || dragIdx === i) return
@@ -1298,132 +1467,209 @@ function Step1({ user, code, posts, selectedPost, onToast }) {
 
   async function doShare() {
     if (!form.topic.trim() || !form.question.trim() || !form.items.length) return
-    setSharing(true)
-    setShareErr('')
+    setSharing(true); setShareErr('')
     try {
       const content = `📌 주제: ${form.topic}\n🔍 질문: ${form.question}\n📋 항목: ${form.items.join(', ')}`
       await addStep1Post(code, {
         name: user.name, step: 1, content,
         topic: form.topic, question: form.question, items: form.items, time: tsNow(),
       })
-      // 공유 성공 후 폼 초기화
-      setForm({ topic: '', question: '', items: [] })
-      setItemInput('')
-      onToast && onToast('🚀 모둠원에게 공유되었어요!')
+      setForm({ topic: '', question: '', items: [] }); setItemInput('')
+      setShowModal(false)
+      onToast && onToast('🚀 보드에 공유되었어요!')
     } catch (err) {
       console.error('공유 실패:', err)
       setShareErr('공유에 실패했어요. 잠시 후 다시 시도해 주세요.')
-    } finally {
-      setSharing(false)
-    }
+    } finally { setSharing(false) }
   }
 
   const ready = form.topic.trim() && form.question.trim() && form.items.length > 0
 
   return (
-    <div>
-      {/* ── 우리 모둠의 탐구 문제 (강조) ── */}
-      {selectedPost && (
-        <div className="selected-glow" style={{
-          background: 'linear-gradient(135deg, #EDFAF2, #D4F5E0)',
-          border: '2.5px solid #90DDB0',
-          borderRadius: 20,
-          padding: '18px 22px',
-          marginBottom: 16,
-          position: 'relative', overflow: 'hidden',
-        }}>
-          <div style={{ position:'absolute', top:-15, right:-15, width:70, height:70,
-            borderRadius:'50%', background:'rgba(91,191,122,.10)', pointerEvents:'none' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: '50%',
-              background: 'linear-gradient(135deg,#5BBF7A,#2D9950)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: 15, flexShrink: 0,
-              boxShadow: '0 3px 10px rgba(91,191,122,.35)',
-            }}>✓</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#2D9950', letterSpacing: '-0.2px' }}>
-              ⭐ 우리 모둠의 탐구 문제
+    <div style={{ position:'relative', flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+
+      {/* ── 패들릿 보드 스크롤 영역 ── */}
+      <div style={{ flex:1, overflowY:'auto', padding:'16px 20px 80px',
+        background:'#FDFCF7',
+        backgroundImage:`radial-gradient(circle at 15% 25%, rgba(251,191,36,.07) 0%, transparent 45%),
+          radial-gradient(circle at 85% 75%, rgba(16,185,129,.06) 0%, transparent 45%),
+          radial-gradient(circle at 50% 50%, rgba(59,130,246,.04) 0%, transparent 60%)`,
+      }}>
+
+        {/* Step 배지 */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 14px',
+          borderRadius:10, background:'#FFF7ED', border:'1px solid #FED7AA',
+          marginBottom:14 }}>
+          <div style={{ width:28, height:28, borderRadius:'50%', background:'#F97316',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            color:'#fff', fontSize:13, fontWeight:700, flexShrink:0 }}>1</div>
+          <div style={{ fontWeight:700, fontSize:15, color:'#C2410C' }}>🔍 탐구 문제 정하기</div>
+          <div style={{ marginLeft:'auto', fontSize:11, color:'#94A3B8' }}>
+            + 버튼을 눌러 아이디어를 올려보세요!
+          </div>
+        </div>
+
+        {/* ── 선정된 탐구 문제 배너 ── */}
+        {selectedPost && (
+          <div style={{
+            background:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',
+            border:'2px solid #10B981', borderRadius:14, padding:'16px 20px',
+            marginBottom:16, boxShadow:'0 4px 16px rgba(16,185,129,.18)',
+            display:'flex', alignItems:'flex-start', gap:14,
+            animation:'fadeUp .4s cubic-bezier(.34,1.3,.64,1)',
+          }}>
+            <div style={{ width:36, height:36, borderRadius:'50%', background:'#10B981',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              color:'#fff', fontSize:18, flexShrink:0, marginTop:2 }}>✓</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:12, fontWeight:800, color:'#047857', marginBottom:4, letterSpacing:.3 }}>
+                ✅ 우리 모둠의 탐구 문제
+              </div>
+              <div style={{ fontSize:16, fontWeight:800, color:'#1E293B', lineHeight:1.35 }}>
+                {selectedPost.topic}
+              </div>
+              <div style={{ fontSize:13, color:'#065F46', marginTop:4 }}>
+                📌 {selectedPost.question}
+              </div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:10 }}>
+                {selectedPost.items?.map((item, i) => (
+                  <span key={i} style={{ padding:'3px 10px', borderRadius:999, fontSize:12, fontWeight:700,
+                    background: CHART_COLORS[i%CHART_COLORS.length]+'15',
+                    color: CHART_COLORS[i%CHART_COLORS.length],
+                    border:`1px solid ${CHART_COLORS[i%CHART_COLORS.length]}35` }}>{item}</span>
+                ))}
+              </div>
             </div>
-            <div style={{ marginLeft:'auto', fontSize:11, fontWeight:800,
-              background:'#fff', color:'#2D9950', padding:'3px 10px',
-              borderRadius:999, border:'1.5px solid #90DDB0' }}>만장일치 선정!</div>
+            <div style={{ fontSize:12, fontWeight:800, background:'#fff', color:'#047857',
+              padding:'3px 10px', borderRadius:999, border:'1.5px solid #A7F3D0', flexShrink:0 }}>
+              만장일치 선정!
+            </div>
           </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#3D2B1F', lineHeight: 1.45 }}>
-            {selectedPost.topic}
+        )}
+
+        {/* ── 카드 그리드 (masonry 3단) ── */}
+        {posts.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'60px 20px', color:'#94A3B8' }}>
+            <div style={{ fontSize:52, marginBottom:14 }}>📋</div>
+            <div style={{ fontSize:15, fontWeight:700, color:'#64748B', marginBottom:6 }}>
+              아직 올라온 탐구 문제가 없어요
+            </div>
+            <div style={{ fontSize:13 }}>
+              우측 하단 <b style={{ color:'#F97316' }}>+</b> 버튼을 눌러서 첫 번째 아이디어를 올려보세요!
+            </div>
           </div>
-          <div style={{ fontSize: 13, color: '#2D9950', marginTop: 8, lineHeight: 1.65, fontWeight: 700 }}>
-            📌 {selectedPost.question}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 12 }}>
-            {selectedPost.items?.map((item, i) => (
-              <Tag key={i} color={CHART_COLORS[i % CHART_COLORS.length]}>{item}</Tag>
+        ) : (
+          <div style={{ columns:3, columnGap:14 }}>
+            {posts.map(post => (
+              <PadletStep1Card key={post.id}
+                post={post} myName={user.name} selectedPost={selectedPost}
+                onLike={onLike} onComment={onComment}
+                onSelectRequest={onSelectRequest} onDelete={onDelete} />
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── FAB 추가 버튼 ── */}
+      {!showModal && (
+        <button className="padlet-fab" onClick={() => setShowModal(true)} title="탐구 문제 추가하기">
+          ＋
+        </button>
+      )}
+
+      {/* ── 추가 모달 ── */}
+      {showModal && (
+        <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.45)',
+          backdropFilter:'blur(3px)', zIndex:100,
+          display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+          onClick={e => { if(e.target===e.currentTarget) setShowModal(false) }}>
+          <div style={{ background:'#fff', borderRadius:20, padding:'26px 26px 22px',
+            width:'100%', maxWidth:420,
+            boxShadow:'0 20px 60px rgba(0,0,0,.25)',
+            animation:'fadeUp .25s cubic-bezier(.34,1.3,.64,1)' }}>
+
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
+              <span style={{ fontSize:18 }}>📝</span>
+              <span style={{ fontSize:17, fontWeight:800, color:'#1E293B' }}>탐구 문제 작성</span>
+              <button onClick={() => setShowModal(false)} style={{
+                marginLeft:'auto', width:30, height:30, borderRadius:'50%',
+                background:'#F1F5F9', border:'none', fontSize:16, cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B' }}>✕</button>
+            </div>
+
+            <div style={{ fontSize:13, fontWeight:700, color:'#64748B', marginBottom:6 }}>📌 조사 주제</div>
+            <input value={form.topic} onChange={e => { setForm(f=>({...f,topic:e.target.value})); setShareErr('') }}
+              placeholder="예: 우리 반 학생들이 좋아하는 간식의 종류"
+              style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:'1.5px solid #CBD5E1',
+                fontSize:14, background:'#F8FAFC', outline:'none', fontFamily:'inherit',
+                marginBottom:12 }}
+              onFocus={e => e.target.style.borderColor='#F97316'}
+              onBlur={e => e.target.style.borderColor='#CBD5E1'} />
+
+            <div style={{ fontSize:13, fontWeight:700, color:'#64748B', marginBottom:6 }}>🔍 조사 질문</div>
+            <input value={form.question} onChange={e => { setForm(f=>({...f,question:e.target.value})); setShareErr('') }}
+              placeholder="예: 가장 자주 먹는 간식은 무엇인가요?"
+              style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:'1.5px solid #CBD5E1',
+                fontSize:14, background:'#F8FAFC', outline:'none', fontFamily:'inherit',
+                marginBottom:12 }}
+              onFocus={e => e.target.style.borderColor='#F97316'}
+              onBlur={e => e.target.style.borderColor='#CBD5E1'} />
+
+            <div style={{ fontSize:13, fontWeight:700, color:'#64748B', marginBottom:4 }}>
+              📋 조사 항목
+              <span style={{ fontSize:11, fontWeight:400, color:'#94A3B8', marginLeft:6 }}>Enter로 추가 · 최대 8개</span>
+            </div>
+            <input value={itemInput} onChange={e => setItemInput(e.target.value)}
+              onKeyDown={addItem}
+              placeholder="항목 입력 후 Enter — 예: 과자"
+              style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:'1.5px solid #CBD5E1',
+                fontSize:14, background:'#F8FAFC', outline:'none', fontFamily:'inherit' }}
+              onFocus={e => e.target.style.borderColor='#F97316'}
+              onBlur={e => e.target.style.borderColor='#CBD5E1'} />
+
+            {form.items.length > 0 && (
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:10 }}>
+                {form.items.map((item, i) => (
+                  <div key={i} draggable
+                    onDragStart={() => onDragStart(i)} onDragEnter={() => onDragEnter(i)}
+                    onDragEnd={() => setDragIdx(null)} onDragOver={e => e.preventDefault()}
+                    style={{ display:'inline-flex', alignItems:'center', gap:5,
+                      padding:'5px 12px', borderRadius:999, fontSize:12, fontWeight:700,
+                      background: CHART_COLORS[i%CHART_COLORS.length]+'15',
+                      color: CHART_COLORS[i%CHART_COLORS.length],
+                      border:`1.5px solid ${CHART_COLORS[i%CHART_COLORS.length]}35`,
+                      cursor:'grab', opacity: dragIdx===i ? .5 : 1, userSelect:'none' }}>
+                    {item}
+                    <button onClick={() => removeItem(i)} style={{ fontSize:14, color:'inherit',
+                      background:'none', border:'none', cursor:'pointer', lineHeight:1, padding:0 }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {shareErr && (
+              <div style={{ marginTop:10, padding:'8px 12px', background:'#FEF2F2',
+                border:'1px solid #FECACA', borderRadius:8, fontSize:12, color:'#DC2626', fontWeight:600 }}>
+                ⚠️ {shareErr}
+              </div>
+            )}
+
+            <button onClick={doShare} disabled={!ready || sharing} style={{
+              width:'100%', padding:'13px', borderRadius:12, marginTop:18,
+              background: ready && !sharing ? 'linear-gradient(135deg,#F97316,#EF4444)' : '#E2E8F2',
+              color: ready && !sharing ? '#fff' : '#94A3B8',
+              border:'none', fontSize:15, fontWeight:700, cursor: ready && !sharing ? 'pointer' : 'not-allowed',
+              fontFamily:'inherit', transition:'all .15s',
+              boxShadow: ready && !sharing ? '0 4px 14px rgba(249,115,22,.35)' : 'none',
+            }}>
+              {sharing ? '공유 중...' : '🚀 보드에 올리기'}
+            </button>
+            <div style={{ fontSize:12, color:'#94A3B8', textAlign:'center', marginTop:8 }}>
+              💡 올리면 모든 모둠원에게 바로 보여요
+            </div>
           </div>
         </div>
       )}
-
-      {/* ── 탐구 문제 작성 폼 ── */}
-      <Sec>
-        <Lbl mt={0}>📌 조사 주제
-          <span style={{ fontSize: 12, fontWeight: 400, color: '#8C7B6E', marginLeft: 6 }}>
-            공유 버튼을 눌러야 친구들에게 보여요
-          </span>
-        </Lbl>
-        <Inp value={form.topic} onChange={v => { setForm(f => ({ ...f, topic: v })); setShareErr('') }}
-          placeholder="예: 우리 반 학생들이 좋아하는 간식의 종류" />
-
-        <Lbl>🔍 조사 질문</Lbl>
-        <Inp value={form.question} onChange={v => { setForm(f => ({ ...f, question: v })); setShareErr('') }}
-          placeholder="예: 가장 자주 먹는 간식은 무엇인가요?" />
-
-        <Lbl>📋 조사 항목
-          <span style={{ fontSize: 12, fontWeight: 400, color: '#8C7B6E', marginLeft: 6 }}>
-            Enter로 추가 · 최대 8개
-          </span>
-        </Lbl>
-        <Inp value={itemInput} onChange={setItemInput} onKeyDown={addItem}
-          placeholder="항목 입력 후 Enter — 예: 과자" />
-
-        {form.items.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 12 }}>
-            {form.items.map((item, i) => (
-              <div key={i} draggable
-                onDragStart={() => onDragStart(i)}
-                onDragEnter={() => onDragEnter(i)}
-                onDragEnd={() => setDragIdx(null)}
-                onDragOver={e => e.preventDefault()}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '6px 14px', borderRadius: 999,
-                  background: CHART_COLORS[i % CHART_COLORS.length] + '12',
-                  color: CHART_COLORS[i % CHART_COLORS.length],
-                  border: `1.5px solid ${CHART_COLORS[i % CHART_COLORS.length]}35`,
-                  fontSize: 13, fontWeight: 700, cursor: 'grab',
-                  opacity: dragIdx === i ? .5 : 1, userSelect: 'none',
-                }}>
-                {item}
-                <button onClick={() => removeItem(i)} style={{
-                  fontSize: 16, color: 'inherit', background: 'none',
-                  border: 'none', cursor: 'pointer', lineHeight: 1, padding: 0,
-                }}>×</button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {shareErr && (
-          <div style={{ marginTop: 10, padding: '8px 12px', background: '#FEF2F2',
-            border: '1px solid #FECACA', borderRadius: 8, fontSize: 12, color: '#DC2626', fontWeight: 600 }}>
-            ⚠️ {shareErr}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-          <Btn onClick={doShare} disabled={!ready || sharing} color="dark" pill>
-            {sharing ? '공유 중...' : '🚀 모둠원에게 공유하기'}
-          </Btn>
-        </div>
-      </Sec>
     </div>
   )
 }
@@ -1799,18 +2045,22 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
 
 // ─── STEP 4 ───────────────────────────────────────────────────────────────
 
-function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4State }) {
-  const [loadedImg,  setLoadedImg]  = useState(null)
-  const [loadingImg, setLoadingImg] = useState(false)
+function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4State, posts4, onLike4, onComment4, onDelete4 }) {
+  const [loadedImg,   setLoadedImg]   = useState(null)
+  const [loadingImg,  setLoadingImg]  = useState(false)
+  const [collapsed,   setCollapsed]   = useState(false)
+  const [sharing,     setSharing]     = useState(false)
+  const [noteInput,   setNoteInput]   = useState('')
 
   const notes  = step4State?.notes  || []
   const checks = step4State?.checks || {}
   const ps     = step4State?.ps     || ''
-  const [noteInput, setNoteInput] = useState('')
 
   const chartData = items.map((label, i) => ({ label, value: dataTable[i]?.value || 0 }))
   const ChartComp = CHART_CMPS[chartConfig.type] || BarChart
   const hasData   = dataTable.some(d => Number(d.value) > 0)
+  const doneCount = Object.values(checks).filter(Boolean).length
+  const total     = dataTable.reduce((s,d) => s + (Number(d.value)||0), 0)
 
   async function doLoadCanvas() {
     setLoadingImg(true)
@@ -1822,105 +2072,316 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
 
   function addNote() {
     if (!noteInput.trim()) return
-    const next = [...notes, { id: Date.now(), text: noteInput.trim() }]
-    onStep4State({ notes: next })
+    onStep4State({ notes: [...notes, { id: Date.now(), text: noteInput.trim() }] })
     setNoteInput('')
   }
 
-  const [sharing, setSharing] = useState(false)
   async function doShare() {
     setSharing(true)
-    const content = `💡 탐구 결과!\n주제: ${notes.map(n => n.text).join(' · ')}\n성찰: ${Object.values(checks).filter(Boolean).length}/${CHECKLIST.length}개 달성`
+    const content = `💡 탐구 결과!\n주제: ${notes.map(n=>n.text).join(' · ')}\n성찰: ${doneCount}/${CHECKLIST.length}개 달성`
     await addStep4Post(code, { name: user.name, step: 4, content, time: tsNow() })
     setSharing(false)
   }
 
   return (
-    <div>
-      <Sec>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>
-          {chartConfig.title || '완성된 그래프'}
-        </div>
-        {hasData ? <ChartComp data={chartData} /> : (
-          <div style={{ textAlign: 'center', padding: '14px 0', color: '#8C7B6E', fontSize: 14 }}>
-            2단계에서 데이터를 입력하면 그래프가 나타나요
-          </div>
-        )}
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #efefef',
-          display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 13, color: '#8C7B6E' }}>✏️ Step 3 직접 그린 그래프</span>
-          <Btn onClick={doLoadCanvas} color="gray" sm disabled={loadingImg}>
-            {loadingImg ? '불러오는 중...' : '📂 불러오기'}
-          </Btn>
-        </div>
-        {loadedImg && (
-          <div style={{ marginTop: 10 }}>
-            <img src={loadedImg} alt="직접 그린 그래프"
-              style={{ width: '100%', borderRadius: 8, border: '1px solid #dbdbdb' }} />
-          </div>
-        )}
-      </Sec>
+    <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
 
-      <Sec>
-        <Lbl mt={0}>🗒️ 그래프에서 알 수 있는 사실</Lbl>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'stretch' }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Inp value={noteInput} onChange={setNoteInput}
-              onKeyDown={e => e.key === 'Enter' && addNote()}
-              placeholder="예: 과자를 좋아하는 학생이 가장 많다" />
-          </div>
-          <button onClick={addNote} className="edu-btn" style={{
-            flexShrink: 0, whiteSpace: 'nowrap',
-            padding: '0 18px', borderRadius: 14, fontSize: 14, fontWeight: 800,
-            background: '#3D2B1F', color: '#fff', border: 'none', cursor: 'pointer',
-            fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(61,43,31,.25)',
-            height: 46,
-          }}>추가</button>
-        </div>
-        {notes.length > 0
-          ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
-            {notes.map((n, i) => (
-              <div key={n.id} style={{ padding: '9px 14px', maxWidth: 210,
-                background: CHART_COLORS[i % CHART_COLORS.length] + '12',
-                border: `1.5px solid ${CHART_COLORS[i % CHART_COLORS.length]}30`,
-                borderRadius: 12, fontSize: 13, fontWeight: 500, lineHeight: 1.6,
-                animation: 'fadeUp .3s ease' }}>{n.text}</div>
-            ))}
-          </div>
-          : <div style={{ fontSize: 14, color: '#8C7B6E', textAlign: 'center', padding: 16 }}>
-            그래프를 보고 알 수 있는 것을 적어 보세요
-          </div>
-        }
-      </Sec>
-
-      <Sec>
-        <Lbl mt={0}>✏️ 문제 해결 과정</Lbl>
-        <Inp value={ps} onChange={v => onStep4State({ ps: v })} multi rows={4}
-          placeholder="그래프를 이용하여 문제를 해결한 과정을 써 보세요..." />
-      </Sec>
-
-      <Sec>
-        <Lbl mt={0}>✅ 성찰 체크리스트</Lbl>
-        {CHECKLIST.map((item, i) => (
-          <label key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10,
-            marginBottom: 14, cursor: 'pointer' }}>
-            <input type="checkbox" checked={!!checks[i]}
-              onChange={e => onStep4State({ checks: { ...checks, [i]: e.target.checked } })}
-              style={{ marginTop: 3, accentColor: '#5BBF7A', width: 18, height: 18, flexShrink: 0 }} />
-            <span style={{ fontSize: 14, color: checks[i] ? '#2D9950' : '#8C7B6E',
-              fontWeight: checks[i] ? 700 : 400, lineHeight: 1.6, transition: 'all .15s' }}>
-              {item}
+      {/* ── 왼쪽 작업 패널 ── */}
+      <div style={{
+        width: collapsed ? 48 : 316,
+        flexShrink: 0,
+        borderRight: '1.5px solid #E2E8F2',
+        background: '#fff',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        transition: 'width .3s cubic-bezier(.4,0,.2,1)',
+      }}>
+        {/* 패널 헤더 */}
+        <div style={{ padding:'10px 12px', borderBottom:'1px solid #F1F5F9',
+          display:'flex', alignItems:'center', gap:8, flexShrink:0, background:'#F8FAFC' }}>
+          {!collapsed && (
+            <span style={{ fontSize:13, fontWeight:700, color:'#1E293B', flex:1, whiteSpace:'nowrap' }}>
+              ✏️ 내 해석 작성
             </span>
-          </label>
-        ))}
-        <div style={{ fontSize: 13, color: '#8C7B6E', marginTop: 4 }}>
-          {Object.values(checks).filter(Boolean).length}/{CHECKLIST.length}개 완료
+          )}
+          <button onClick={() => setCollapsed(c => !c)} style={{
+            width:28, height:28, borderRadius:8, border:'1.5px solid #E2E8F2',
+            background:'#fff', cursor:'pointer', fontSize:13,
+            display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B',
+            flexShrink:0, marginLeft: collapsed ? 'auto' : 0,
+            transition:'transform .3s',
+          }}>{collapsed ? '▶' : '◀'}</button>
         </div>
-      </Sec>
 
-      <Btn onClick={doShare} color="blue" full disabled={sharing} pill style={{ marginBottom: 8 }}>
-        {sharing ? '공유 중...' : '📤 최종 탐구 결과 공유하기'}
-      </Btn>
+        {/* 스크롤 내용 */}
+        {!collapsed && (
+          <div style={{ flex:1, overflowY:'auto', padding:12 }}>
+
+            {/* 그래프 썸네일 */}
+            <div style={{ background:'#F0FDF4', border:'1.5px solid #A7F3D0', borderRadius:12,
+              padding:12, marginBottom:12 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'#047857', marginBottom:8 }}>
+                📊 {chartConfig.title || '완성된 그래프'}
+              </div>
+              {hasData ? (
+                items.map((item, i) => {
+                  const v = Number(dataTable[i]?.value) || 0
+                  const pct = total ? Math.round(v/total*100) : 0
+                  return (
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:7, marginBottom:5 }}>
+                      <div style={{ fontSize:10, color:'#475569', width:38, textAlign:'right', flexShrink:0,
+                        overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item}</div>
+                      <div style={{ flex:1, height:14, background:'#D1FAE5', borderRadius:3, overflow:'hidden' }}>
+                        <div style={{ height:'100%', width:`${pct}%`,
+                          background: CHART_COLORS[i%CHART_COLORS.length],
+                          borderRadius:3, display:'flex', alignItems:'center',
+                          paddingLeft:4, fontSize:9, fontWeight:700, color:'#fff',
+                          transition:'width .5s' }}>{pct > 15 ? `${pct}%` : ''}</div>
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                <div style={{ fontSize:12, color:'#94A3B8', textAlign:'center', padding:'8px 0' }}>
+                  2단계에서 데이터를 입력해 주세요
+                </div>
+              )}
+              <button onClick={doLoadCanvas} disabled={loadingImg} style={{
+                marginTop:8, width:'100%', padding:'6px', borderRadius:7, border:'1px solid #A7F3D0',
+                background:'#fff', color:'#047857', fontSize:11, fontWeight:700, cursor:'pointer',
+                fontFamily:'inherit' }}>
+                {loadingImg ? '불러오는 중...' : '📂 직접 그린 그래프 불러오기'}
+              </button>
+              {loadedImg && (
+                <img src={loadedImg} alt="직접 그린 그래프"
+                  style={{ width:'100%', borderRadius:6, border:'1px solid #A7F3D0', marginTop:8 }} />
+              )}
+            </div>
+
+            {/* 알 수 있는 사실 */}
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'#64748B', marginBottom:7 }}>
+                🗒️ 알 수 있는 사실
+              </div>
+              <div style={{ display:'flex', gap:6, marginBottom:8 }}>
+                <input value={noteInput} onChange={e => setNoteInput(e.target.value)}
+                  onKeyDown={e => e.key==='Enter' && addNote()}
+                  placeholder="예: 과자를 좋아하는 학생이 가장 많다"
+                  style={{ flex:1, padding:'7px 9px', borderRadius:7, border:'1.5px solid #CBD5E1',
+                    fontSize:12, background:'#F8FAFC', outline:'none', fontFamily:'inherit' }}
+                  onFocus={e => e.target.style.borderColor='#8B5CF6'}
+                  onBlur={e => e.target.style.borderColor='#CBD5E1'} />
+                <button onClick={addNote} style={{ padding:'7px 11px', borderRadius:7, background:'#1E293B',
+                  color:'#fff', border:'none', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>추가</button>
+              </div>
+              {notes.length > 0 ? (
+                <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                  {notes.map((n, i) => (
+                    <div key={n.id} style={{ display:'flex', alignItems:'flex-start', gap:5,
+                      padding:'6px 10px', borderRadius:8, fontSize:12, fontWeight:500, lineHeight:1.5,
+                      background: CHART_COLORS[i%CHART_COLORS.length]+'12',
+                      border:`1px solid ${CHART_COLORS[i%CHART_COLORS.length]}25` }}>
+                      <div style={{ width:5, height:5, borderRadius:'50%', marginTop:6, flexShrink:0,
+                        background: CHART_COLORS[i%CHART_COLORS.length] }} />
+                      {n.text}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize:12, color:'#94A3B8', textAlign:'center', padding:'8px 0' }}>
+                  그래프를 보고 사실을 적어 보세요
+                </div>
+              )}
+            </div>
+
+            {/* 문제 해결 과정 */}
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'#64748B', marginBottom:6 }}>
+                📝 문제 해결 과정
+              </div>
+              <textarea value={ps} onChange={e => onStep4State({ ps: e.target.value })}
+                placeholder="그래프를 이용하여 문제를 해결한 과정을 써 보세요..."
+                rows={4} style={{ width:'100%', padding:'9px 10px', borderRadius:8,
+                  border:'1.5px solid #CBD5E1', fontSize:12, background:'#F8FAFC',
+                  outline:'none', resize:'none', lineHeight:1.6, fontFamily:'inherit' }}
+                onFocus={e => e.target.style.borderColor='#8B5CF6'}
+                onBlur={e => e.target.style.borderColor='#CBD5E1'} />
+            </div>
+
+            {/* 체크리스트 */}
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'#64748B', marginBottom:7 }}>
+                ✅ 성찰 체크리스트
+              </div>
+              {CHECKLIST.map((item, i) => (
+                <label key={i} style={{ display:'flex', alignItems:'flex-start', gap:8,
+                  marginBottom:8, cursor:'pointer' }}>
+                  <div onClick={() => onStep4State({ checks: { ...checks, [i]: !checks[i] } })}
+                    style={{ width:17, height:17, borderRadius:4,
+                      border: checks[i] ? 'none' : '2px solid #10B981',
+                      background: checks[i] ? '#10B981' : '#fff',
+                      flexShrink:0, marginTop:1,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      transition:'all .15s', cursor:'pointer' }}>
+                    {checks[i] && <span style={{ color:'#fff', fontSize:10, fontWeight:800 }}>✓</span>}
+                  </div>
+                  <span style={{ fontSize:12, lineHeight:1.55,
+                    color: checks[i] ? '#10B981' : '#475569',
+                    fontWeight: checks[i] ? 700 : 400,
+                    transition:'all .15s', flex:1 }}>{item}</span>
+                </label>
+              ))}
+              {/* 진행 바 */}
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:6 }}>
+                <div style={{ flex:1, height:7, borderRadius:999, background:'#E2E8F2', overflow:'hidden' }}>
+                  <div style={{ height:'100%',
+                    width:`${Math.round(doneCount/CHECKLIST.length*100)}%`,
+                    background:'#10B981', borderRadius:999, transition:'width .4s' }} />
+                </div>
+                <span style={{ fontSize:11, fontWeight:700, color:'#10B981', whiteSpace:'nowrap' }}>
+                  {doneCount}/{CHECKLIST.length} {doneCount===CHECKLIST.length ? '✨' : '완료'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 공유 버튼 */}
+        {!collapsed && (
+          <div style={{ padding:12, flexShrink:0, borderTop:'1px solid #F1F5F9' }}>
+            <button onClick={doShare} disabled={sharing} style={{
+              width:'100%', padding:12, borderRadius:10,
+              background: sharing ? '#E2E8F2' : 'linear-gradient(135deg,#8B5CF6,#6D28D9)',
+              color: sharing ? '#94A3B8' : '#fff', border:'none',
+              fontSize:13, fontWeight:700, cursor: sharing ? 'not-allowed' : 'pointer',
+              fontFamily:'inherit', boxShadow: sharing ? 'none' : '0 4px 12px rgba(139,92,246,.35)',
+            }}>
+              {sharing ? '공유 중...' : '📤 보드에 공유하기'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── 오른쪽 패들릿 보드 ── */}
+      <div style={{ flex:1, overflowY:'auto', padding:'16px 18px 80px',
+        background:'#FDFCF7',
+        backgroundImage:`radial-gradient(circle at 15% 25%, rgba(139,92,246,.05) 0%, transparent 45%),
+          radial-gradient(circle at 85% 75%, rgba(16,185,129,.05) 0%, transparent 45%)`,
+        position:'relative' }}>
+
+        {/* Step 배지 */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 14px',
+          borderRadius:10, background:'#F5F3FF', border:'1px solid #DDD6FE',
+          marginBottom:14 }}>
+          <div style={{ width:28, height:28, borderRadius:'50%', background:'#8B5CF6',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            color:'#fff', fontSize:13, fontWeight:700, flexShrink:0 }}>4</div>
+          <div style={{ fontWeight:700, fontSize:15, color:'#6D28D9' }}>
+            💡 그래프 해석하기 — 모둠원 해석 보드
+          </div>
+        </div>
+
+        {posts4 && posts4.length > 0 ? (
+          <div style={{ columns:2, columnGap:12 }}>
+            {posts4.map(post => {
+              const isMyPost = post.name === user.name
+              const isLiked  = post.likedBy?.includes(user.name)
+              const pal = isMyPost
+                ? { bg:'#FDFAFF', border:'#C4B5FD', hdr:'#F5F3FF', avBg:'#EDE9FE', avFg:'#5B21B6' }
+                : padletPalette(post.name)
+              const doneCount4 = post.checks ? Object.values(post.checks).filter(Boolean).length : 0
+
+              return (
+                <div key={post.id} className="padlet-card-item postcard-wrap" style={{
+                  background: pal.bg,
+                  border:`1.5px solid ${pal.border}`,
+                  boxShadow:`0 2px 10px rgba(0,0,0,.08)`,
+                }}>
+                  {isMyPost && (
+                    <>
+                      <div style={{ position:'absolute', top:-8, left:12, zIndex:10,
+                        padding:'2px 8px', borderRadius:999, background:'#8B5CF6', color:'#fff',
+                        fontSize:10, fontWeight:800 }}>내 글</div>
+                      <button onClick={() => onDelete4 && onDelete4(post.id)}
+                        className="postcard-close" style={{
+                          position:'absolute', top:-9, right:-9, zIndex:10,
+                          width:22, height:22, borderRadius:'50%', background:'#EF4444', color:'#fff',
+                          border:'2px solid #fff', fontSize:11, fontWeight:800, cursor:'pointer',
+                          display:'flex', alignItems:'center', justifyContent:'center',
+                          boxShadow:'0 2px 8px rgba(239,68,68,.45)' }}>✕</button>
+                    </>
+                  )}
+
+                  {/* 카드 헤더 */}
+                  <div style={{ padding:'9px 12px 7px', display:'flex', alignItems:'center', gap:8,
+                    background: pal.hdr }}>
+                    <div style={{ width:28, height:28, borderRadius:'50%', flexShrink:0,
+                      background: pal.avBg, color: pal.avFg,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize:11, fontWeight:700 }}>{(post.name||'?')[0]}</div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:13, fontWeight:700, color:'#1E293B' }}>
+                        {post.name}{isMyPost && <span style={{ fontSize:10, color:'#94A3B8', fontWeight:400 }}> (나)</span>}
+                      </div>
+                      <div style={{ fontSize:10, color:'#94A3B8' }}>{post.time}</div>
+                    </div>
+                  </div>
+
+                  {/* 카드 바디 */}
+                  <div style={{ padding:'9px 12px 8px' }}>
+                    <div style={{ fontSize:13, color:'#334155', lineHeight:1.65,
+                      whiteSpace:'pre-line' }}>{post.content}</div>
+                    {/* 체크 진행 바 */}
+                    {post.checks && (
+                      <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:8 }}>
+                        <div style={{ flex:1, height:7, borderRadius:999, background:'#E2E8F2', overflow:'hidden' }}>
+                          <div style={{ height:'100%', borderRadius:999, background:'#10B981',
+                            width:`${Math.round(doneCount4/CHECKLIST.length*100)}%`,
+                            transition:'width .4s' }} />
+                        </div>
+                        <span style={{ fontSize:11, fontWeight:700, color:'#10B981', whiteSpace:'nowrap' }}>
+                          {doneCount4}/{CHECKLIST.length}{doneCount4===CHECKLIST.length ? ' ✨' : ' 완료'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 댓글 */}
+                  {post.comments?.map((c, i) => (
+                    <div key={i} style={{ fontSize:12, color:'#64748B', padding:'2px 12px 2px 16px',
+                      borderLeft:`2px solid ${pal.border}`, margin:'0 12px 3px', lineHeight:1.6 }}>{c}</div>
+                  ))}
+
+                  {/* 푸터 */}
+                  <div style={{ padding:'7px 10px 9px', display:'flex', alignItems:'center', gap:5,
+                    borderTop:`1px solid ${pal.border}50` }}>
+                    <button onClick={() => onLike4 && onLike4(post.id, !isLiked)} style={{
+                      background:'none', border:'none', cursor:'pointer', fontSize:17, lineHeight:1 }}>
+                      {isLiked ? '❤️' : '🤍'}
+                    </button>
+                    <span style={{ fontSize:11, color:'#94A3B8' }}>
+                      {post.likes > 0 && <b style={{ color:'#475569' }}>♥ {post.likes}</b>}
+                      {post.likes > 0 && post.comments?.length > 0 && ' · '}
+                      {post.comments?.length > 0 && `댓글 ${post.comments.length}`}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div style={{ textAlign:'center', padding:'50px 20px', color:'#94A3B8' }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>💡</div>
+            <div style={{ fontSize:15, fontWeight:700, color:'#64748B', marginBottom:6 }}>
+              아직 공유된 해석이 없어요
+            </div>
+            <div style={{ fontSize:13 }}>
+              왼쪽 패널에서 해석을 작성하고<br/><b>보드에 공유하기</b>를 눌러보세요!
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -2184,271 +2645,326 @@ export default function ActivityPage() {
     dataTable.some(d => Number(d.value) > 0),
     (chartConfig.title || strokes.length > 0), true]
 
-  const hasSidepanel = activeStep === 1 || activeStep === 4
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
     <div className="textbook-bg" style={{ display: 'flex', flexDirection: 'column', width: 1024, height: 768,
       overflow: 'hidden' }}>
 
-      {/* ── Top Navigation Bar ── */}
+      {/* ── 컴팩트 상단 헤더 (44px) ── */}
       <header style={{
         background: '#fff',
-        height: 62, display: 'flex', alignItems: 'center',
-        padding: '0 18px', gap: 12, flexShrink: 0,
-        borderBottom: '3px solid #E6D8C8',
-        boxShadow: '0 3px 12px rgba(140,90,50,.07)',
+        height: 44, display: 'flex', alignItems: 'center',
+        padding: '0 14px', gap: 10, flexShrink: 0,
+        borderBottom: '2px solid #E6D8C8',
+        boxShadow: '0 2px 8px rgba(140,90,50,.07)',
       }}>
-        {/* Left */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <div style={{ width: 38, height: 38, borderRadius: '50%', padding: 2.5,
-            background: EDU_GRAD, flexShrink: 0,
-            boxShadow: '0 3px 10px rgba(255,140,66,.30)' }}>
-            <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📚</div>
-          </div>
-          <div style={{ lineHeight: 1.3 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#3D2B1F', whiteSpace: 'nowrap' }}>
-              {user.groupName}
-            </div>
-            <div style={{ fontSize: 11, color: '#8C7B6E', fontWeight: 700 }}>✏️ {user.name}</div>
-          </div>
-        </div>
+        {/* 앱 타이틀 (그라데이션) */}
+        <span style={{
+          fontSize: 15, fontWeight: 800, letterSpacing: -0.3,
+          background: EDU_GRAD, WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent', backgroundClip: 'text', flexShrink: 0,
+        }}>📊 메모 보드</span>
 
-        {/* Center */}
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <span style={{
-            fontSize: 17, fontWeight: 800, letterSpacing: -0.5,
-            background: EDU_GRAD,
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>📊 자료를 수집하여 그래프로 나타내고 해석해요!</span>
-        </div>
+        {/* 현재 단계 표시 */}
+        <span style={{ fontSize: 13, fontWeight: 700, color: step.c, flexShrink: 0 }}>
+          {step.emoji} {step.short}
+        </span>
 
-        {/* Right */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-          <OnlineUsers users={onlineUsers} />
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '5px 10px 5px 13px', borderRadius: 999,
-            background: '#FFF3E8', border: '2.5px solid #FFCB96',
-            boxShadow: '0 2px 8px rgba(255,140,66,.14)',
-          }}>
-            <span style={{ fontSize: 11, color: '#D4601A', fontWeight: 800 }}>🔑</span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#3D2B1F', letterSpacing: 2.5 }}>{user.code}</span>
-            <button
-              onClick={() => navigator.clipboard.writeText(user.code).then(() => setToast('✅ 코드가 복사되었어요!'))}
-              style={{
-                marginLeft: 2, padding: '4px 10px', borderRadius: 10,
-                background: '#FF8C42', color: '#fff', border: 'none',
-                fontSize: 11, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 2px 8px rgba(255,140,66,.38)',
-                transition: 'all .15s',
-              }}>복사</button>
-          </div>
-          <button
-            onClick={() => { sessionStorage.removeItem('gts_user'); router.push('/') }}
-            style={{
-              padding: '7px 16px', borderRadius: 12,
-              background: '#fff', color: '#8C7B6E',
-              border: '2.5px solid #E6D8C8', fontSize: 12, fontWeight: 800,
-              cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background='#FFF0F1'; e.currentTarget.style.color='#C0364A'; e.currentTarget.style.borderColor='#FFB0B0' }}
-            onMouseLeave={e => { e.currentTarget.style.background='#fff'; e.currentTarget.style.color='#8C7B6E'; e.currentTarget.style.borderColor='#E6D8C8' }}
-          >나가기 →</button>
-        </div>
-      </header>
+        <div style={{ flex: 1 }} />
 
-      {/* ── Sync Strip ── */}
-      <div style={{ height: 30, flexShrink: 0, display: 'flex', alignItems: 'center',
-        padding: '0 16px', gap: 8,
-        background: hasSyncLead
-          ? iAmLeader ? '#EDFAF2' : '#EBF7FF'
-          : freeMode ? '#FFF3E8' : '#FFF9F2',
-        borderBottom: `2.5px solid ${hasSyncLead ? iAmLeader ? '#90DDB0' : '#93D1F5' : freeMode ? '#FFCB96' : '#E6D8C8'}`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1,
-          fontSize: 11, fontWeight: 800,
-          color: hasSyncLead ? iAmLeader ? '#2D9950' : '#2785B5' : freeMode ? '#D4601A' : '#8C7B6E' }}>
+        {/* 동기화 상태 pill */}
+        <div style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 10px',
+          borderRadius:999,
+          background: hasSyncLead ? iAmLeader ? '#ECFDF5' : '#EFF6FF' : '#F8FAFC',
+          border: `1px solid ${hasSyncLead ? iAmLeader ? '#A7F3D0' : '#BFDBFE' : '#E2E8F2'}`,
+          fontSize:10, fontWeight:700,
+          color: hasSyncLead ? iAmLeader ? '#047857' : '#1D4ED8' : '#64748B',
+        }}>
           {hasSyncLead && (
-            <span style={{ width: 7, height: 7, borderRadius: '50%',
-              background: iAmLeader ? '#5BBF7A' : '#4EACD9',
-              animation: 'pulse 1.5s infinite', display: 'inline-block', flexShrink: 0 }} />
+            <span style={{ width:6, height:6, borderRadius:'50%',
+              background: iAmLeader ? '#10B981' : '#3B82F6',
+              animation:'pulse 1.5s infinite', display:'inline-block', flexShrink:0 }} />
           )}
           {hasSyncLead
-            ? iAmLeader ? '👑 내 화면으로 모둠원이 동기화 중' : `📡 ${room.syncLeader}님 화면과 동기화 중`
-            : freeMode  ? '🔓 자유 탐색 모드' : '동기화 없음'
+            ? iAmLeader ? '내 화면 동기화 중' : `${room.syncLeader}님 화면 동기화 중`
+            : freeMode  ? '🔓 자유 탐색' : '동기화 없음'
           }
-        </div>
-        <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+          {/* 버튼들 */}
           {freeMode ? (
             <button onClick={() => { setFreeMode(false); setActiveStep(remoteStep.current) }} style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
-              background: '#FF8C42', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800,
+              background:'#FF8C42', color:'#fff', border:'none', cursor:'pointer', fontFamily:'inherit',
             }}>← 합류</button>
           ) : (
             <button onClick={() => setFreeMode(true)} style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
-              background: '#fff', color: '#8C7B6E', border: '1.5px solid #E8DFD4',
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}>자유 탐색</button>
+              marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800,
+              background:'rgba(0,0,0,.06)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit',
+            }}>자유</button>
           )}
           {!hasSyncLead ? (
             <button onClick={takeSyncLead} style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
-              background: '#5BBF7A', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-            }}>🔗 화면 동기화</button>
+              padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800,
+              background:'#10B981', color:'#fff', border:'none', cursor:'pointer', fontFamily:'inherit',
+            }}>🔗 동기화</button>
           ) : iAmLeader ? (
             <button onClick={releaseSyncLead} style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
-              background: '#5BBF7A', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-            }}>동기화 해제</button>
-          ) : (
-            <button disabled style={{
-              padding: '3px 11px', height: 22, borderRadius: 999, fontSize: 11, fontWeight: 800,
-              background: '#F2EAE0', color: '#8C7B6E', border: 'none', cursor: 'not-allowed', fontFamily: 'inherit',
-            }}>동기화 중</button>
-          )}
+              padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800,
+              background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit',
+            }}>해제</button>
+          ) : null}
         </div>
-      </div>
 
-      {/* ── Step Nav ── */}
-      <div style={{ height: 74, flexShrink: 0, background: '#fff',
-        borderBottom: '3px solid #E6D8C8',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '0 16px',
-        boxShadow: '0 3px 10px rgba(140,90,50,.06)',
-      }}>
-        {STEPS.map((s, idx) => {
-          const isActive = activeStep === s.n
-          const isDone   = done[s.n] && !isActive
-          const stepColors = ['#FF8C42','#4EACD9','#5BBF7A','#C97DE8']
-          const sc = stepColors[idx]
-          return (
-            <button key={s.n} onClick={() => changeStep(s.n)} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-              background: isActive ? s.bg : 'none',
-              border: isActive ? `2px solid ${s.bd}` : '2px solid transparent',
-              borderRadius: 16, cursor: 'pointer',
-              padding: '5px 12px 5px 10px',
-              transition: 'all .2s cubic-bezier(.34,1.3,.64,1)',
-              boxShadow: isActive ? `0 4px 14px ${sc}25` : 'none',
-            }}
-            onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background='#F0E8DC'; e.currentTarget.style.transform='translateY(-2px)' }}}
-            onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background='none'; e.currentTarget.style.transform='none' }}}>
-              <div style={{
-                width: 38, height: 38, borderRadius: '50%', padding: 2.5,
-                background: isActive ? `linear-gradient(135deg, ${sc}, ${sc}bb)` :
-                             isDone  ? 'linear-gradient(135deg,#90DDB0,#5BBF7A)' : '#EDE4D8',
-                transition: 'all .2s', boxShadow: isActive ? `0 5px 14px ${sc}40` : isDone ? '0 3px 8px rgba(91,191,122,.30)' : 'none',
-              }}>
-                <div style={{ width: '100%', height: '100%', borderRadius: '50%',
-                  background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: isActive ? 18 : 15, transition:'font-size .2s' }}>{isDone ? '✓' : s.emoji}</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <span style={{
-                  width: 16, height: 16, borderRadius: '50%',
-                  background: isActive ? sc : isDone ? '#5BBF7A' : '#C4B4A8',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 9, color: '#fff', fontWeight: 800, flexShrink: 0,
-                  boxShadow: isActive ? `0 2px 6px ${sc}50` : 'none',
-                }}>{s.n}</span>
-                <span style={{ fontSize: 10, fontWeight: isActive ? 800 : 600,
-                  color: isActive ? sc : '#8C7B6E', whiteSpace: 'nowrap' }}>
-                  {s.short}
-                </span>
-              </div>
-            </button>
-          )
-        })}
-      </div>
+        {/* 온라인 유저 */}
+        <OnlineUsers users={onlineUsers} />
 
-      {/* ── Body ── */}
+        {/* 참여 코드 pill */}
+        <div style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 9px 4px 11px',
+          borderRadius:999, background:'#FFF3E8', border:'1.5px solid #FFCB96',
+          boxShadow:'0 2px 6px rgba(255,140,66,.14)' }}>
+          <span style={{ fontSize:10, color:'#D4601A', fontWeight:800 }}>🔑</span>
+          <span style={{ fontSize:12, fontWeight:800, color:'#3D2B1F', letterSpacing:2 }}>{user.code}</span>
+          <button onClick={() => navigator.clipboard.writeText(user.code).then(() => setToast('✅ 코드가 복사되었어요!'))}
+            style={{ marginLeft:2, padding:'3px 8px', borderRadius:8,
+              background:'#FF8C42', color:'#fff', border:'none',
+              fontSize:10, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>복사</button>
+        </div>
+
+        <button onClick={() => { sessionStorage.removeItem('gts_user'); router.push('/') }}
+          style={{ padding:'5px 12px', borderRadius:10, background:'#fff', color:'#8C7B6E',
+            border:'1.5px solid #E6D8C8', fontSize:11, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}
+          onMouseEnter={e => { e.currentTarget.style.background='#FFF0F1'; e.currentTarget.style.color='#C0364A' }}
+          onMouseLeave={e => { e.currentTarget.style.background='#fff'; e.currentTarget.style.color='#8C7B6E' }}>
+          나가기 →
+        </button>
+      </header>
+
+      {/* ── 바디 : H-드로어 + 콘텐츠 ── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
-        {/* 메인 영역 — 크림 파스텔 배경 */}
-        <main ref={mainRef} style={{
-          flex: 1, overflowY: 'auto', padding: 16, minWidth: 0,
-          background: '#FFF9F2',
-          backgroundImage: `
-            radial-gradient(circle at 10% 15%, rgba(255,140,66,.07) 0%, transparent 40%),
-            radial-gradient(circle at 88% 12%, rgba(78,172,217,.06) 0%, transparent 40%),
-            radial-gradient(circle at 52% 82%, rgba(91,191,122,.05) 0%, transparent 40%),
-            radial-gradient(circle at 20% 70%, rgba(201,125,232,.04) 0%, transparent 35%)
-          `,
+        {/* ── H-스타일 사이드 드로어 네비게이션 ── */}
+        <nav style={{
+          width: drawerOpen ? 200 : 52,
+          flexShrink: 0,
+          background: '#1E293B',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '10px 0',
+          gap: 2,
+          transition: 'width .3s cubic-bezier(.4,0,.2,1)',
+          overflow: 'hidden',
+          position: 'relative',
+          zIndex: 10,
         }}>
-          {/* Step 헤더 뱃지 — 교과서 스타일 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16,
-            padding: '12px 20px', borderRadius: 20,
-            background: `linear-gradient(135deg, ${step.bg}, #fff)`,
-            border: `2.5px solid ${step.bd}`,
-            boxShadow: `0 4px 16px ${step.c}18`,
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <div style={{ position:'absolute', right:-10, top:-10, width:60, height:60,
-              borderRadius:'50%', background:`${step.c}12`, pointerEvents:'none' }} />
-            <div style={{ width: 36, height: 36, borderRadius: '50%',
-              background: `linear-gradient(135deg, ${step.c}, ${step.dk})`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: 15, fontWeight: 800, flexShrink: 0,
-              boxShadow: `0 4px 10px ${step.c}45` }}>{step.n}</div>
-            <div style={{ lineHeight: 1.3 }}>
-              <div style={{ fontWeight: 800, fontSize: 16, color: step.dk, letterSpacing: '-0.3px' }}>{step.emoji} {step.label}</div>
-              <div style={{ fontSize: 11, color: step.c, fontWeight: 700, marginTop: 1, opacity:.75 }}>Step {step.n} of 4</div>
-            </div>
-            <div style={{ marginLeft: 'auto', display:'flex', gap:4 }}>
-              {[1,2,3,4].map(n => (
-                <div key={n} style={{ width: n <= activeStep ? 20 : 8, height:8, borderRadius:999,
-                  background: n <= activeStep ? step.c : '#E6D8C8',
-                  transition:'all .3s', boxShadow: n <= activeStep ? `0 2px 6px ${step.c}40` : 'none',
-                }} />
-              ))}
-            </div>
+          {/* 로고 */}
+          <div style={{ width:36, height:36, borderRadius:10, padding:2, background:EDU_GRAD, marginBottom:8, flexShrink:0 }}>
+            <div style={{ width:'100%', height:'100%', borderRadius:8, background:'#fff',
+              display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>📚</div>
           </div>
 
+          {/* 모둠명 (열렸을 때) */}
+          {drawerOpen && (
+            <div style={{ fontSize:10, color:'rgba(255,255,255,.35)', fontWeight:700,
+              marginBottom:4, whiteSpace:'nowrap' }}>{user.groupName}</div>
+          )}
+
+          {/* 동기화 상태 dot */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:5,
+            padding:'5px 8px', width:'100%', marginBottom:4 }}>
+            <div style={{ width:7, height:7, borderRadius:'50%', flexShrink:0,
+              background: hasSyncLead ? '#34D399' : '#64748B',
+              boxShadow: hasSyncLead ? '0 0 6px #34D399' : 'none',
+              animation: hasSyncLead ? 'pulse 1.5s infinite' : 'none' }} />
+            {drawerOpen && (
+              <span style={{ fontSize:10, color: hasSyncLead ? '#34D399' : 'rgba(255,255,255,.3)',
+                fontWeight:700, whiteSpace:'nowrap' }}>
+                {hasSyncLead ? iAmLeader ? '동기화 중' : `${room.syncLeader}` : '비동기화'}
+              </span>
+            )}
+          </div>
+
+          {/* 구분선 */}
+          <div style={{ width:'80%', height:1, background:'rgba(255,255,255,.08)', marginBottom:4 }} />
+
+          {/* 스텝 네비게이션 아이템 */}
+          {STEPS.map((s, idx) => {
+            const isActive = activeStep === s.n
+            const isDone   = done[s.n] && !isActive
+            const stepClr  = ['#FF8C42','#4EACD9','#5BBF7A','#C97DE8'][idx]
+            return (
+              <button key={s.n} onClick={() => changeStep(s.n)}
+                className={`h-step-item${isActive ? ' active' : isDone ? ' done' : ''}`}
+                style={{ width:'100%', display:'flex', alignItems:'center',
+                  gap:10, padding:'9px 0 9px 10px',
+                  border:'none', background:'none', borderRadius:10,
+                  cursor:'pointer', fontFamily:'inherit',
+                  position:'relative', whiteSpace:'nowrap', overflow:'hidden',
+                  background: isActive ? 'rgba(255,255,255,.13)' : 'none',
+                }}
+                onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='rgba(255,255,255,.07)' }}
+                onMouseLeave={e => { if(!isActive) e.currentTarget.style.background='none' }}>
+
+                {/* 활성 표시 바 */}
+                {isActive && (
+                  <div style={{ position:'absolute', left:0, top:'15%', bottom:'15%',
+                    width:3, borderRadius:'0 3px 3px 0',
+                    background: stepClr }} />
+                )}
+
+                {/* 번호 + 아이콘 */}
+                <div style={{ position:'relative', flexShrink:0 }}>
+                  <div style={{ width:30, height:30, borderRadius:8, flexShrink:0,
+                    background: isActive ? stepClr + '22' : isDone ? 'rgba(52,211,153,.15)' : 'rgba(255,255,255,.06)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:15, border: isActive ? `1.5px solid ${stepClr}55` : '1.5px solid transparent',
+                    transition:'all .2s',
+                  }}>
+                    {isDone ? '✓' : s.emoji}
+                  </div>
+                  {/* 번호 뱃지 */}
+                  <div style={{ position:'absolute', bottom:-4, right:-4,
+                    width:14, height:14, borderRadius:'50%',
+                    background: isActive ? stepClr : isDone ? '#34D399' : '#334155',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:8, fontWeight:800, color:'#fff',
+                    boxShadow: isActive ? `0 1px 4px ${stepClr}80` : 'none',
+                  }}>{s.n}</div>
+                </div>
+
+                {/* 레이블 (열렸을 때) */}
+                {drawerOpen && (
+                  <div style={{ textAlign:'left', overflow:'hidden' }}>
+                    <div style={{ fontSize:12, fontWeight:700,
+                      color: isActive ? stepClr : isDone ? '#34D399' : 'rgba(255,255,255,.55)',
+                      whiteSpace:'nowrap' }}>{s.short}</div>
+                    {isActive && (
+                      <div style={{ fontSize:10, color:'rgba(255,255,255,.3)', marginTop:1 }}>진행 중 →</div>
+                    )}
+                    {isDone && !isActive && (
+                      <div style={{ fontSize:10, color:'#34D399', marginTop:1 }}>완료 ✓</div>
+                    )}
+                  </div>
+                )}
+
+                {/* 완료 체크 뱃지 (닫힘 상태) */}
+                {isDone && !drawerOpen && (
+                  <div style={{ position:'absolute', top:6, right:6,
+                    width:10, height:10, borderRadius:'50%',
+                    background:'#34D399', display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:6, color:'#fff', fontWeight:800 }}>✓</div>
+                )}
+              </button>
+            )
+          })}
+
+          {/* 구분선 */}
+          <div style={{ width:'80%', height:1, background:'rgba(255,255,255,.08)', margin:'6px 0' }} />
+
+          {/* 참여 코드 블록 (열렸을 때) */}
+          {drawerOpen && (
+            <div style={{ padding:'6px 10px', width:'100%' }}>
+              <div style={{ background:'rgba(255,255,255,.07)', borderRadius:8, padding:'7px 9px' }}>
+                <div style={{ fontSize:8, color:'rgba(255,255,255,.3)', marginBottom:3 }}>참여 코드</div>
+                <div style={{ fontSize:14, fontWeight:800, color:'rgba(255,255,255,.7)', letterSpacing:2 }}>
+                  {user.code}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 토글 버튼 */}
+          <button onClick={() => setDrawerOpen(o => !o)} style={{
+            marginTop:'auto', width:32, height:32, borderRadius:8,
+            background:'rgba(255,255,255,.08)', display:'flex', alignItems:'center',
+            justifyContent:'center', cursor:'pointer', border:'none',
+            color:'rgba(255,255,255,.5)', fontSize:12,
+            transition:'transform .3s',
+            transform: drawerOpen ? 'rotate(180deg)' : 'none',
+          }}>▶</button>
+        </nav>
+
+        {/* ── 메인 콘텐츠 영역 ── */}
+        <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
+
+          {/* Step1: 패들릿 보드 (full height) */}
           {activeStep === 1 && (
             <Step1 user={user} code={user.code} posts={step1Posts}
-              selectedPost={room.selectedPost} onToast={setToast} />
+              selectedPost={room.selectedPost} onToast={setToast}
+              onLike={handleLike1} onComment={handleComment1}
+              onSelectRequest={handleSelectRequest} onDelete={handleDelete1} />
           )}
-          {activeStep === 2 && (
-            <Step2 user={user} code={user.code} selectedPost={room.selectedPost}
-              dataTable={dataTable} onChange={handleDataTable}
-              surveyActive={room.surveyActive || false} survey={survey} surveyResponses={surveyResp} />
-          )}
-          {activeStep === 3 && (
-            <Step3 user={user} code={user.code}
-              items={items} dataTable={dataTable}
-              chartConfig={chartConfig} onChartConfig={handleChartConfig}
-              strokes={strokes} currentDrawer={room.currentDrawer || null}
-              drawMode={drawMode} onDrawMode={handleDrawMode}
-              livePreview={room.livePreview || null} />
-          )}
+
+          {/* Step4: 분할 패널 (full height) */}
           {activeStep === 4 && (
             <Step4 user={user} code={user.code}
               items={items} dataTable={dataTable} chartConfig={chartConfig}
-              step4State={step4State} onStep4State={handleStep4State} />
+              step4State={step4State} onStep4State={handleStep4State}
+              posts4={step4Posts}
+              onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4} />
           )}
-        </main>
 
-        {/* Side panel — Step 1 & 4 only */}
-        {hasSidepanel && (
-          <aside style={{
-            width: 244, borderLeft: '2.5px solid #E6D8C8',
-            display: 'flex', flexDirection: 'column',
-            background: '#FFF9F2', flexShrink: 0, overflow: 'hidden',
-          }}>
-            {activeStep === 1 ? (
-              <FeedPanel posts={step1Posts} myName={user.name} code={user.code}
-                onLike={handleLike1} onComment={handleComment1}
-                onSelectRequest={handleSelectRequest}
-                onDelete={handleDelete1} />
-            ) : (
-              <FeedPanel posts={step4Posts} myName={user.name} code={user.code}
-                onLike={handleLike4} onComment={handleComment4}
-                onSelectRequest={null} onDelete={handleDelete4} />
-            )}
-          </aside>
-        )}
+          {/* Step 2 & 3: 일반 스크롤 메인 */}
+          {(activeStep === 2 || activeStep === 3) && (
+            <main ref={mainRef} style={{
+              flex: 1, overflowY: 'auto', padding: 16, minWidth: 0,
+              background: '#FFF9F2',
+              backgroundImage: `
+                radial-gradient(circle at 10% 15%, rgba(255,140,66,.07) 0%, transparent 40%),
+                radial-gradient(circle at 88% 12%, rgba(78,172,217,.06) 0%, transparent 40%),
+                radial-gradient(circle at 52% 82%, rgba(91,191,122,.05) 0%, transparent 40%),
+                radial-gradient(circle at 20% 70%, rgba(201,125,232,.04) 0%, transparent 35%)
+              `,
+            }}>
+              {/* Step 헤더 뱃지 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16,
+                padding: '12px 20px', borderRadius: 20,
+                background: `linear-gradient(135deg, ${step.bg}, #fff)`,
+                border: `2.5px solid ${step.bd}`,
+                boxShadow: `0 4px 16px ${step.c}18`,
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{ position:'absolute', right:-10, top:-10, width:60, height:60,
+                  borderRadius:'50%', background:`${step.c}12`, pointerEvents:'none' }} />
+                <div style={{ width: 36, height: 36, borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${step.c}, ${step.dk})`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#fff', fontSize: 15, fontWeight: 800, flexShrink: 0,
+                  boxShadow: `0 4px 10px ${step.c}45` }}>{step.n}</div>
+                <div style={{ lineHeight: 1.3 }}>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: step.dk, letterSpacing: '-0.3px' }}>
+                    {step.emoji} {step.label}
+                  </div>
+                  <div style={{ fontSize: 11, color: step.c, fontWeight: 700, marginTop: 1, opacity:.75 }}>
+                    Step {step.n} of 4
+                  </div>
+                </div>
+                <div style={{ marginLeft: 'auto', display:'flex', gap:4 }}>
+                  {[1,2,3,4].map(n => (
+                    <div key={n} style={{ width: n <= activeStep ? 20 : 8, height:8, borderRadius:999,
+                      background: n <= activeStep ? step.c : '#E6D8C8',
+                      transition:'all .3s', boxShadow: n <= activeStep ? `0 2px 6px ${step.c}40` : 'none',
+                    }} />
+                  ))}
+                </div>
+              </div>
+
+              {activeStep === 2 && (
+                <Step2 user={user} code={user.code} selectedPost={room.selectedPost}
+                  dataTable={dataTable} onChange={handleDataTable}
+                  surveyActive={room.surveyActive || false} survey={survey} surveyResponses={surveyResp} />
+              )}
+              {activeStep === 3 && (
+                <Step3 user={user} code={user.code}
+                  items={items} dataTable={dataTable}
+                  chartConfig={chartConfig} onChartConfig={handleChartConfig}
+                  strokes={strokes} currentDrawer={room.currentDrawer || null}
+                  drawMode={drawMode} onDrawMode={handleDrawMode}
+                  livePreview={room.livePreview || null} />
+              )}
+            </main>
+          )}
+        </div>
       </div>
 
       {/* ── Vote Modal ── */}
