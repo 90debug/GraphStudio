@@ -2456,7 +2456,7 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
         position:'relative' }}>
 
         {posts4 && posts4.length > 0 ? (
-          <div style={{ columns:2, columnGap:12 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:12, alignItems:'start' }}>
             {posts4.map(post => (
               <PadletStep4Card key={post.id}
                 post={post} myName={user.name}
