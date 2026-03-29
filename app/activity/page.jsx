@@ -1320,9 +1320,7 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
         <div style={{ position:'absolute', top:-18, left:'50%', transform:'translateX(-50%)',
           zIndex:20, display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
           <span className="crown-icon" style={{ fontSize:24, lineHeight:1, display:'block' }}>👑</span>
-          <span className="card-confetti" style={{ fontSize:9, fontWeight:800,
-            background:'#10B981', color:'#fff', padding:'2px 8px', borderRadius:999,
-            whiteSpace:'nowrap' }}>우리 모둠 탐구 문제!</span>
+
         </div>
       )}
 
@@ -1335,14 +1333,15 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
 
       {/* 삭제 버튼 (내 글) */}
       {isMyPost && !isSelected && (
-        <button onClick={() => onDelete && onDelete(post.id)} style={{
-          position:'absolute', top:-8, right:-8, zIndex:10,
-          width:22, height:22, borderRadius:'50%', background:'#EF4444', color:'#fff',
-          border:'2px solid #fff', fontSize:11, fontWeight:800, cursor:'pointer',
-          display:'flex', alignItems:'center', justifyContent:'center',
-          boxShadow:'0 2px 8px rgba(239,68,68,.45)',
-          opacity:0, transition:'opacity .15s',
-        }} className="postcard-close">✕</button>
+        <button onClick={() => onDelete && onDelete(post.id)}
+          className="postcard-close"
+          style={{
+            position:'absolute', top:-8, right:-8, zIndex:10,
+            width:22, height:22, borderRadius:'50%', background:'#EF4444', color:'#fff',
+            border:'2px solid #fff', fontSize:11, fontWeight:800, cursor:'pointer',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            boxShadow:'0 2px 8px rgba(239,68,68,.45)',
+          }}>✕</button>
       )}
 
       {/* 선정됨 배지 */}
@@ -1543,10 +1542,7 @@ function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, on
                 ))}
               </div>
             </div>
-            <div style={{ fontSize:12, fontWeight:800, background:'#fff', color:'#047857',
-              padding:'3px 10px', borderRadius:999, border:'1.5px solid #A7F3D0', flexShrink:0 }}>
-              만장일치 선정!
-            </div>
+
           </div>
         )}
 
@@ -2086,8 +2082,37 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
     setSharing(false)
   }
 
+  const step4Info = { bg:'#F8EFFE', bd:'#D9A4F5', c:'#C97DE8', dk:'#9A45C2' }
+
   return (
-    <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
+    <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+
+      {/* ── Step 4 헤더 배지 (Steps 2&3과 동일한 스타일) ── */}
+      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 18px',
+        background:`linear-gradient(135deg, ${step4Info.bg}, #fff)`,
+        border:`none`, borderBottom:`2px solid ${step4Info.bd}`,
+        flexShrink:0, position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', right:-10, top:-10, width:50, height:50,
+          borderRadius:'50%', background:`${step4Info.c}12`, pointerEvents:'none' }} />
+        <div style={{ width:32, height:32, borderRadius:'50%',
+          background:`linear-gradient(135deg, ${step4Info.c}, ${step4Info.dk})`,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          color:'#fff', fontSize:14, fontWeight:800, flexShrink:0,
+          boxShadow:`0 4px 10px ${step4Info.c}45` }}>4</div>
+        <div style={{ fontWeight:800, fontSize:15, color:step4Info.dk, letterSpacing:'-0.2px' }}>
+          💡 그래프 해석하기
+        </div>
+        <div style={{ marginLeft:'auto', display:'flex', gap:4 }}>
+          {[1,2,3,4].map(n => (
+            <div key={n} style={{ width: n <= 4 ? 20 : 8, height:7, borderRadius:999,
+              background: n <= 4 ? step4Info.c : '#E6D8C8',
+              boxShadow: n <= 4 ? `0 2px 6px ${step4Info.c}40` : 'none' }} />
+          ))}
+        </div>
+      </div>
+
+      {/* ── 바디: 작업패널 + 보드 ── */}
+      <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
 
       {/* ── 왼쪽 작업 패널 ── */}
       <div style={{
@@ -2121,30 +2146,17 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
         {!collapsed && (
           <div style={{ flex:1, overflowY:'auto', padding:12 }}>
 
-            {/* 그래프 썸네일 */}
+            {/* 그래프 썸네일 — 실제 그래프 컴포넌트 렌더 */}
             <div style={{ background:'#F0FDF4', border:'1.5px solid #A7F3D0', borderRadius:12,
               padding:12, marginBottom:12 }}>
-              <div style={{ fontSize:12, fontWeight:700, color:'#047857', marginBottom:8 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'#047857', marginBottom:6 }}>
                 📊 {chartConfig.title || '완성된 그래프'}
               </div>
               {hasData ? (
-                items.map((item, i) => {
-                  const v = Number(dataTable[i]?.value) || 0
-                  const pct = total ? Math.round(v/total*100) : 0
-                  return (
-                    <div key={i} style={{ display:'flex', alignItems:'center', gap:7, marginBottom:5 }}>
-                      <div style={{ fontSize:10, color:'#475569', width:38, textAlign:'right', flexShrink:0,
-                        overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item}</div>
-                      <div style={{ flex:1, height:14, background:'#D1FAE5', borderRadius:3, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${pct}%`,
-                          background: CHART_COLORS[i%CHART_COLORS.length],
-                          borderRadius:3, display:'flex', alignItems:'center',
-                          paddingLeft:4, fontSize:9, fontWeight:700, color:'#fff',
-                          transition:'width .5s' }}>{pct > 15 ? `${pct}%` : ''}</div>
-                      </div>
-                    </div>
-                  )
-                })
+                <div style={{ transform:'scale(0.82)', transformOrigin:'top left',
+                  width:'122%', pointerEvents:'none' }}>
+                  <ChartComp data={chartData} />
+                </div>
               ) : (
                 <div style={{ fontSize:12, color:'#94A3B8', textAlign:'center', padding:'8px 0' }}>
                   2단계에서 데이터를 입력해 주세요
@@ -2273,18 +2285,6 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
           radial-gradient(circle at 85% 75%, rgba(16,185,129,.05) 0%, transparent 45%)`,
         position:'relative' }}>
 
-        {/* Step 배지 */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 14px',
-          borderRadius:10, background:'#F5F3FF', border:'1px solid #DDD6FE',
-          marginBottom:14 }}>
-          <div style={{ width:28, height:28, borderRadius:'50%', background:'#8B5CF6',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            color:'#fff', fontSize:13, fontWeight:700, flexShrink:0 }}>4</div>
-          <div style={{ fontWeight:700, fontSize:15, color:'#6D28D9' }}>
-            💡 그래프 해석하기 — 모둠원 해석 보드
-          </div>
-        </div>
-
         {posts4 && posts4.length > 0 ? (
           <div style={{ columns:2, columnGap:12 }}>
             {posts4.map(post => {
@@ -2385,6 +2385,7 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
           </div>
         )}
       </div>
+      </div>{/* /body split */}
     </div>
   )
 }
@@ -2414,7 +2415,8 @@ export default function ActivityPage() {
   const userRef      = useRef(null)
   const presenceT    = useRef(null)
   const remoteStep   = useRef(1)
-  const mainRef      = useRef(null)
+  const mainRef            = useRef(null)
+  const lastDismissedVoteRef = useRef(null)   // 내가 닫은 투표의 고유키
 
   const dbTable  = useDb((code, val) => updateDataTable(code, val), 700)
   const dbChart  = useDb((code, val) => updateChartConfig(code, val), 700)
@@ -2577,8 +2579,13 @@ export default function ActivityPage() {
     if (!sv || !user) return
 
     // 내가 아직 투표 안 했으면 팝업 표시
+    // 이전에 닫은 투표와 다른 새 투표이거나 (재투표), 아직 찬성 안 한 경우
     if (!sv.agreed?.includes(user.name)) {
-      setVoteModal(true)
+      // 새 투표(postId+requestedBy 조합으로 구분)이면 dismissed 초기화 후 무조건 표시
+      const voteKey = `${sv.postId}_${sv.requestedBy}_${sv.voters?.length}`
+      if (lastDismissedVoteRef.current !== voteKey) {
+        setVoteModal(true)
+      }
     }
 
     // 전원 찬성 → 자동 선정 처리
@@ -2938,9 +2945,7 @@ export default function ActivityPage() {
                   <div style={{ fontWeight: 800, fontSize: 16, color: step.dk, letterSpacing: '-0.3px' }}>
                     {step.emoji} {step.label}
                   </div>
-                  <div style={{ fontSize: 11, color: step.c, fontWeight: 700, marginTop: 1, opacity:.75 }}>
-                    Step {step.n} of 4
-                  </div>
+
                 </div>
                 <div style={{ marginLeft: 'auto', display:'flex', gap:4 }}>
                   {[1,2,3,4].map(n => (
@@ -2976,7 +2981,13 @@ export default function ActivityPage() {
           vote={room.selectionVote}
           myName={user.name}
           onAgree={handleVote}
-          onClose={() => setVoteModal(false)}
+          onClose={() => {
+            const sv = room.selectionVote
+            if (sv) {
+              lastDismissedVoteRef.current = `${sv.postId}_${sv.requestedBy}_${sv.voters?.length}`
+            }
+            setVoteModal(false)
+          }}
           onCancel={handleCancelVote}
           isRequester={room.selectionVote?.requestedBy === user.name}
         />
