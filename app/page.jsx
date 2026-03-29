@@ -126,7 +126,7 @@ export default function JoinPage() {
             display:'inline-block', padding:'5px 16px', borderRadius:999,
             background:'#FF8C42', color:'#fff',
             fontSize:12, fontWeight:800, letterSpacing:1.5, marginBottom:10,
-          }}>초등 수학 5단원</div>
+          }}>6. 여러 가지 그래프</div>
           <h1 style={{
             fontSize: 32, fontWeight: 800, color:'#3D2B1F',
             lineHeight: 1.25, letterSpacing:'-0.5px',
@@ -141,24 +141,7 @@ export default function JoinPage() {
           </p>
         </div>
 
-        {/* 단계 안내 */}
-        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-          {[
-            { n:'①', label:'탐구 주제', color:'#FF8C42', bg:'#FFF3E8' },
-            { n:'②', label:'자료 수집', color:'#4EACD9', bg:'#EBF7FF' },
-            { n:'③', label:'그래프 그리기', color:'#5BBF7A', bg:'#EDFAF2' },
-            { n:'④', label:'해석 발표', color:'#C97DE8', bg:'#F8EFFE' },
-          ].map(s => (
-            <div key={s.n} style={{
-              display:'flex', alignItems:'center', gap:5,
-              padding:'5px 12px', borderRadius:999,
-              background:s.bg, border:`2px solid ${s.color}30`,
-            }}>
-              <span style={{ color:s.color, fontWeight:800, fontSize:13 }}>{s.n}</span>
-              <span style={{ fontSize:12, color:s.color, fontWeight:700 }}>{s.label}</span>
-            </div>
-          ))}
-        </div>
+
       </div>
 
       {/* ── 오른쪽: 입장 카드 ── */}
@@ -303,10 +286,7 @@ export default function JoinPage() {
           )}
         </div>
 
-        {/* 하단 출처 */}
-        <div style={{ textAlign:'center', marginTop:14, fontSize:11, color:'#C4B4A8', fontWeight:600 }}>
-          📘 초등 수학 · 여러 가지 그래프 모둠 활동
-        </div>
+
       </div>
     </div>
   )

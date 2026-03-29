@@ -1490,6 +1490,30 @@ function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, on
   return (
     <div style={{ position:'relative', flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
 
+      {/* ── Step 1 헤더 배지 스트립 (Step4와 동일 스타일) ── */}
+      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 18px',
+        background:'linear-gradient(135deg, #FFF3E8, #fff)',
+        borderBottom:'2px solid #FFCB96',
+        flexShrink:0, position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', right:-10, top:-10, width:50, height:50,
+          borderRadius:'50%', background:'rgba(255,140,66,.10)', pointerEvents:'none' }} />
+        <div style={{ width:32, height:32, borderRadius:'50%',
+          background:'linear-gradient(135deg, #FF8C42, #D4601A)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          color:'#fff', fontSize:14, fontWeight:800, flexShrink:0,
+          boxShadow:'0 4px 10px rgba(255,140,66,.45)' }}>1</div>
+        <div style={{ fontWeight:800, fontSize:15, color:'#D4601A', letterSpacing:'-0.2px' }}>
+          🔍 탐구 문제 정하기
+        </div>
+        <div style={{ marginLeft:'auto', display:'flex', gap:4 }}>
+          {[1,2,3,4].map(n => (
+            <div key={n} style={{ width: n <= 1 ? 20 : 8, height:7, borderRadius:999,
+              background: n <= 1 ? '#FF8C42' : '#E6D8C8',
+              boxShadow: n <= 1 ? '0 2px 6px rgba(255,140,66,.40)' : 'none' }} />
+          ))}
+        </div>
+      </div>
+
       {/* ── 패들릿 보드 스크롤 영역 ── */}
       <div style={{ flex:1, overflowY:'auto', padding:'16px 20px 80px',
         background:'#FDFCF7',
@@ -1497,19 +1521,6 @@ function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, on
           radial-gradient(circle at 85% 75%, rgba(16,185,129,.06) 0%, transparent 45%),
           radial-gradient(circle at 50% 50%, rgba(59,130,246,.04) 0%, transparent 60%)`,
       }}>
-
-        {/* Step 배지 */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 14px',
-          borderRadius:10, background:'#FFF7ED', border:'1px solid #FED7AA',
-          marginBottom:14 }}>
-          <div style={{ width:28, height:28, borderRadius:'50%', background:'#F97316',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            color:'#fff', fontSize:13, fontWeight:700, flexShrink:0 }}>1</div>
-          <div style={{ fontWeight:700, fontSize:15, color:'#C2410C' }}>🔍 탐구 문제 정하기</div>
-          <div style={{ marginLeft:'auto', fontSize:11, color:'#94A3B8' }}>
-            + 버튼을 눌러 아이디어를 올려보세요!
-          </div>
-        </div>
 
         {/* ── 선정된 탐구 문제 배너 ── */}
         {selectedPost && (
@@ -1823,88 +1834,93 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
                 📌 {selectedPost?.topic} — {selectedPost?.question}
               </div>
 
-              {surveyActive && surveyResponses.length > 0 && (
-                <Sec style={{ background: '#EBF7FF', border: '1px solid #BFDBFE', marginBottom: 12 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#4EACD9', marginBottom: 10 }}>
-                    📊 실시간 응답 ({surveyResponses.length}명)
-                  </div>
-                  {items.map(item => {
-                    const cnt = surveyResponses.filter(r => r.selectedItem === item).length
-                    const pct = surveyResponses.length ? Math.round(cnt / surveyResponses.length * 100) : 0
-                    return (
-                      <div key={item} style={{ marginBottom: 10 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
-                          <span>{item}</span>
-                          <span style={{ fontWeight: 700, color: '#4EACD9' }}>{cnt}명 ({pct}%)</span>
-                        </div>
-                        <div style={{ height: 10, borderRadius: 999, background: '#93D1F5', overflow: 'hidden' }}>
-                          <div style={{ width: `${pct}%`, height: '100%', background: '#4EACD9',
-                            borderRadius: 999, transition: 'width .5s' }} />
-                        </div>
-                      </div>
-                    )
-                  })}
-                </Sec>
-              )}
+              {/* 실시간 응답 + 항목별 결과 좌우 배치 */}
+              <div style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
 
-              <Sec>
-                <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>📥 항목별 조사 결과</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {items.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                        background: CHART_COLORS[i % CHART_COLORS.length] + '18',
-                        color: CHART_COLORS[i % CHART_COLORS.length],
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 13, fontWeight: 700 }}>{i + 1}</div>
-                      <span style={{ flex: 1, fontSize: 14 }}>{item}</span>
-                      <input type="number" min="0" max="999"
-                        value={dataTable[i]?.value || ''}
-                        onChange={e => updateValue(i, e.target.value)}
-                        placeholder="0"
-                        style={{ width: 76, padding: '8px 10px', borderRadius: 8,
-                          border: '1.5px solid #dbdbdb', fontSize: 17, fontWeight: 700,
-                          textAlign: 'center', fontFamily: 'inherit', outline: 'none',
-                          background: '#fafafa' }} />
-                      <span style={{ fontSize: 14, color: '#8C7B6E', width: 22 }}>명</span>
+                {/* 왼쪽: 실시간 응답 */}
+                {surveyActive && surveyResponses.length > 0 && (
+                  <Sec style={{ flex:1, background: '#EBF7FF', border: '1px solid #BFDBFE', marginBottom: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#4EACD9', marginBottom: 10 }}>
+                      📊 실시간 응답 ({surveyResponses.length}명)
                     </div>
-                  ))}
-                </div>
-
-                {total > 0 && (
-                  <div style={{ marginTop: 14, padding: '11px 14px', background: '#EDFAF2',
-                    borderRadius: 10, border: '1px solid #A7F3D0' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid #A7F3D0' }}>
-                          {['항목', '명수', '백분율(%)'].map(h => (
-                            <th key={h} style={{ padding: '6px 8px', textAlign: h === '항목' ? 'left' : 'right',
-                              color: '#2D9950', fontWeight: 700 }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((item, i) => {
-                          const v = Number(dataTable[i]?.value) || 0
-                          const pct = total ? Math.round(v / total * 100) : 0
-                          return (
-                            <tr key={i} style={{ borderBottom: '1px solid #D1FAE5' }}>
-                              <td style={{ padding: '6px 8px' }}>{item}</td>
-                              <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 700 }}>{v}</td>
-                              <td style={{ padding: '6px 8px', textAlign: 'right', color: '#5BBF7A', fontWeight: 700 }}>{pct}%</td>
-                            </tr>
-                          )
-                        })}
-                        <tr>
-                          <td style={{ padding: '7px 8px', fontWeight: 700 }}>합계</td>
-                          <td style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700 }}>{total}</td>
-                          <td style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700, color: '#5BBF7A' }}>100%</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                    {items.map(item => {
+                      const cnt = surveyResponses.filter(r => r.selectedItem === item).length
+                      const pct = surveyResponses.length ? Math.round(cnt / surveyResponses.length * 100) : 0
+                      return (
+                        <div key={item} style={{ marginBottom: 10 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
+                            <span>{item}</span>
+                            <span style={{ fontWeight: 700, color: '#4EACD9' }}>{cnt}명 ({pct}%)</span>
+                          </div>
+                          <div style={{ height: 10, borderRadius: 999, background: '#93D1F5', overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', background: '#4EACD9',
+                              borderRadius: 999, transition: 'width .5s' }} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </Sec>
                 )}
-              </Sec>
+
+                {/* 오른쪽: 항목별 조사 결과 */}
+                <Sec style={{ flex:1, marginBottom:0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>📥 항목별 조사 결과</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {items.map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                          background: CHART_COLORS[i % CHART_COLORS.length] + '18',
+                          color: CHART_COLORS[i % CHART_COLORS.length],
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 13, fontWeight: 700 }}>{i + 1}</div>
+                        <span style={{ flex: 1, fontSize: 14 }}>{item}</span>
+                        <input type="number" min="0" max="999"
+                          value={dataTable[i]?.value || ''}
+                          onChange={e => updateValue(i, e.target.value)}
+                          placeholder="0"
+                          style={{ width: 72, padding: '8px 8px', borderRadius: 8,
+                            border: '1.5px solid #dbdbdb', fontSize: 16, fontWeight: 700,
+                            textAlign: 'center', fontFamily: 'inherit', outline: 'none',
+                            background: '#fafafa' }} />
+                        <span style={{ fontSize: 13, color: '#8C7B6E', width: 18 }}>명</span>
+                      </div>
+                    ))}
+                  </div>
+                  {total > 0 && (
+                    <div style={{ marginTop: 12, padding: '10px 12px', background: '#EDFAF2',
+                      borderRadius: 10, border: '1px solid #A7F3D0' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid #A7F3D0' }}>
+                            {['항목', '명수', '%'].map(h => (
+                              <th key={h} style={{ padding: '5px 6px', textAlign: h === '항목' ? 'left' : 'right',
+                                color: '#2D9950', fontWeight: 700 }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((item, i) => {
+                            const v = Number(dataTable[i]?.value) || 0
+                            const pct = total ? Math.round(v / total * 100) : 0
+                            return (
+                              <tr key={i} style={{ borderBottom: '1px solid #D1FAE5' }}>
+                                <td style={{ padding: '5px 6px', maxWidth: 80, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item}</td>
+                                <td style={{ padding: '5px 6px', textAlign: 'right', fontWeight: 700 }}>{v}</td>
+                                <td style={{ padding: '5px 6px', textAlign: 'right', color: '#5BBF7A', fontWeight: 700 }}>{pct}%</td>
+                              </tr>
+                            )
+                          })}
+                          <tr>
+                            <td style={{ padding: '6px 6px', fontWeight: 700 }}>합계</td>
+                            <td style={{ padding: '6px 6px', textAlign: 'right', fontWeight: 700 }}>{total}</td>
+                            <td style={{ padding: '6px 6px', textAlign: 'right', fontWeight: 700, color: '#5BBF7A' }}>100%</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </Sec>
+              </div>
             </>
           )}
         </div>
@@ -1942,7 +1958,7 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
 
 // ─── STEP 3 ───────────────────────────────────────────────────────────────
 
-function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strokes, currentDrawer, drawMode, onDrawMode, livePreview }) {
+function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strokes, currentDrawer, drawMode, onDrawMode, livePreview, selectedPost }) {
   const chartData = items.map((label, i) => ({ label, value: dataTable[i]?.value || 0 }))
   const ChartComp = CHART_CMPS[chartConfig.type] || BarChart
   const total = dataTable.reduce((s, d) => s + (Number(d.value) || 0), 0)
@@ -1958,7 +1974,9 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
       {total > 0 && (
         <Sec style={{ background: '#EDFAF2', border: '1px solid #A7F3D0', padding: '12px 16px', marginBottom: 12 }}>
           <div style={{ fontWeight: 700, fontSize: 13, color: '#2D9950', marginBottom: 9 }}>
-            📊 2단계 항목별 조사 결과
+            {selectedPost?.question
+              ? <span>🔍 {selectedPost.question}</span>
+              : '📊 항목별 조사 결과'}
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
@@ -2044,6 +2062,149 @@ function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strok
 
 // ─── STEP 4 ───────────────────────────────────────────────────────────────
 
+// ─── Padlet Step4 Card (댓글 포함) ──────────────────────────────────────────
+
+function PadletStep4Card({ post, myName, onLike, onComment, onDelete }) {
+  const [showCmt, setShowCmt] = useState(false)
+  const [cmtText, setCmtText] = useState('')
+  const isMyPost = post.name === myName
+  const isLiked  = post.likedBy?.includes(myName)
+  const pal = isMyPost
+    ? { bg:'#FDFAFF', border:'#C4B5FD', hdr:'#F5F3FF', avBg:'#EDE9FE', avFg:'#5B21B6' }
+    : padletPalette(post.name)
+  const doneCount4 = post.doneCount ?? (post.checks ? Object.values(post.checks).filter(Boolean).length : 0)
+
+  async function toggleLike() { if (onLike) await onLike(post.id, !isLiked) }
+  async function submitCmt() {
+    if (!cmtText.trim()) return
+    await onComment(post.id, cmtText.trim())
+    setCmtText(''); setShowCmt(false)
+  }
+
+  return (
+    <div className="padlet-card-item postcard-wrap" style={{
+      background: pal.bg, border:`1.5px solid ${pal.border}`,
+      borderRadius: 14, overflow: 'visible', position: 'relative',
+      boxShadow:`0 2px 10px rgba(0,0,0,.08)`,
+    }}>
+      {isMyPost && (
+        <>
+          <div style={{ position:'absolute', top:-8, left:12, zIndex:10,
+            padding:'2px 8px', borderRadius:999, background:'#8B5CF6', color:'#fff',
+            fontSize:10, fontWeight:800 }}>내 글</div>
+          <button onClick={() => onDelete && onDelete(post.id)}
+            className="postcard-close" style={{
+              position:'absolute', top:-9, right:-9, zIndex:10,
+              width:22, height:22, borderRadius:'50%', background:'#EF4444', color:'#fff',
+              border:'2px solid #fff', fontSize:11, fontWeight:800, cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              boxShadow:'0 2px 8px rgba(239,68,68,.45)' }}>✕</button>
+        </>
+      )}
+
+      {/* 헤더 */}
+      <div style={{ padding:'9px 12px 7px', display:'flex', alignItems:'center', gap:8, background: pal.hdr, borderRadius:'12px 12px 0 0' }}>
+        <div style={{ width:28, height:28, borderRadius:'50%', flexShrink:0,
+          background: pal.avBg, color: pal.avFg,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:11, fontWeight:700 }}>{(post.name||'?')[0]}</div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:'#1E293B' }}>
+            {post.name}{isMyPost && <span style={{ fontSize:10, color:'#94A3B8', fontWeight:400 }}> (나)</span>}
+          </div>
+          <div style={{ fontSize:10, color:'#94A3B8' }}>{post.time}</div>
+        </div>
+      </div>
+
+      {/* 바디 */}
+      <div style={{ padding:'10px 12px 8px' }}>
+        {/* 알 수 있는 사실 */}
+        {post.noteTexts?.length > 0 && (
+          <div style={{ marginBottom:8 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:'#8B5CF6', marginBottom:5 }}>🗒️ 알 수 있는 사실</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+              {post.noteTexts.map((t, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:5,
+                  fontSize:12, color:'#334155', lineHeight:1.5 }}>
+                  <div style={{ width:5, height:5, borderRadius:'50%', marginTop:5, flexShrink:0,
+                    background: CHART_COLORS[i%CHART_COLORS.length] }} />
+                  {t}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* 문제 해결 과정 */}
+        {post.ps && (
+          <div style={{ marginBottom:8 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:'#8B5CF6', marginBottom:4 }}>📝 문제 해결 과정</div>
+            <div style={{ fontSize:12, color:'#475569', lineHeight:1.6, padding:'7px 10px',
+              background:'rgba(139,92,246,.06)', borderRadius:8, whiteSpace:'pre-line' }}>{post.ps}</div>
+          </div>
+        )}
+        {/* noteTexts/ps 없으면 기존 content 표시 */}
+        {!post.noteTexts?.length && !post.ps && (
+          <div style={{ fontSize:13, color:'#334155', lineHeight:1.65, whiteSpace:'pre-line' }}>
+            {post.content}
+          </div>
+        )}
+        {/* 체크리스트 진행 바 */}
+        <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:6 }}>
+          <div style={{ flex:1, height:6, borderRadius:999, background:'#E2E8F2', overflow:'hidden' }}>
+            <div style={{ height:'100%', borderRadius:999, background:'#10B981',
+              width:`${Math.round(doneCount4/CHECKLIST.length*100)}%`, transition:'width .4s' }} />
+          </div>
+          <span style={{ fontSize:10, fontWeight:700, color:'#10B981', whiteSpace:'nowrap' }}>
+            {doneCount4}/{CHECKLIST.length}{doneCount4===CHECKLIST.length ? ' ✨' : ''}
+          </span>
+        </div>
+      </div>
+
+      {/* 댓글 목록 */}
+      {post.comments?.map((c, i) => (
+        <div key={i} style={{ fontSize:12, color:'#64748B', padding:'2px 12px 2px 16px',
+          borderLeft:`2px solid ${pal.border}`, margin:'0 12px 3px', lineHeight:1.6 }}>{c}</div>
+      ))}
+
+      {/* 댓글 입력 (열렸을 때) */}
+      {showCmt && (
+        <div style={{ padding:'0 12px 10px', display:'flex', gap:6 }}>
+          <input value={cmtText} onChange={e => setCmtText(e.target.value)}
+            onKeyDown={e => e.key==='Enter' && submitCmt()}
+            placeholder="댓글 달기..."
+            style={{ flex:1, padding:'7px 11px', borderRadius:999,
+              border:`1.5px solid ${pal.border}`, fontSize:12, background:'#fff',
+              outline:'none', fontFamily:'inherit' }} />
+          <button onClick={submitCmt} style={{ fontSize:12, fontWeight:700, color:'#fff',
+            background:'#8B5CF6', border:'none', borderRadius:8,
+            cursor:'pointer', padding:'7px 12px', fontFamily:'inherit' }}>게시</button>
+        </div>
+      )}
+
+      {/* 푸터 */}
+      <div style={{ padding:'7px 10px 9px', display:'flex', alignItems:'center', gap:5,
+        borderTop:`1px solid ${pal.border}50` }}>
+        <button onClick={toggleLike} style={{ background:'none', border:'none', cursor:'pointer',
+          fontSize:17, lineHeight:1, transition:'transform .15s' }}
+          onMouseEnter={e=>e.currentTarget.style.transform='scale(1.25)'}
+          onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
+          {isLiked ? '❤️' : '🤍'}
+        </button>
+        <button onClick={() => setShowCmt(s=>!s)} style={{ background:'none', border:'none',
+          cursor:'pointer', fontSize:15, lineHeight:1, color:'#94A3B8' }}>💬</button>
+        {(post.likes > 0 || post.comments?.length > 0) && (
+          <span style={{ fontSize:11, color:'#94A3B8' }}>
+            {post.likes > 0 && <b style={{ color:'#475569' }}>♥ {post.likes}</b>}
+            {post.likes > 0 && post.comments?.length > 0 && ' · '}
+            {post.comments?.length > 0 && `댓글 ${post.comments.length}`}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
 function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4State, posts4, onLike4, onComment4, onDelete4 }) {
   const [loadedImg,   setLoadedImg]   = useState(null)
   const [loadingImg,  setLoadingImg]  = useState(false)
@@ -2077,8 +2238,14 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
 
   async function doShare() {
     setSharing(true)
-    const content = `💡 탐구 결과!\n주제: ${notes.map(n=>n.text).join(' · ')}\n성찰: ${doneCount}/${CHECKLIST.length}개 달성`
-    await addStep4Post(code, { name: user.name, step: 4, content, time: tsNow() })
+    const noteTexts = notes.map(n => n.text)
+    const content = `💡 탐구 결과!\n사실: ${noteTexts.join(' · ')}\n성찰: ${doneCount}/${CHECKLIST.length}개 달성`
+    await addStep4Post(code, {
+      name: user.name, step: 4, content, time: tsNow(),
+      noteTexts,
+      ps,
+      doneCount,
+    })
     setSharing(false)
   }
 
@@ -2287,91 +2454,11 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
 
         {posts4 && posts4.length > 0 ? (
           <div style={{ columns:2, columnGap:12 }}>
-            {posts4.map(post => {
-              const isMyPost = post.name === user.name
-              const isLiked  = post.likedBy?.includes(user.name)
-              const pal = isMyPost
-                ? { bg:'#FDFAFF', border:'#C4B5FD', hdr:'#F5F3FF', avBg:'#EDE9FE', avFg:'#5B21B6' }
-                : padletPalette(post.name)
-              const doneCount4 = post.checks ? Object.values(post.checks).filter(Boolean).length : 0
-
-              return (
-                <div key={post.id} className="padlet-card-item postcard-wrap" style={{
-                  background: pal.bg,
-                  border:`1.5px solid ${pal.border}`,
-                  boxShadow:`0 2px 10px rgba(0,0,0,.08)`,
-                }}>
-                  {isMyPost && (
-                    <>
-                      <div style={{ position:'absolute', top:-8, left:12, zIndex:10,
-                        padding:'2px 8px', borderRadius:999, background:'#8B5CF6', color:'#fff',
-                        fontSize:10, fontWeight:800 }}>내 글</div>
-                      <button onClick={() => onDelete4 && onDelete4(post.id)}
-                        className="postcard-close" style={{
-                          position:'absolute', top:-9, right:-9, zIndex:10,
-                          width:22, height:22, borderRadius:'50%', background:'#EF4444', color:'#fff',
-                          border:'2px solid #fff', fontSize:11, fontWeight:800, cursor:'pointer',
-                          display:'flex', alignItems:'center', justifyContent:'center',
-                          boxShadow:'0 2px 8px rgba(239,68,68,.45)' }}>✕</button>
-                    </>
-                  )}
-
-                  {/* 카드 헤더 */}
-                  <div style={{ padding:'9px 12px 7px', display:'flex', alignItems:'center', gap:8,
-                    background: pal.hdr }}>
-                    <div style={{ width:28, height:28, borderRadius:'50%', flexShrink:0,
-                      background: pal.avBg, color: pal.avFg,
-                      display:'flex', alignItems:'center', justifyContent:'center',
-                      fontSize:11, fontWeight:700 }}>{(post.name||'?')[0]}</div>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:13, fontWeight:700, color:'#1E293B' }}>
-                        {post.name}{isMyPost && <span style={{ fontSize:10, color:'#94A3B8', fontWeight:400 }}> (나)</span>}
-                      </div>
-                      <div style={{ fontSize:10, color:'#94A3B8' }}>{post.time}</div>
-                    </div>
-                  </div>
-
-                  {/* 카드 바디 */}
-                  <div style={{ padding:'9px 12px 8px' }}>
-                    <div style={{ fontSize:13, color:'#334155', lineHeight:1.65,
-                      whiteSpace:'pre-line' }}>{post.content}</div>
-                    {/* 체크 진행 바 */}
-                    {post.checks && (
-                      <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:8 }}>
-                        <div style={{ flex:1, height:7, borderRadius:999, background:'#E2E8F2', overflow:'hidden' }}>
-                          <div style={{ height:'100%', borderRadius:999, background:'#10B981',
-                            width:`${Math.round(doneCount4/CHECKLIST.length*100)}%`,
-                            transition:'width .4s' }} />
-                        </div>
-                        <span style={{ fontSize:11, fontWeight:700, color:'#10B981', whiteSpace:'nowrap' }}>
-                          {doneCount4}/{CHECKLIST.length}{doneCount4===CHECKLIST.length ? ' ✨' : ' 완료'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 댓글 */}
-                  {post.comments?.map((c, i) => (
-                    <div key={i} style={{ fontSize:12, color:'#64748B', padding:'2px 12px 2px 16px',
-                      borderLeft:`2px solid ${pal.border}`, margin:'0 12px 3px', lineHeight:1.6 }}>{c}</div>
-                  ))}
-
-                  {/* 푸터 */}
-                  <div style={{ padding:'7px 10px 9px', display:'flex', alignItems:'center', gap:5,
-                    borderTop:`1px solid ${pal.border}50` }}>
-                    <button onClick={() => onLike4 && onLike4(post.id, !isLiked)} style={{
-                      background:'none', border:'none', cursor:'pointer', fontSize:17, lineHeight:1 }}>
-                      {isLiked ? '❤️' : '🤍'}
-                    </button>
-                    <span style={{ fontSize:11, color:'#94A3B8' }}>
-                      {post.likes > 0 && <b style={{ color:'#475569' }}>♥ {post.likes}</b>}
-                      {post.likes > 0 && post.comments?.length > 0 && ' · '}
-                      {post.comments?.length > 0 && `댓글 ${post.comments.length}`}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
+            {posts4.map(post => (
+              <PadletStep4Card key={post.id}
+                post={post} myName={user.name}
+                onLike={onLike4} onComment={onComment4} onDelete={onDelete4} />
+            ))}
           </div>
         ) : (
           <div style={{ textAlign:'center', padding:'50px 20px', color:'#94A3B8' }}>
@@ -2914,8 +3001,33 @@ export default function ActivityPage() {
               onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4} />
           )}
 
-          {/* Step 2 & 3: 일반 스크롤 메인 */}
+          {/* Step 2 & 3: Step4 스타일 헤더 + 스크롤 메인 */}
           {(activeStep === 2 || activeStep === 3) && (
+            <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+            {/* Step 헤더 배지 스트립 */}
+            <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 18px',
+              background:`linear-gradient(135deg, ${step.bg}, #fff)`,
+              borderBottom:`2px solid ${step.bd}`,
+              flexShrink:0, position:'relative', overflow:'hidden' }}>
+              <div style={{ position:'absolute', right:-10, top:-10, width:50, height:50,
+                borderRadius:'50%', background:`${step.c}12`, pointerEvents:'none' }} />
+              <div style={{ width:32, height:32, borderRadius:'50%',
+                background:`linear-gradient(135deg, ${step.c}, ${step.dk})`,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                color:'#fff', fontSize:14, fontWeight:800, flexShrink:0,
+                boxShadow:`0 4px 10px ${step.c}45` }}>{step.n}</div>
+              <div style={{ fontWeight:800, fontSize:15, color:step.dk, letterSpacing:'-0.2px' }}>
+                {step.emoji} {step.label}
+              </div>
+              <div style={{ marginLeft:'auto', display:'flex', gap:4 }}>
+                {[1,2,3,4].map(n => (
+                  <div key={n} style={{ width: n <= activeStep ? 20 : 8, height:7, borderRadius:999,
+                    background: n <= activeStep ? step.c : '#E6D8C8',
+                    transition:'all .3s', boxShadow: n <= activeStep ? `0 2px 6px ${step.c}40` : 'none',
+                  }} />
+                ))}
+              </div>
+            </div>
             <main ref={mainRef} style={{
               flex: 1, overflowY: 'auto', padding: 16, minWidth: 0,
               background: '#FFF9F2',
@@ -2926,36 +3038,7 @@ export default function ActivityPage() {
                 radial-gradient(circle at 20% 70%, rgba(201,125,232,.04) 0%, transparent 35%)
               `,
             }}>
-              {/* Step 헤더 뱃지 */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16,
-                padding: '12px 20px', borderRadius: 20,
-                background: `linear-gradient(135deg, ${step.bg}, #fff)`,
-                border: `2.5px solid ${step.bd}`,
-                boxShadow: `0 4px 16px ${step.c}18`,
-                position: 'relative', overflow: 'hidden',
-              }}>
-                <div style={{ position:'absolute', right:-10, top:-10, width:60, height:60,
-                  borderRadius:'50%', background:`${step.c}12`, pointerEvents:'none' }} />
-                <div style={{ width: 36, height: 36, borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${step.c}, ${step.dk})`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', fontSize: 15, fontWeight: 800, flexShrink: 0,
-                  boxShadow: `0 4px 10px ${step.c}45` }}>{step.n}</div>
-                <div style={{ lineHeight: 1.3 }}>
-                  <div style={{ fontWeight: 800, fontSize: 16, color: step.dk, letterSpacing: '-0.3px' }}>
-                    {step.emoji} {step.label}
-                  </div>
 
-                </div>
-                <div style={{ marginLeft: 'auto', display:'flex', gap:4 }}>
-                  {[1,2,3,4].map(n => (
-                    <div key={n} style={{ width: n <= activeStep ? 20 : 8, height:8, borderRadius:999,
-                      background: n <= activeStep ? step.c : '#E6D8C8',
-                      transition:'all .3s', boxShadow: n <= activeStep ? `0 2px 6px ${step.c}40` : 'none',
-                    }} />
-                  ))}
-                </div>
-              </div>
 
               {activeStep === 2 && (
                 <Step2 user={user} code={user.code} selectedPost={room.selectedPost}
@@ -2968,9 +3051,11 @@ export default function ActivityPage() {
                   chartConfig={chartConfig} onChartConfig={handleChartConfig}
                   strokes={strokes} currentDrawer={room.currentDrawer || null}
                   drawMode={drawMode} onDrawMode={handleDrawMode}
-                  livePreview={room.livePreview || null} />
+                  livePreview={room.livePreview || null}
+                  selectedPost={room.selectedPost} />
               )}
             </main>
+            </div>
           )}
         </div>
       </div>
