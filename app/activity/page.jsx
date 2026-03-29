@@ -1304,13 +1304,16 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
   }
 
   return (
-    <div className="padlet-card-item" style={{
+    <div className={`padlet-card-item postcard-wrap${isSelected ? ' card-selected-pulse' : ''}`} style={{
       background: pal.bg,
       border: `2px solid ${pal.border}`,
+      borderRadius: 14,
+      overflow: 'visible',
+      position: 'relative',
       boxShadow: isSelected
         ? `0 0 0 3px ${pal.border}55, 0 6px 20px ${pal.border}44`
         : `0 3px 12px rgba(0,0,0,.08)`,
-    }} className={`padlet-card-item${isSelected ? ' card-selected-pulse' : ''}`}>
+    }}>
 
       {/* 왕관 게이미피케이션 — 선정된 카드 */}
       {isSelected && (
