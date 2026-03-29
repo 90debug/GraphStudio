@@ -8,9 +8,6 @@ function randCode() {
   ).join('')
 }
 
-// 귀여운 캐릭터 이모지 배열
-const MASCOTS = ['🌱', '🦁', '💧', '🌸', '🌈', '⭐']
-
 export default function JoinPage() {
   const router = useRouter()
   const [mode,      setMode]      = useState('new')
@@ -19,15 +16,14 @@ export default function JoinPage() {
   const [joinCode,  setJoinCode]  = useState('')
   const [error,     setError]     = useState('')
   const [lastGroup, setLastGroup] = useState(null)
-  const [mascot,    setMascot]    = useState(0)
+
 
   useEffect(() => {
     try {
       const s = localStorage.getItem('gts_last')
       if (s) setLastGroup(JSON.parse(s))
     } catch {}
-    const t = setInterval(() => setMascot(m => (m + 1) % MASCOTS.length), 2500)
-    return () => clearInterval(t)
+
   }, [])
 
   function save(user) {
@@ -76,52 +72,21 @@ export default function JoinPage() {
   }
 
   return (
-    <div className="wave-bg" style={{
+    <div style={{
       width: 1024, height: 768,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#FFF8F0',
+      backgroundImage: "url('/bg-main.png')",
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
       position: 'relative', overflow: 'hidden',
     }}>
 
-      {/* ── 배경 장식 도형들 ── */}
-      <div style={{ position:'absolute', top:40, left:60, width:90, height:90, borderRadius:'50%',
-        background:'rgba(255,140,66,.13)', pointerEvents:'none' }} />
-      <div style={{ position:'absolute', top:120, right:80, width:60, height:60, borderRadius:'50%',
-        background:'rgba(78,172,217,.14)', pointerEvents:'none' }} />
-      <div style={{ position:'absolute', bottom:80, left:100, width:70, height:70, borderRadius:'50%',
-        background:'rgba(91,191,122,.12)', pointerEvents:'none' }} />
-      <div style={{ position:'absolute', bottom:60, right:120, width:80, height:80, borderRadius:'50%',
-        background:'rgba(201,125,232,.11)', pointerEvents:'none' }} />
-      <div style={{ position:'absolute', top:200, left:180, fontSize:28, opacity:.18, pointerEvents:'none' }}>★</div>
-      <div style={{ position:'absolute', top:100, right:240, fontSize:20, opacity:.14, pointerEvents:'none' }}>✦</div>
-      <div style={{ position:'absolute', bottom:160, left:300, fontSize:22, opacity:.12, pointerEvents:'none' }}>◆</div>
-      <div style={{ position:'absolute', bottom:120, right:200, fontSize:18, opacity:.16, pointerEvents:'none' }}>●</div>
-
       {/* ── 왼쪽: 타이틀 영역 ── */}
       <div style={{ width: 420, padding: '0 40px', flexShrink: 0 }}>
-        {/* 마스코트 + 말풍선 */}
-        <div style={{ marginBottom: 24, display:'flex', alignItems:'flex-end', gap:10 }}>
-          <div style={{ position:'relative' }}>
-            <div className="speech-bubble" style={{ marginBottom: 10, fontSize:13, fontWeight:700,
-              background:'#fff', color:'#3D2B1F', padding:'8px 14px', borderRadius:14,
-              boxShadow:'0 3px 10px rgba(150,100,60,.10)',
-              border:'2px solid #E8DFD4',
-            }}>
-              함께 탐구해 봐요! 🔍
-              <div style={{ position:'absolute', bottom:-10, left:18,
-                width:0, height:0,
-                borderLeft:'8px solid transparent', borderRight:'8px solid transparent',
-                borderTop:'10px solid #fff',
-              }} />
-            </div>
-            <div style={{ fontSize:52, lineHeight:1, transition:'all .4s', display:'block' }}>
-              {MASCOTS[mascot]}
-            </div>
-          </div>
-        </div>
+
 
         {/* 메인 타이틀 */}
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginBottom: 18, marginTop: 20 }}>
           <div style={{
             display:'inline-block', padding:'5px 16px', borderRadius:999,
             background:'#FF8C42', color:'#fff',

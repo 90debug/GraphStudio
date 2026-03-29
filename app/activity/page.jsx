@@ -143,9 +143,9 @@ function Lbl({ children, mt = 12 }) {
 function Sec({ children, style: ex = {} }) {
   return (
     <div style={{
-      background: '#fff', border: '2.5px solid #E6D8C8',
+      background: 'rgba(255,255,255,.96)', border: '2px solid rgba(230,216,200,.7)',
       borderRadius: 20, padding: '16px 18px', marginBottom: 14,
-      boxShadow: '0 4px 16px rgba(140,90,50,.08)', ...ex,
+      boxShadow: '0 4px 20px rgba(0,0,0,.10)', backdropFilter: 'blur(8px)', ...ex,
     }}>{children}</div>
   )
 }
@@ -1311,8 +1311,8 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
       overflow: 'visible',
       position: 'relative',
       boxShadow: isSelected
-        ? `0 0 0 3px ${pal.border}55, 0 6px 20px ${pal.border}44`
-        : `0 3px 12px rgba(0,0,0,.08)`,
+        ? `0 0 0 3px ${pal.border}55, 0 8px 28px rgba(0,0,0,.18)`
+        : `0 4px 16px rgba(0,0,0,.13)`,
     }}>
 
       {/* 왕관 게이미피케이션 — 선정된 카드 */}
@@ -1516,10 +1516,8 @@ function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, on
 
       {/* ── 패들릿 보드 스크롤 영역 ── */}
       <div style={{ flex:1, overflowY:'auto', padding:'16px 20px 80px',
-        background:'#FDFCF7',
-        backgroundImage:`radial-gradient(circle at 15% 25%, rgba(251,191,36,.07) 0%, transparent 45%),
-          radial-gradient(circle at 85% 75%, rgba(16,185,129,.06) 0%, transparent 45%),
-          radial-gradient(circle at 50% 50%, rgba(59,130,246,.04) 0%, transparent 60%)`,
+        backgroundImage: "url('/bg-activity.png')", backgroundSize: 'cover', backgroundPosition: 'center',
+        backgroundAttachment: 'local',
       }}>
 
         {/* ── 선정된 탐구 문제 배너 ── */}
@@ -1559,9 +1557,9 @@ function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, on
 
         {/* ── 카드 그리드 (masonry 3단) ── */}
         {posts.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'60px 20px', color:'#94A3B8' }}>
+          <div style={{ textAlign:'center', padding:'60px 20px', color:'#475569' }}>
             <div style={{ fontSize:52, marginBottom:14 }}>📋</div>
-            <div style={{ fontSize:15, fontWeight:700, color:'#64748B', marginBottom:6 }}>
+            <div style={{ fontSize:15, fontWeight:700, color:'#334155', marginBottom:6 }}>
               아직 올라온 탐구 문제가 없어요
             </div>
             <div style={{ fontSize:13 }}>
@@ -1569,7 +1567,7 @@ function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, on
             </div>
           </div>
         ) : (
-          <div style={{ columns:3, columnGap:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:12 }}>
             {posts.map(post => (
               <PadletStep1Card key={post.id}
                 post={post} myName={user.name} selectedPost={selectedPost}
@@ -1862,27 +1860,33 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
                   </Sec>
                 )}
 
-                {/* 오른쪽: 항목별 조사 결과 */}
+                {/* 오른쪽: 항목별 조사 결과 — 2열 카드 그리드 */}
                 <Sec style={{ flex:1, marginBottom:0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>📥 항목별 조사 결과</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                     {items.map((item, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div key={i} style={{ display: 'flex', flexDirection:'column', alignItems: 'center',
+                        gap: 6, padding:'10px 12px', borderRadius:12,
+                        background: CHART_COLORS[i % CHART_COLORS.length] + '10',
+                        border:`1.5px solid ${CHART_COLORS[i % CHART_COLORS.length]}30` }}>
                         <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                          background: CHART_COLORS[i % CHART_COLORS.length] + '18',
+                          background: CHART_COLORS[i % CHART_COLORS.length] + '20',
                           color: CHART_COLORS[i % CHART_COLORS.length],
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 13, fontWeight: 700 }}>{i + 1}</div>
-                        <span style={{ flex: 1, fontSize: 14 }}>{item}</span>
-                        <input type="number" min="0" max="999"
-                          value={dataTable[i]?.value || ''}
-                          onChange={e => updateValue(i, e.target.value)}
-                          placeholder="0"
-                          style={{ width: 72, padding: '8px 8px', borderRadius: 8,
-                            border: '1.5px solid #dbdbdb', fontSize: 16, fontWeight: 700,
-                            textAlign: 'center', fontFamily: 'inherit', outline: 'none',
-                            background: '#fafafa' }} />
-                        <span style={{ fontSize: 13, color: '#8C7B6E', width: 18 }}>명</span>
+                          fontSize: 13, fontWeight: 800 }}>{i + 1}</div>
+                        <span style={{ fontSize: 13, fontWeight:700, color:'#334155',
+                          textAlign:'center', lineHeight:1.3 }}>{item}</span>
+                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                          <input type="number" min="0" max="999"
+                            value={dataTable[i]?.value || ''}
+                            onChange={e => updateValue(i, e.target.value)}
+                            placeholder="0"
+                            style={{ width: 60, padding: '7px 6px', borderRadius: 8,
+                              border: '1.5px solid #dbdbdb', fontSize: 18, fontWeight: 800,
+                              textAlign: 'center', fontFamily: 'inherit', outline: 'none',
+                              background: '#fff' }} />
+                          <span style={{ fontSize: 12, color: '#8C7B6E' }}>명</span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -2085,7 +2089,7 @@ function PadletStep4Card({ post, myName, onLike, onComment, onDelete }) {
     <div className="padlet-card-item postcard-wrap" style={{
       background: pal.bg, border:`1.5px solid ${pal.border}`,
       borderRadius: 14, overflow: 'visible', position: 'relative',
-      boxShadow:`0 2px 10px rgba(0,0,0,.08)`,
+      boxShadow:`0 4px 16px rgba(0,0,0,.13)`,
     }}>
       {isMyPost && (
         <>
@@ -2447,9 +2451,8 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
 
       {/* ── 오른쪽 패들릿 보드 ── */}
       <div style={{ flex:1, overflowY:'auto', padding:'16px 18px 80px',
-        background:'#FDFCF7',
-        backgroundImage:`radial-gradient(circle at 15% 25%, rgba(139,92,246,.05) 0%, transparent 45%),
-          radial-gradient(circle at 85% 75%, rgba(16,185,129,.05) 0%, transparent 45%)`,
+        backgroundImage: "url('/bg-activity.png')", backgroundSize: 'cover', backgroundPosition: 'center',
+        backgroundAttachment: 'local',
         position:'relative' }}>
 
         {posts4 && posts4.length > 0 ? (
@@ -2715,8 +2718,9 @@ export default function ActivityPage() {
   }
 
   if (loading || !user) return (
-    <div className="textbook-bg" style={{ width: 1024, height: 768, display: 'flex', alignItems: 'center',
-      justifyContent: 'center', flexDirection: 'column', gap: 18 }}>
+    <div style={{ width: 1024, height: 768, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', flexDirection: 'column', gap: 18,
+      backgroundImage: "url('/bg-activity.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div style={{ position:'relative' }}>
         <div className="bounce" style={{ fontSize: 60 }}>📚</div>
         <div style={{ position:'absolute', top:-4, right:-8, width:20, height:20, borderRadius:'50%',
@@ -2745,16 +2749,17 @@ export default function ActivityPage() {
 
 
   return (
-    <div className="textbook-bg" style={{ display: 'flex', flexDirection: 'column', width: 1024, height: 768,
-      overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: 1024, height: 768,
+      overflow: 'hidden', backgroundImage: "url('/bg-activity.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
 
       {/* ── 컴팩트 상단 헤더 (44px) ── */}
       <header style={{
-        background: '#fff',
+        background: 'rgba(255,255,255,.92)',
+        backdropFilter: 'blur(12px)',
         height: 44, display: 'flex', alignItems: 'center',
         padding: '0 14px', gap: 10, flexShrink: 0,
-        borderBottom: '2px solid #E6D8C8',
-        boxShadow: '0 2px 8px rgba(140,90,50,.07)',
+        borderBottom: '1.5px solid rgba(230,216,200,.6)',
+        boxShadow: '0 2px 12px rgba(0,0,0,.08)',
       }}>
         {/* 앱 타이틀 (그라데이션) */}
         <span style={{
@@ -3030,13 +3035,8 @@ export default function ActivityPage() {
             </div>
             <main ref={mainRef} style={{
               flex: 1, overflowY: 'auto', padding: 16, minWidth: 0,
-              background: '#FFF9F2',
-              backgroundImage: `
-                radial-gradient(circle at 10% 15%, rgba(255,140,66,.07) 0%, transparent 40%),
-                radial-gradient(circle at 88% 12%, rgba(78,172,217,.06) 0%, transparent 40%),
-                radial-gradient(circle at 52% 82%, rgba(91,191,122,.05) 0%, transparent 40%),
-                radial-gradient(circle at 20% 70%, rgba(201,125,232,.04) 0%, transparent 35%)
-              `,
+              backgroundImage: "url('/bg-activity.png')", backgroundSize: 'cover', backgroundPosition: 'center',
+              backgroundAttachment: 'local',
             }}>
 
 
