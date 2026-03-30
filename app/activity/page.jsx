@@ -201,7 +201,7 @@ function ConfirmResetModal({ topicName, onConfirm, onCancel }) {
           <div style={{ fontSize:13, color:'#64748B', lineHeight:1.75, padding:'10px 14px',
             background:'#FEF2F2', borderRadius:12, border:'1px solid #FECACA' }}>
             이미 설문 조사가 진행 중인 탐구 문제가 있습니다.<br />
-            <b style={{ color:'#DC2626' }}>새로운 문제를 선정하면 Step 2~4의<br />모든 내용이 초기화됩니다.</b>
+            <b style={{ color:'#DC2626' }}>새로운 문제를 선정하면 모든 내용이 초기화됩니다.</b>
           </div>
           {topicName && (
             <div style={{ marginTop:10, fontSize:12, color:'#94A3B8' }}>
@@ -2950,9 +2950,9 @@ export default function ActivityPage() {
   const device   = useDevice()
   const isMobile = device === 'mobile' || device === 'tablet'
 
-  // 모바일용 스텝 탭 레이블 (짧게)
+  // 하단 탭 네비게이션 (PC / 태블릿 / 모바일 공통)
   const STEP_COLORS = ['#FF8C42', '#4EACD9', '#5BBF7A', '#C97DE8']
-  const STEP_SHORT_LABELS = ['탐구 문제', '자료 수집', '그래프', '그래프 해석']
+  const STEP_FULL_LABELS = ['탐구 문제 정하기', '자료 수집하기', '그래프로 나타내기', '그래프 해석하기']
 
 
   return (
@@ -2974,11 +2974,6 @@ export default function ActivityPage() {
           background: EDU_GRAD, WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent', backgroundClip: 'text', flexShrink: 0,
         }}>📊 메모 보드</span>
-
-        {/* 현재 단계 표시 */}
-        <span style={{ fontSize: 13, fontWeight: 700, color: step.c, flexShrink: 0 }}>
-          {step.emoji} {step.short}
-        </span>
 
         <div style={{ flex: 1 }} />
 
@@ -3048,138 +3043,8 @@ export default function ActivityPage() {
         </button>
       </header>
 
-      {/* ── 바디 : H-드로어 + 콘텐츠 (PC) / 풀스크린 콘텐츠 + 하단 탭바 (모바일) ── */}
-      <div style={{ flex: 1, display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        overflow: 'hidden' }}>
-
-        {/* ── PC 전용: H-스타일 사이드 드로어 네비게이션 ── */}
-        {!isMobile && (
-        <nav style={{
-          width: drawerOpen ? 200 : 52,
-          flexShrink: 0,
-          background: '#1E293B',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: '10px 0',
-          gap: 2,
-          transition: 'width .3s cubic-bezier(.4,0,.2,1)',
-          overflow: 'hidden',
-          position: 'relative',
-          zIndex: 10,
-        }}>
-          {/* 로고 */}
-          <div style={{ width:36, height:36, borderRadius:10, padding:2, background:EDU_GRAD, marginBottom:8, flexShrink:0 }}>
-            <div style={{ width:'100%', height:'100%', borderRadius:8, background:'#fff',
-              display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>📚</div>
-          </div>
-
-          {/* 모둠명 (열렸을 때) */}
-          {drawerOpen && (
-            <div style={{ fontSize:10, color:'rgba(255,255,255,.35)', fontWeight:700,
-              marginBottom:4, whiteSpace:'nowrap' }}>{user.groupName}</div>
-          )}
-
-          {/* 동기화 상태 dot */}
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:5,
-            padding:'5px 8px', width:'100%', marginBottom:4 }}>
-            <div style={{ width:7, height:7, borderRadius:'50%', flexShrink:0,
-              background: hasSyncLead ? '#34D399' : '#64748B',
-              boxShadow: hasSyncLead ? '0 0 6px #34D399' : 'none',
-              animation: hasSyncLead ? 'pulse 1.5s infinite' : 'none' }} />
-            {drawerOpen && (
-              <span style={{ fontSize:10, color: hasSyncLead ? '#34D399' : 'rgba(255,255,255,.3)',
-                fontWeight:700, whiteSpace:'nowrap' }}>
-                {hasSyncLead ? iAmLeader ? '동기화 중' : `${room.syncLeader}` : '비동기화'}
-              </span>
-            )}
-          </div>
-
-          {/* 구분선 */}
-          <div style={{ width:'80%', height:1, background:'rgba(255,255,255,.08)', marginBottom:4 }} />
-
-          {/* 스텝 네비게이션 아이템 */}
-          {STEPS.map((s, idx) => {
-            const isActive = activeStep === s.n
-            const isDone   = done[s.n] && !isActive
-            const stepClr  = STEP_COLORS[idx]
-            return (
-              <button key={s.n} onClick={() => changeStep(s.n)}
-                className={`h-step-item${isActive ? ' active' : isDone ? ' done' : ''}`}
-                style={{ width:'100%', display:'flex', alignItems:'center',
-                  gap:10, padding:'9px 0 9px 10px',
-                  border:'none', background:'none', borderRadius:10,
-                  cursor:'pointer', fontFamily:'inherit',
-                  position:'relative', whiteSpace:'nowrap', overflow:'hidden',
-                  background: isActive ? 'rgba(255,255,255,.13)' : 'none',
-                }}
-                onMouseEnter={e => { if(!isActive) e.currentTarget.style.background='rgba(255,255,255,.07)' }}
-                onMouseLeave={e => { if(!isActive) e.currentTarget.style.background='none' }}>
-
-                {/* 활성 표시 바 */}
-                {isActive && (
-                  <div style={{ position:'absolute', left:0, top:'15%', bottom:'15%',
-                    width:3, borderRadius:'0 3px 3px 0', background: stepClr }} />
-                )}
-
-                {/* 번호 + 아이콘 */}
-                <div style={{ position:'relative', flexShrink:0 }}>
-                  <div style={{ width:30, height:30, borderRadius:8, flexShrink:0,
-                    background: isActive ? stepClr + '22' : isDone ? 'rgba(52,211,153,.15)' : 'rgba(255,255,255,.06)',
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    fontSize:15, border: isActive ? `1.5px solid ${stepClr}55` : '1.5px solid transparent',
-                    transition:'all .2s',
-                  }}>
-                    {isDone ? '✓' : s.emoji}
-                  </div>
-                  {/* 번호 뱃지 */}
-                  <div style={{ position:'absolute', bottom:-4, right:-4,
-                    width:14, height:14, borderRadius:'50%',
-                    background: isActive ? stepClr : isDone ? '#34D399' : '#334155',
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    fontSize:8, fontWeight:800, color:'#fff',
-                    boxShadow: isActive ? `0 1px 4px ${stepClr}80` : 'none',
-                  }}>{s.n}</div>
-                </div>
-
-                {/* 레이블 (열렸을 때) */}
-                {drawerOpen && (
-                  <div style={{ textAlign:'left', overflow:'hidden' }}>
-                    <div style={{ fontSize:12, fontWeight:700,
-                      color: isActive ? stepClr : isDone ? '#34D399' : 'rgba(255,255,255,.55)',
-                      whiteSpace:'nowrap' }}>{s.short}</div>
-                    {isActive && (
-                      <div style={{ fontSize:10, color:'rgba(255,255,255,.3)', marginTop:1 }}>진행 중 →</div>
-                    )}
-                    {isDone && !isActive && (
-                      <div style={{ fontSize:10, color:'#34D399', marginTop:1 }}>완료 ✓</div>
-                    )}
-                  </div>
-                )}
-
-                {/* 완료 체크 뱃지 (닫힘 상태) */}
-                {isDone && !drawerOpen && (
-                  <div style={{ position:'absolute', top:6, right:6,
-                    width:10, height:10, borderRadius:'50%',
-                    background:'#34D399', display:'flex', alignItems:'center', justifyContent:'center',
-                    fontSize:6, color:'#fff', fontWeight:800 }}>✓</div>
-                )}
-              </button>
-            )
-          })}
-
-          {/* 토글 버튼 */}
-          <button onClick={() => setDrawerOpen(o => !o)} style={{
-            marginTop:'auto', width:32, height:32, borderRadius:8,
-            background:'rgba(255,255,255,.08)', display:'flex', alignItems:'center',
-            justifyContent:'center', cursor:'pointer', border:'none',
-            color:'rgba(255,255,255,.5)', fontSize:12,
-            transition:'transform .3s',
-            transform: drawerOpen ? 'rotate(180deg)' : 'none',
-          }}>▶</button>
-        </nav>
-        )}
+      {/* ── 바디 : 콘텐츠 + 하단 탭바 ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* ── 메인 콘텐츠 영역 ── */}
         <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
@@ -3252,9 +3117,8 @@ export default function ActivityPage() {
           )}
         </div>
 
-        {/* ── 모바일/태블릿 전용: 하단 탭 네비게이션 ── */}
-        {isMobile && (
-          <nav style={{
+        {/* ── 하단 탭 네비게이션 (PC / 태블릿 / 모바일 공통) ── */}
+        <nav style={{
             display: 'flex',
             flexShrink: 0,
             height: 62,
@@ -3309,21 +3173,20 @@ export default function ActivityPage() {
 
                   {/* 레이블 */}
                   <div style={{
-                    fontSize: 9,
+                    fontSize: 10,
                     fontWeight: isActive ? 800 : 600,
                     color: isActive ? clr : isDone ? '#16A34A' : '#94A3B8',
                     lineHeight: 1.3,
                     textAlign: 'center',
-                    letterSpacing: '-0.2px',
+                    letterSpacing: '-0.3px',
                     whiteSpace: 'nowrap',
                   }}>
-                    {STEP_SHORT_LABELS[idx]}
+                    {STEP_FULL_LABELS[idx]}
                   </div>
                 </button>
               )
             })}
           </nav>
-        )}
 
       </div>
 

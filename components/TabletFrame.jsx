@@ -185,29 +185,185 @@ function PortraitGuide() {
   )
 }
 
-// ── 모바일/태블릿 — 가로 모드 스케일 콘텐츠 ───────────────────────────────
-function MobileScaled({ children, scale }) {
-  const scaledW = CONTENT_W * scale
-  const scaledH = CONTENT_H * scale
+// ── 모바일/태블릿 — 가로 모드 스케일 콘텐츠 (핀치 줌 + 패닝) ──────────────
+function MobileScaled({ children, scale: baseScale }) {
+  const containerRef  = useRef(null)
+  const stateRef      = useRef(null)   // { tx, ty, scale } — 렌더 없이 최신 값 유지
+  const prevTouchRef  = useRef(null)   // 직전 프레임 터치 스냅샷
+  const lastTapRef    = useRef(0)      // 더블탭 감지용 타임스탬프
+  const [tf, setTf]   = useState(null) // 실제 렌더에 쓸 transform 값
+
+  // baseScale 기준으로 콘텐츠 중앙 배치 초기화
+  useEffect(() => {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const tx = (vw - CONTENT_W * baseScale) / 2
+    const ty = (vh - CONTENT_H * baseScale) / 2
+    const init = { tx, ty, scale: baseScale }
+    stateRef.current = init
+    setTf({ ...init })
+  }, [baseScale])
+
+  // 터치 이벤트 핸들러 (passive:false 로 preventDefault 허용)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    // 터치 좌표 스냅샷 (live TouchList 복사)
+    function snap(e) {
+      return Array.from(e.touches).map(t => ({
+        id: t.identifier,
+        x:  t.clientX,
+        y:  t.clientY,
+      }))
+    }
+
+    // 특정 태그에서 시작한 1-핑거 팬은 건너뜀 (캔버스·입력창 자체 터치와 충돌 방지)
+    const PASSTHROUGH_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
+
+    function onStart(e) {
+      const curr = snap(e)
+
+      // ① 더블탭 → 줌 리셋
+      if (curr.length === 1) {
+        const now = Date.now()
+        if (now - lastTapRef.current < 280) {
+          const vw = window.innerWidth
+          const vh = window.innerHeight
+          const tx = (vw - CONTENT_W * baseScale) / 2
+          const ty = (vh - CONTENT_H * baseScale) / 2
+          const reset = { tx, ty, scale: baseScale }
+          stateRef.current = reset
+          setTf({ ...reset })
+          prevTouchRef.current = null
+          return
+        }
+        lastTapRef.current = now
+
+        // ② 입력 요소는 1핑거 팬 패스스루
+        if (PASSTHROUGH_TAGS.has(e.target.tagName)) {
+          prevTouchRef.current = null
+          return
+        }
+      }
+
+      prevTouchRef.current = curr
+    }
+
+    function onMove(e) {
+      e.preventDefault()
+      const prev = prevTouchRef.current
+      if (!prev || !stateRef.current) return
+
+      const curr = snap(e)
+      let { tx, ty, scale } = stateRef.current
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+
+      if (curr.length === 1 && prev.length >= 1) {
+        // ─ 단일 손가락 패닝 ─
+        const p = prev.find(t => t.id === curr[0].id) ?? prev[0]
+        tx += curr[0].x - p.x
+        ty += curr[0].y - p.y
+
+      } else if (curr.length >= 2 && prev.length >= 2) {
+        // ─ 두 손가락 핀치 줌 + 패닝 ─
+        const c0 = curr[0], c1 = curr[1]
+        const p0 = prev.find(t => t.id === c0.id) ?? prev[0]
+        const p1 = prev.find(t => t.id === c1.id) ?? prev[Math.min(1, prev.length - 1)]
+
+        if (p0 && p1) {
+          const prevDist = Math.hypot(p0.x - p1.x, p0.y - p1.y)
+          const currDist = Math.hypot(c0.x - c1.x, c0.y - c1.y)
+
+          if (prevDist > 1) {
+            const rawRatio = currDist / prevDist
+            const newScale = Math.max(baseScale, Math.min(baseScale * 5, scale * rawRatio))
+            const ratio    = newScale / scale
+
+            // 핀치 중심점 기준 줌
+            const midX = (c0.x + c1.x) / 2
+            const midY = (c0.y + c1.y) / 2
+            tx    = midX - (midX - tx) * ratio
+            ty    = midY - (midY - ty) * ratio
+            scale = newScale
+          }
+
+          // 중점 이동 → 팬
+          const pMidX = (p0.x + p1.x) / 2
+          const pMidY = (p0.y + p1.y) / 2
+          tx += (c0.x + c1.x) / 2 - pMidX
+          ty += (c0.y + c1.y) / 2 - pMidY
+        }
+      }
+
+      // 콘텐츠가 화면에서 너무 벗어나지 않도록 클램프 (최소 120px 화면에 걸쳐야 함)
+      const margin  = 120
+      const scaledW = CONTENT_W * scale
+      const scaledH = CONTENT_H * scale
+      tx = Math.min(vw - margin, Math.max(margin - scaledW, tx))
+      ty = Math.min(vh - margin, Math.max(margin - scaledH, ty))
+
+      const next = { tx, ty, scale }
+      stateRef.current  = next
+      prevTouchRef.current = curr
+      setTf({ ...next })
+    }
+
+    function onEnd(e) {
+      prevTouchRef.current = snap(e)
+      if (e.touches.length === 0) prevTouchRef.current = null
+    }
+
+    el.addEventListener('touchstart', onStart, { passive: false })
+    el.addEventListener('touchmove',  onMove,  { passive: false })
+    el.addEventListener('touchend',   onEnd,   { passive: true })
+
+    return () => {
+      el.removeEventListener('touchstart', onStart)
+      el.removeEventListener('touchmove',  onMove)
+      el.removeEventListener('touchend',   onEnd)
+    }
+  }, [baseScale])
+
+  if (!tf) return null
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0,
-      background: '#000',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      overflow: 'hidden',
-    }}>
-      <div style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}>
-        <div style={{
-          width: CONTENT_W, height: CONTENT_H,
-          transformOrigin: 'top left',
-          transform: `scale(${scale})`,
-          position: 'absolute', top: 0, left: 0,
-          overflow: 'hidden',
-        }}>
-          {children}
-        </div>
+    <div
+      ref={containerRef}
+      style={{
+        position: 'fixed', inset: 0,
+        background: '#000',
+        overflow: 'hidden',
+        touchAction: 'none',  // 브라우저 기본 스크롤/줌 차단
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        left: 0, top: 0,
+        width: CONTENT_W,
+        height: CONTENT_H,
+        transformOrigin: 'top left',
+        transform: `translate(${tf.tx}px, ${tf.ty}px) scale(${tf.scale})`,
+        overflow: 'hidden',
+        willChange: 'transform',
+      }}>
+        {children}
       </div>
+
+      {/* 더블탭 리셋 힌트 — 줌인 됐을 때만 표시 */}
+      {tf.scale > baseScale * 1.05 && (
+        <div style={{
+          position: 'absolute', bottom: 72, left: '50%', transform: 'translateX(-50%)',
+          padding: '5px 14px', borderRadius: 999,
+          background: 'rgba(0,0,0,.45)', backdropFilter: 'blur(6px)',
+          color: '#fff', fontSize: 11, fontWeight: 600,
+          pointerEvents: 'none', whiteSpace: 'nowrap',
+          letterSpacing: '0.2px',
+        }}>
+          두 번 탭하면 원래 크기로 돌아가요
+        </div>
+      )}
     </div>
   )
 }
