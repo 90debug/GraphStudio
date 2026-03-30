@@ -13,15 +13,16 @@ import {
   updateRoomMeta, updateSurveyTopic,
   setSelectionVote, agreeSelectionVote,
   setLivePreview,
+  resetSurvey,
 } from '../../lib/firestore'
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
 const STEPS = [
-  { n:1, label:'탐구 문제 정하기', short:'탐구문제', emoji:'🔍', c:'var(--s1)', bg:'var(--s1-bg)', bd:'var(--s1-bd)', dk:'var(--s1-dk)' },
-  { n:2, label:'자료 모으기',       short:'자료수집',  emoji:'📥', c:'var(--s2)', bg:'var(--s2-bg)', bd:'var(--s2-bd)', dk:'var(--s2-dk)' },
-  { n:3, label:'그래프로 나타내기', short:'그래프',    emoji:'📊', c:'var(--s3)', bg:'var(--s3-bg)', bd:'var(--s3-bd)', dk:'var(--s3-dk)' },
-  { n:4, label:'그래프 해석하기',   short:'해석',      emoji:'💡', c:'var(--s4)', bg:'var(--s4-bg)', bd:'var(--s4-bd)', dk:'var(--s4-dk)' },
+  { n:1, label:'탐구 문제 정하기', short:'탐구 문제 정하기', emoji:'🔍', c:'var(--s1)', bg:'var(--s1-bg)', bd:'var(--s1-bd)', dk:'var(--s1-dk)' },
+  { n:2, label:'자료 수집하기',    short:'자료 수집하기',   emoji:'📥', c:'var(--s2)', bg:'var(--s2-bg)', bd:'var(--s2-bd)', dk:'var(--s2-dk)' },
+  { n:3, label:'그래프로 나타내기', short:'그래프로 나타내기', emoji:'📊', c:'var(--s3)', bg:'var(--s3-bg)', bd:'var(--s3-bd)', dk:'var(--s3-dk)' },
+  { n:4, label:'그래프 해석하기',   short:'그래프 해석하기', emoji:'💡', c:'var(--s4)', bg:'var(--s4-bg)', bd:'var(--s4-bd)', dk:'var(--s4-dk)' },
 ]
 
 const CHART_COLORS = ['#FF8C42','#4EACD9','#5BBF7A','#C97DE8','#F7C948','#FF6B7A','#4DD9C0','#FF9FBB']
@@ -1024,7 +1025,6 @@ function DrawingCanvas({ code, userName, strokes, currentDrawer, livePreview }) 
       <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
         <Btn onClick={doDeleteMine} color="gray" sm>🙋 내 그림만 지우기</Btn>
         <Btn onClick={doClearAll}   color="gray" sm>🗑️ 전체 지우기</Btn>
-        <Btn onClick={doLoad}       color="gray" sm>📂 불러오기</Btn>
         <Btn onClick={doSave} color="green" sm disabled={saving} style={{ marginLeft: 'auto' }}>
           {saving ? '저장 중...' : '💾 저장하기'}
         </Btn>
@@ -1575,7 +1575,7 @@ function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, on
           color:'#fff', fontSize:14, fontWeight:800, flexShrink:0,
           boxShadow:'0 4px 10px rgba(255,140,66,.45)' }}>1</div>
         <div style={{ fontWeight:800, fontSize:15, color:'#D4601A', letterSpacing:'-0.2px' }}>
-          🔍 탐구 문제 정하기
+          탐구 문제 정하기
         </div>
         <div style={{ marginLeft:'auto', display:'flex', gap:4 }}>
           {[1,2,3,4].map(n => (
@@ -1592,38 +1592,77 @@ function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, on
         backgroundAttachment: 'local',
       }}>
 
-        {/* ── 선정된 탐구 문제 배너 ── */}
+        {/* ── 선정된 탐구 문제 배너 — 전광판 스타일 ── */}
         {selectedPost && (
           <div style={{
-            background:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',
-            border:'2px solid #10B981', borderRadius:14, padding:'16px 20px',
-            marginBottom:16, boxShadow:'0 4px 16px rgba(16,185,129,.18)',
-            display:'flex', alignItems:'flex-start', gap:14,
-            animation:'fadeUp .4s cubic-bezier(.34,1.3,.64,1)',
+            background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #0F172A 100%)',
+            border: '2px solid #22D3EE',
+            borderRadius: 14,
+            padding: '14px 18px',
+            marginBottom: 16,
+            boxShadow: '0 0 0 1px #22D3EE30, 0 0 20px #22D3EE40, 0 8px 24px rgba(0,0,0,.5)',
+            position: 'relative',
+            overflow: 'hidden',
           }}>
-            <div style={{ width:36, height:36, borderRadius:'50%', background:'#10B981',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              color:'#fff', fontSize:18, flexShrink:0, marginTop:2 }}>✓</div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:12, fontWeight:800, color:'#047857', marginBottom:4, letterSpacing:.3 }}>
-                ✅ 우리 모둠의 탐구 문제
+            {/* 배경 스캔라인 효과 */}
+            <div style={{ position:'absolute', inset:0, pointerEvents:'none',
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.15) 3px, rgba(0,0,0,.15) 4px)',
+            }} />
+            {/* 좌상단 코너 조명 */}
+            <div style={{ position:'absolute', top:-30, left:-30, width:80, height:80, borderRadius:'50%',
+              background:'radial-gradient(circle, rgba(34,211,238,.25) 0%, transparent 70%)', pointerEvents:'none' }} />
+            <div style={{ position:'absolute', bottom:-30, right:-30, width:80, height:80, borderRadius:'50%',
+              background:'radial-gradient(circle, rgba(16,185,129,.20) 0%, transparent 70%)', pointerEvents:'none' }} />
+
+            {/* 상단 레이블 */}
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+              <div style={{ display:'flex', gap:4 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:'#EF4444',
+                  boxShadow:'0 0 6px #EF4444' }} />
+                <div style={{ width:8, height:8, borderRadius:'50%', background:'#FBBF24',
+                  boxShadow:'0 0 6px #FBBF24' }} />
+                <div style={{ width:8, height:8, borderRadius:'50%', background:'#22D3EE',
+                  boxShadow:'0 0 6px #22D3EE' }} />
               </div>
-              <div style={{ fontSize:16, fontWeight:800, color:'#1E293B', lineHeight:1.35 }}>
-                {selectedPost.topic}
-              </div>
-              <div style={{ fontSize:13, color:'#065F46', marginTop:4 }}>
-                📌 {selectedPost.question}
-              </div>
-              <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:10 }}>
-                {selectedPost.items?.map((item, i) => (
-                  <span key={i} style={{ padding:'3px 10px', borderRadius:999, fontSize:12, fontWeight:700,
-                    background: CHART_COLORS[i%CHART_COLORS.length]+'15',
-                    color: CHART_COLORS[i%CHART_COLORS.length],
-                    border:`1px solid ${CHART_COLORS[i%CHART_COLORS.length]}35` }}>{item}</span>
-                ))}
-              </div>
+              <span style={{
+                fontSize:10, fontWeight:800, color:'#22D3EE', letterSpacing:3,
+                textShadow:'0 0 8px #22D3EE',
+                textTransform:'uppercase',
+              }}>✅ 우리 모둠의 탐구 문제</span>
             </div>
 
+            {/* 메인 주제 — LED 폰트 느낌 */}
+            <div style={{
+              fontSize:18, fontWeight:800, color:'#F0FDF4',
+              letterSpacing:'-0.3px', lineHeight:1.3, marginBottom:8,
+              textShadow:'0 0 12px rgba(34,211,238,.6), 0 0 24px rgba(34,211,238,.3)',
+              fontVariantNumeric:'tabular-nums',
+            }}>
+              {selectedPost.topic}
+            </div>
+
+            {/* 질문 */}
+            <div style={{
+              fontSize:13, color:'#94A3B8', marginBottom:12, lineHeight:1.6,
+              borderLeft:'2px solid #22D3EE60', paddingLeft:10,
+            }}>
+              <span style={{ color:'#22D3EE', fontWeight:700 }}>Q.</span>{' '}
+              {selectedPost.question}
+            </div>
+
+            {/* 항목 태그 */}
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+              {selectedPost.items?.map((item, i) => (
+                <span key={i} style={{
+                  padding:'3px 10px', borderRadius:6, fontSize:11, fontWeight:700,
+                  background: CHART_COLORS[i%CHART_COLORS.length] + '22',
+                  color: CHART_COLORS[i%CHART_COLORS.length],
+                  border:`1px solid ${CHART_COLORS[i%CHART_COLORS.length]}55`,
+                  boxShadow:`0 0 6px ${CHART_COLORS[i%CHART_COLORS.length]}30`,
+                  letterSpacing:'0.2px',
+                }}>{item}</span>
+              ))}
+            </div>
           </div>
         )}
 
@@ -1809,7 +1848,7 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
   const TABS = [
     { id: 'create',  label: '📨 설문 만들기' },
     { id: 'results', label: '📊 응답 확인' },
-    { id: 'join',    label: '🙋 다른 모둠 참여' },
+    { id: 'join',    label: '🙋 설문조사 참여하기' },
   ]
 
   return (
@@ -1829,9 +1868,11 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
       </div>
 
       {tab === 'create' && (
-        <div>
+        <div style={{ display:'flex', gap:14, alignItems:'flex-start' }}>
+          {/* 왼쪽: 선정된 탐구 문제 */}
+          <div style={{ flex:1 }}>
           {selectedPost ? (
-            <Sec style={{ background: '#FFF7ED', border: '1.5px solid #F97316' }}>
+            <Sec style={{ background: '#FFF7ED', border: '1.5px solid #F97316', marginBottom:0 }}>
               <div style={{ fontWeight: 700, fontSize: 13, color: '#C2410C', marginBottom: 8 }}>
                 ✅ 선정된 탐구 문제
               </div>
@@ -1846,15 +1887,18 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
               </div>
             </Sec>
           ) : (
-            <Sec style={{ background: '#FFFBEB', border: '1px dashed #F59E0B' }}>
+            <Sec style={{ background: '#FFFBEB', border: '1px dashed #F59E0B', marginBottom:0 }}>
               <div style={{ fontSize: 14, color: '#B45309', fontWeight: 700 }}>
                 ⚠️ Step 1에서 탐구 문제를 먼저 선정해 주세요
               </div>
             </Sec>
           )}
+          </div>
 
+          {/* 오른쪽: 설문조사 시작/진행 중 */}
+          <div style={{ flex:1 }}>
           {!surveyActive ? (
-            <Sec>
+            <Sec style={{ marginBottom:0 }}>
               <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>📨 설문조사 시작하기</div>
               <div style={{ fontSize: 14, color: '#8C7B6E', marginBottom: 14, lineHeight: 1.75 }}>
                 선정된 탐구 문제로 설문조사를 만들어요.<br />
@@ -1865,7 +1909,7 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
               </Btn>
             </Sec>
           ) : (
-            <Sec style={{ background: '#EBF7FF', border: '1px solid #BFDBFE' }}>
+            <Sec style={{ background: '#EBF7FF', border: '1px solid #BFDBFE', marginBottom:0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ fontSize: 28 }}>📋</div>
                 <div>
@@ -1886,12 +1930,25 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
               )}
             </Sec>
           )}
+          </div>
         </div>
       )}
 
       {tab === 'results' && (
         <div>
-          {items.length === 0 ? (
+          {!surveyActive ? (
+            <Sec>
+              <div style={{ textAlign:'center', padding:'28px 0', color:'#8C7B6E' }}>
+                <div style={{ fontSize:36, marginBottom:10 }}>📭</div>
+                <div style={{ fontSize:15, fontWeight:700, color:'#64748B' }}>
+                  진행 중인 설문조사가 없어요.
+                </div>
+                <div style={{ fontSize:13, marginTop:6 }}>
+                  설문 만들기 탭에서 설문조사를 먼저 시작해 주세요.
+                </div>
+              </div>
+            </Sec>
+          ) : items.length === 0 ? (
             <Sec>
               <div style={{ textAlign: 'center', padding: 24, color: '#8C7B6E', fontSize: 14 }}>
                 💡 Step 1에서 탐구 문제를 선정하면 여기에 항목이 나타나요
@@ -2004,7 +2061,7 @@ function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, su
 
       {tab === 'join' && (
         <Sec>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 9 }}>🙋 다른 모둠 설문 참여하기</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 9 }}>🙋 설문조사 참여하기</div>
           <div style={{ fontSize: 14, color: '#8C7B6E', marginBottom: 14, lineHeight: 1.75 }}>
             다른 모둠에서 공유한 <b style={{ color: '#3D2B1F' }}>6자리 코드</b>를 입력하면 해당 설문에 참여할 수 있어요.
           </div>
@@ -2282,15 +2339,15 @@ function PadletStep4Card({ post, myName, onLike, onComment, onDelete }) {
 
 
 function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4State, posts4, onLike4, onComment4, onDelete4 }) {
-  const [loadedImg,   setLoadedImg]   = useState(null)
   const [loadingImg,  setLoadingImg]  = useState(false)
   const [collapsed,   setCollapsed]   = useState(false)
   const [sharing,     setSharing]     = useState(false)
   const [noteInput,   setNoteInput]   = useState('')
 
-  const notes  = step4State?.notes  || []
-  const checks = step4State?.checks || {}
-  const ps     = step4State?.ps     || ''
+  const notes    = step4State?.notes     || []
+  const checks   = step4State?.checks   || {}
+  const ps       = step4State?.ps       || ''
+  const loadedImg = step4State?.loadedImg || null
 
   const chartData = items.map((label, i) => ({ label, value: dataTable[i]?.value || 0 }))
   const ChartComp = CHART_CMPS[chartConfig.type] || BarChart
@@ -2301,7 +2358,7 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
   async function doLoadCanvas() {
     setLoadingImg(true)
     const img = await loadCanvasSnapshot(code)
-    if (img) setLoadedImg(img)
+    if (img) onStep4State({ loadedImg: img })
     else alert('저장된 그림이 없어요. Step 3에서 직접 그리기 후 저장해 주세요.')
     setLoadingImg(false)
   }
@@ -2347,7 +2404,7 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
           color:'#fff', fontSize:14, fontWeight:800, flexShrink:0,
           boxShadow:`0 4px 10px ${step4Info.c}45` }}>4</div>
         <div style={{ fontWeight:800, fontSize:15, color:step4Info.dk, letterSpacing:'-0.2px' }}>
-          💡 그래프 해석하기
+          그래프 해석하기
         </div>
         <div style={{ marginLeft:'auto', display:'flex', gap:4 }}>
           {[1,2,3,4].map(n => (
@@ -2523,15 +2580,21 @@ function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4S
         {/* 공유 버튼 */}
         {!collapsed && (
           <div style={{ padding:12, flexShrink:0, borderTop:'1px solid #F1F5F9' }}>
-            <button onClick={doShare} disabled={sharing} style={{
-              width:'100%', padding:12, borderRadius:10,
-              background: sharing ? '#E2E8F2' : 'linear-gradient(135deg,#8B5CF6,#6D28D9)',
-              color: sharing ? '#94A3B8' : '#fff', border:'none',
-              fontSize:13, fontWeight:700, cursor: sharing ? 'not-allowed' : 'pointer',
-              fontFamily:'inherit', boxShadow: sharing ? 'none' : '0 4px 12px rgba(139,92,246,.35)',
-            }}>
-              {sharing ? '공유 중...' : '📤 보드에 공유하기'}
-            </button>
+            {(() => {
+              const canShare = notes.length > 0 || ps.trim() !== '' || doneCount > 0
+              return (
+                <button onClick={doShare} disabled={sharing || !canShare} style={{
+                  width:'100%', padding:12, borderRadius:10,
+                  background: (sharing || !canShare) ? '#E2E8F2' : 'linear-gradient(135deg,#8B5CF6,#6D28D9)',
+                  color: (sharing || !canShare) ? '#94A3B8' : '#fff', border:'none',
+                  fontSize:13, fontWeight:700, cursor: (sharing || !canShare) ? 'not-allowed' : 'pointer',
+                  fontFamily:'inherit', boxShadow: (sharing || !canShare) ? 'none' : '0 4px 12px rgba(139,92,246,.35)',
+                  transition: 'all .2s',
+                }}>
+                  {sharing ? '공유 중...' : '📤 보드에 공유하기'}
+                </button>
+              )
+            })()}
           </div>
         )}
       </div>
@@ -2769,6 +2832,7 @@ export default function ActivityPage() {
           livePreview:   null,
         }),
         clearStrokes(code),
+        resetSurvey(code),
       ])
       // 로컬 상태도 즉시 반영
       setRoom(r => ({ ...r,
@@ -3094,21 +3158,6 @@ export default function ActivityPage() {
             )
           })}
 
-          {/* 구분선 */}
-          <div style={{ width:'80%', height:1, background:'rgba(255,255,255,.08)', margin:'6px 0' }} />
-
-          {/* 참여 코드 블록 (열렸을 때) */}
-          {drawerOpen && (
-            <div style={{ padding:'6px 10px', width:'100%' }}>
-              <div style={{ background:'rgba(255,255,255,.07)', borderRadius:8, padding:'7px 9px' }}>
-                <div style={{ fontSize:8, color:'rgba(255,255,255,.3)', marginBottom:3 }}>참여 코드</div>
-                <div style={{ fontSize:14, fontWeight:800, color:'rgba(255,255,255,.7)', letterSpacing:2 }}>
-                  {user.code}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* 토글 버튼 */}
           <button onClick={() => setDrawerOpen(o => !o)} style={{
             marginTop:'auto', width:32, height:32, borderRadius:8,
@@ -3156,7 +3205,7 @@ export default function ActivityPage() {
                 color:'#fff', fontSize:14, fontWeight:800, flexShrink:0,
                 boxShadow:`0 4px 10px ${step.c}45` }}>{step.n}</div>
               <div style={{ fontWeight:800, fontSize:15, color:step.dk, letterSpacing:'-0.2px' }}>
-                {step.emoji} {step.label}
+                {step.label}
               </div>
               <div style={{ marginLeft:'auto', display:'flex', gap:4 }}>
                 {[1,2,3,4].map(n => (
