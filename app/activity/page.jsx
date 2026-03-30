@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useDevice } from '../../lib/DeviceContext'
 import {
   getOrCreateRoom, subscribeRoom, subscribeStep1Posts, subscribeStep4Posts,
   updateRoomStep, setSyncLeader, clearSyncLeader, updateDataTable, updateChartConfig,
@@ -2945,6 +2946,14 @@ export default function ActivityPage() {
     dataTable.some(d => Number(d.value) > 0),
     (chartConfig.title || strokes.length > 0), true]
 
+  // 기기 타입 — TabletFrame에서 Context로 전달받음
+  const device   = useDevice()
+  const isMobile = device === 'mobile' || device === 'tablet'
+
+  // 모바일용 스텝 탭 레이블 (짧게)
+  const STEP_COLORS = ['#FF8C42', '#4EACD9', '#5BBF7A', '#C97DE8']
+  const STEP_SHORT_LABELS = ['탐구 문제', '자료 수집', '그래프', '그래프 해석']
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: 1024, height: 768,
@@ -3039,10 +3048,13 @@ export default function ActivityPage() {
         </button>
       </header>
 
-      {/* ── 바디 : H-드로어 + 콘텐츠 ── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      {/* ── 바디 : H-드로어 + 콘텐츠 (PC) / 풀스크린 콘텐츠 + 하단 탭바 (모바일) ── */}
+      <div style={{ flex: 1, display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        overflow: 'hidden' }}>
 
-        {/* ── H-스타일 사이드 드로어 네비게이션 ── */}
+        {/* ── PC 전용: H-스타일 사이드 드로어 네비게이션 ── */}
+        {!isMobile && (
         <nav style={{
           width: drawerOpen ? 200 : 52,
           flexShrink: 0,
@@ -3091,7 +3103,7 @@ export default function ActivityPage() {
           {STEPS.map((s, idx) => {
             const isActive = activeStep === s.n
             const isDone   = done[s.n] && !isActive
-            const stepClr  = ['#FF8C42','#4EACD9','#5BBF7A','#C97DE8'][idx]
+            const stepClr  = STEP_COLORS[idx]
             return (
               <button key={s.n} onClick={() => changeStep(s.n)}
                 className={`h-step-item${isActive ? ' active' : isDone ? ' done' : ''}`}
@@ -3108,8 +3120,7 @@ export default function ActivityPage() {
                 {/* 활성 표시 바 */}
                 {isActive && (
                   <div style={{ position:'absolute', left:0, top:'15%', bottom:'15%',
-                    width:3, borderRadius:'0 3px 3px 0',
-                    background: stepClr }} />
+                    width:3, borderRadius:'0 3px 3px 0', background: stepClr }} />
                 )}
 
                 {/* 번호 + 아이콘 */}
@@ -3168,6 +3179,7 @@ export default function ActivityPage() {
             transform: drawerOpen ? 'rotate(180deg)' : 'none',
           }}>▶</button>
         </nav>
+        )}
 
         {/* ── 메인 콘텐츠 영역 ── */}
         <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
@@ -3221,8 +3233,6 @@ export default function ActivityPage() {
               backgroundImage: "url('/bg-activity.png')", backgroundSize: 'cover', backgroundPosition: 'center',
               backgroundAttachment: 'local',
             }}>
-
-
               {activeStep === 2 && (
                 <Step2 user={user} code={user.code} selectedPost={room.selectedPost}
                   dataTable={dataTable} onChange={handleDataTable}
@@ -3241,6 +3251,80 @@ export default function ActivityPage() {
             </div>
           )}
         </div>
+
+        {/* ── 모바일/태블릿 전용: 하단 탭 네비게이션 ── */}
+        {isMobile && (
+          <nav style={{
+            display: 'flex',
+            flexShrink: 0,
+            height: 62,
+            background: 'rgba(255,255,255,.97)',
+            backdropFilter: 'blur(12px)',
+            borderTop: '1.5px solid #E6D8C8',
+            boxShadow: '0 -4px 16px rgba(61,43,31,.08)',
+          }}>
+            {STEPS.map((s, idx) => {
+              const isActive = activeStep === s.n
+              const isDone   = done[s.n] && !isActive
+              const clr      = STEP_COLORS[idx]
+              return (
+                <button key={s.n} onClick={() => changeStep(s.n)} style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 3,
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  position: 'relative',
+                  padding: '6px 4px 4px',
+                  transition: 'background .15s',
+                }}>
+                  {/* 활성 상단 인디케이터 바 */}
+                  {isActive && (
+                    <div style={{
+                      position: 'absolute', top: 0, left: '15%', right: '15%',
+                      height: 3, borderRadius: '0 0 3px 3px',
+                      background: clr,
+                      boxShadow: `0 2px 8px ${clr}60`,
+                    }} />
+                  )}
+
+                  {/* 아이콘 원형 */}
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 14,
+                    background: isActive ? clr : isDone ? '#DCFCE7' : '#F1F5F9',
+                    color: isActive ? '#fff' : isDone ? '#16A34A' : '#64748B',
+                    fontWeight: 800,
+                    transition: 'all .2s',
+                    boxShadow: isActive ? `0 3px 10px ${clr}50` : 'none',
+                  }}>
+                    {isDone ? '✓' : s.n}
+                  </div>
+
+                  {/* 레이블 */}
+                  <div style={{
+                    fontSize: 9,
+                    fontWeight: isActive ? 800 : 600,
+                    color: isActive ? clr : isDone ? '#16A34A' : '#94A3B8',
+                    lineHeight: 1.3,
+                    textAlign: 'center',
+                    letterSpacing: '-0.2px',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {STEP_SHORT_LABELS[idx]}
+                  </div>
+                </button>
+              )
+            })}
+          </nav>
+        )}
+
       </div>
 
       {/* ── Reset Confirm Modal ── */}

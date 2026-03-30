@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { DeviceContext } from '../lib/DeviceContext'
 
 // ── 콘텐츠 고정 크기 (activity/page.jsx 와 동일) ──
 const CONTENT_W  = 1024
@@ -275,9 +276,11 @@ export default function TabletFrame({ children }) {
   // ── PC ──
   if (device === 'pc') {
     return (
-      <PCFrame scale={scale} isActivity={isActivity} onGoHome={goHome}>
-        {children}
-      </PCFrame>
+      <DeviceContext.Provider value="pc">
+        <PCFrame scale={scale} isActivity={isActivity} onGoHome={goHome}>
+          {children}
+        </PCFrame>
+      </DeviceContext.Provider>
     )
   }
 
@@ -285,5 +288,9 @@ export default function TabletFrame({ children }) {
   if (isPortrait) return <PortraitGuide />
 
   // ── 모바일/태블릿 — 가로 모드 ──
-  return <MobileScaled scale={scale}>{children}</MobileScaled>
+  return (
+    <DeviceContext.Provider value={device}>
+      <MobileScaled scale={scale}>{children}</MobileScaled>
+    </DeviceContext.Provider>
+  )
 }
