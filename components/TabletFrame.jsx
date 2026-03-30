@@ -188,12 +188,17 @@ function PortraitGuide() {
 // ── 모바일/태블릿 — 가로 모드 스케일 콘텐츠 (핀치 줌 + 패닝) ──────────────
 function MobileScaled({ children, scale: baseScale }) {
   const containerRef  = useRef(null)
-  const stateRef      = useRef(null)   // { tx, ty, scale } — 렌더 없이 최신 값 유지
-  const prevTouchRef  = useRef(null)   // 직전 프레임 터치 스냅샷
-  const lastTapRef    = useRef(0)      // 더블탭 감지용 타임스탬프
-  const [tf, setTf]   = useState(null) // 실제 렌더에 쓸 transform 값
+  // stateRef: 렌더를 트리거하지 않고 최신 transform 값 유지
+  const stateRef      = useRef({ tx: 0, ty: 0, scale: baseScale })
+  const prevTouchRef  = useRef(null)
+  const lastTapRef    = useRef(0)
+  // tf: CSS transform에 실제로 반영되는 값 (렌더 트리거)
+  const [tf, setTf]   = useState({ tx: 0, ty: 0, scale: baseScale })
 
-  // baseScale 기준으로 콘텐츠 중앙 배치 초기화
+  // ── 1) 화면 크기 기준으로 콘텐츠 중앙 배치 ──────────────────────────────
+  // ※ 컨테이너 div는 항상 렌더되어야 containerRef가 연결됨
+  //   → 이 effect가 먼저 실행되어 stateRef를 초기화한 뒤
+  //     effect 2(이벤트 리스너)가 실행되는 순서 보장
   useEffect(() => {
     const vw = window.innerWidth
     const vh = window.innerHeight
@@ -204,12 +209,14 @@ function MobileScaled({ children, scale: baseScale }) {
     setTf({ ...init })
   }, [baseScale])
 
-  // 터치 이벤트 핸들러 (passive:false 로 preventDefault 허용)
+  // ── 2) 터치 이벤트 핸들러 등록 ──────────────────────────────────────────
   useEffect(() => {
     const el = containerRef.current
-    if (!el) return
+    if (!el) return   // 이제 항상 렌더되므로 null이 되지 않음
 
-    // 터치 좌표 스냅샷 (live TouchList 복사)
+    const PASSTHROUGH = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
+
+    // e.touches는 live 객체라 그대로 저장하면 안 됨 → 좌표만 스냅샷
     function snap(e) {
       return Array.from(e.touches).map(t => ({
         id: t.identifier,
@@ -218,14 +225,11 @@ function MobileScaled({ children, scale: baseScale }) {
       }))
     }
 
-    // 특정 태그에서 시작한 1-핑거 팬은 건너뜀 (캔버스·입력창 자체 터치와 충돌 방지)
-    const PASSTHROUGH_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
-
     function onStart(e) {
       const curr = snap(e)
 
-      // ① 더블탭 → 줌 리셋
       if (curr.length === 1) {
+        // 더블탭 → 줌 리셋
         const now = Date.now()
         if (now - lastTapRef.current < 280) {
           const vw = window.innerWidth
@@ -240,8 +244,8 @@ function MobileScaled({ children, scale: baseScale }) {
         }
         lastTapRef.current = now
 
-        // ② 입력 요소는 1핑거 팬 패스스루
-        if (PASSTHROUGH_TAGS.has(e.target.tagName)) {
+        // 입력 요소 위의 단일 터치는 패스스루 (팬 건너뜀)
+        if (PASSTHROUGH.has(e.target.tagName)) {
           prevTouchRef.current = null
           return
         }
@@ -253,7 +257,7 @@ function MobileScaled({ children, scale: baseScale }) {
     function onMove(e) {
       e.preventDefault()
       const prev = prevTouchRef.current
-      if (!prev || !stateRef.current) return
+      if (!prev) return
 
       const curr = snap(e)
       let { tx, ty, scale } = stateRef.current
@@ -267,7 +271,7 @@ function MobileScaled({ children, scale: baseScale }) {
         ty += curr[0].y - p.y
 
       } else if (curr.length >= 2 && prev.length >= 2) {
-        // ─ 두 손가락 핀치 줌 + 패닝 ─
+        // ─ 두 손가락 핀치 줌 + 팬 ─
         const c0 = curr[0], c1 = curr[1]
         const p0 = prev.find(t => t.id === c0.id) ?? prev[0]
         const p1 = prev.find(t => t.id === c1.id) ?? prev[Math.min(1, prev.length - 1)]
@@ -277,10 +281,8 @@ function MobileScaled({ children, scale: baseScale }) {
           const currDist = Math.hypot(c0.x - c1.x, c0.y - c1.y)
 
           if (prevDist > 1) {
-            const rawRatio = currDist / prevDist
-            const newScale = Math.max(baseScale, Math.min(baseScale * 5, scale * rawRatio))
+            const newScale = Math.max(baseScale, Math.min(baseScale * 5, scale * (currDist / prevDist)))
             const ratio    = newScale / scale
-
             // 핀치 중심점 기준 줌
             const midX = (c0.x + c1.x) / 2
             const midY = (c0.y + c1.y) / 2
@@ -289,7 +291,7 @@ function MobileScaled({ children, scale: baseScale }) {
             scale = newScale
           }
 
-          // 중점 이동 → 팬
+          // 두 손가락 중점 이동 → 팬
           const pMidX = (p0.x + p1.x) / 2
           const pMidY = (p0.y + p1.y) / 2
           tx += (c0.x + c1.x) / 2 - pMidX
@@ -297,15 +299,15 @@ function MobileScaled({ children, scale: baseScale }) {
         }
       }
 
-      // 콘텐츠가 화면에서 너무 벗어나지 않도록 클램프 (최소 120px 화면에 걸쳐야 함)
-      const margin  = 120
+      // 클램프: 콘텐츠가 화면에서 120px 이상 벗어나지 않도록
       const scaledW = CONTENT_W * scale
       const scaledH = CONTENT_H * scale
-      tx = Math.min(vw - margin, Math.max(margin - scaledW, tx))
-      ty = Math.min(vh - margin, Math.max(margin - scaledH, ty))
+      const m = 120
+      tx = Math.min(vw - m, Math.max(m - scaledW, tx))
+      ty = Math.min(vh - m, Math.max(m - scaledH, ty))
 
       const next = { tx, ty, scale }
-      stateRef.current  = next
+      stateRef.current     = next
       prevTouchRef.current = curr
       setTf({ ...next })
     }
@@ -326,8 +328,8 @@ function MobileScaled({ children, scale: baseScale }) {
     }
   }, [baseScale])
 
-  if (!tf) return null
-
+  // ※ 컨테이너 div를 항상 렌더 (조건부 return null 제거)
+  //   → useEffect 실행 시점에 containerRef.current가 반드시 존재해야 함
   return (
     <div
       ref={containerRef}
@@ -335,14 +337,12 @@ function MobileScaled({ children, scale: baseScale }) {
         position: 'fixed', inset: 0,
         background: '#000',
         overflow: 'hidden',
-        touchAction: 'none',  // 브라우저 기본 스크롤/줌 차단
+        touchAction: 'none',   // 브라우저 기본 스크롤·줌 차단
       }}
     >
       <div style={{
-        position: 'absolute',
-        left: 0, top: 0,
-        width: CONTENT_W,
-        height: CONTENT_H,
+        position: 'absolute', left: 0, top: 0,
+        width: CONTENT_W, height: CONTENT_H,
         transformOrigin: 'top left',
         transform: `translate(${tf.tx}px, ${tf.ty}px) scale(${tf.scale})`,
         overflow: 'hidden',
@@ -351,15 +351,15 @@ function MobileScaled({ children, scale: baseScale }) {
         {children}
       </div>
 
-      {/* 더블탭 리셋 힌트 — 줌인 됐을 때만 표시 */}
+      {/* 줌인 시 더블탭 리셋 안내 */}
       {tf.scale > baseScale * 1.05 && (
         <div style={{
-          position: 'absolute', bottom: 72, left: '50%', transform: 'translateX(-50%)',
+          position: 'absolute', bottom: 72, left: '50%',
+          transform: 'translateX(-50%)',
           padding: '5px 14px', borderRadius: 999,
-          background: 'rgba(0,0,0,.45)', backdropFilter: 'blur(6px)',
+          background: 'rgba(0,0,0,.50)', backdropFilter: 'blur(6px)',
           color: '#fff', fontSize: 11, fontWeight: 600,
           pointerEvents: 'none', whiteSpace: 'nowrap',
-          letterSpacing: '0.2px',
         }}>
           두 번 탭하면 원래 크기로 돌아가요
         </div>
