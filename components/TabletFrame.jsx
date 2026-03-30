@@ -2,107 +2,84 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 
-const SCREEN_W   = 1024
-const SCREEN_H   = 768
+// ── 콘텐츠 고정 크기 (activity/page.jsx 와 동일) ──
+const CONTENT_W  = 1024
+const CONTENT_H  = 768
+
+// ── 태블릿 프레임 베젤 ──
 const BEZEL_TOP  = 40
 const BEZEL_BOT  = 40
 const BEZEL_SIDE = 26
-const FRAME_W    = SCREEN_W + BEZEL_SIDE * 2  // 1076
-const FRAME_H    = SCREEN_H + BEZEL_TOP + BEZEL_BOT  // 848
+const FRAME_W    = CONTENT_W + BEZEL_SIDE * 2   // 1076
+const FRAME_H    = CONTENT_H + BEZEL_TOP + BEZEL_BOT  // 848
 
-export default function TabletFrame({ children }) {
-  const wrapRef  = useRef(null)
-  const frameRef = useRef(null)
-  const [scale,  setScale]  = useState(1)
-  const router   = useRouter()
-  const pathname = usePathname()
-  const isActivity = pathname === '/activity'
+// ── 기기 판별 (SSR safe) ──
+function detectDevice() {
+  if (typeof window === 'undefined') return 'pc'
+  const ua = navigator.userAgent
 
-  useEffect(() => {
-    function fit() {
-      if (!wrapRef.current) return
-      const pad = 24
-      const vw  = window.innerWidth
-      const vh  = window.innerHeight
-      const sx  = (vw - pad) / FRAME_W
-      const sy  = (vh - pad) / FRAME_H
-      const s   = Math.min(sx, sy)
-      setScale(s)
-    }
-    fit()
-    window.addEventListener('resize', fit)
-    return () => window.removeEventListener('resize', fit)
-  }, [])
+  // 명확한 모바일 UA
+  if (/iPhone|Android.*Mobile|Mobile.*Android|Windows Phone/i.test(ua)) return 'mobile'
 
-  function goHome() {
-    sessionStorage.removeItem('gts_user')
-    router.push('/')
-  }
+  // 명확한 태블릿 UA
+  if (/iPad|Android(?!.*Mobile)|Tablet|Kindle|Silk/i.test(ua)) return 'tablet'
 
+  // UA 불확실 시 터치 + 화면 크기로 보조 판별
+  // (예: iPad가 "Macintosh"로 UA를 보내는 경우)
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 1
+  const isSmallScreen = Math.min(window.screen.width, window.screen.height) < 1024
+  if (hasTouch && isSmallScreen) return 'tablet'
+
+  return 'pc'
+}
+
+// ── PC용 태블릿 프레임 ─────────────────────────────────────────────────────
+function PCFrame({ children, scale, isActivity, onGoHome }) {
   const scaledW = FRAME_W * scale
   const scaledH = FRAME_H * scale
 
   return (
-    <div ref={wrapRef} style={{
-      position: 'fixed',
-      inset: 0,
-      /* Instagram-inspired gradient background */
+    <div style={{
+      position: 'fixed', inset: 0,
       background: `
         radial-gradient(ellipse at 20% 10%, rgba(240,148,51,.55) 0%, transparent 45%),
         radial-gradient(ellipse at 80% 20%, rgba(220,39,67,.45) 0%, transparent 45%),
-        radial-gradient(ellipse at 50% 90%, rgba(188,24,136,.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 90%, rgba(188,24,136,.4)  0%, transparent 50%),
         radial-gradient(ellipse at 80% 80%, rgba(102,51,153,.35) 0%, transparent 40%),
         #1a0a2e
       `,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
     }}>
-      {/* Decorative blobs */}
-      <div style={{
-        position: 'absolute', top: '8%', left: '6%',
-        width: 180, height: 180, borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(240,148,51,.18) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute', bottom: '12%', right: '8%',
-        width: 220, height: 220, borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(188,24,136,.15) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
+      {/* 배경 장식 블롭 */}
+      <div style={{ position:'absolute', top:'8%', left:'6%', width:180, height:180, borderRadius:'50%',
+        background:'radial-gradient(circle, rgba(240,148,51,.18) 0%, transparent 70%)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', bottom:'12%', right:'8%', width:220, height:220, borderRadius:'50%',
+        background:'radial-gradient(circle, rgba(188,24,136,.15) 0%, transparent 70%)', pointerEvents:'none' }} />
 
+      {/* 스케일 컨테이너 */}
       <div style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}>
-        <div ref={frameRef} style={{
-          width:  FRAME_W,
-          height: FRAME_H,
-          transformOrigin: 'top left',
-          transform: `scale(${scale})`,
-          position: 'absolute',
-          top: 0, left: 0,
+        <div style={{
+          width: FRAME_W, height: FRAME_H,
+          transformOrigin: 'top left', transform: `scale(${scale})`,
+          position: 'absolute', top: 0, left: 0,
         }}>
-          {/* Hardware shell */}
+          {/* 하드웨어 쉘 */}
           <div style={{
             width: '100%', height: '100%',
             background: 'linear-gradient(160deg, #3A3530 0%, #252220 40%, #1E1C19 100%)',
             borderRadius: 28, position: 'relative',
             boxShadow: [
-              '0 0 0 1px #4A4540',
-              '0 0 0 2px #111',
-              '0 32px 80px rgba(0,0,0,.85)',
-              '0 0 60px rgba(240,148,51,.1)',
-              'inset 0 1px 0 rgba(255,255,255,.08)',
-              'inset 0 -1px 0 rgba(0,0,0,.4)',
+              '0 0 0 1px #4A4540', '0 0 0 2px #111',
+              '0 32px 80px rgba(0,0,0,.85)', '0 0 60px rgba(240,148,51,.1)',
+              'inset 0 1px 0 rgba(255,255,255,.08)', 'inset 0 -1px 0 rgba(0,0,0,.4)',
             ].join(', '),
           }}>
-            {/* Volume buttons */}
+            {/* 사이드 버튼들 */}
             <div style={{ position:'absolute', left:-5, top:120, width:5, height:32, background:'#2A2520', borderRadius:'3px 0 0 3px', boxShadow:'-1px 0 0 #4A4540' }}/>
             <div style={{ position:'absolute', left:-5, top:162, width:5, height:32, background:'#2A2520', borderRadius:'3px 0 0 3px', boxShadow:'-1px 0 0 #4A4540' }}/>
-            {/* Power button */}
             <div style={{ position:'absolute', right:-5, top:150, width:5, height:48, background:'#2A2520', borderRadius:'0 3px 3px 0', boxShadow:'1px 0 0 #4A4540' }}/>
 
-            {/* Top bezel */}
+            {/* 상단 베젤 (카메라) */}
             <div style={{ position:'absolute', top:0, left:BEZEL_SIDE, right:BEZEL_SIDE, height:BEZEL_TOP,
               display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
               <div style={{ width:10, height:10, borderRadius:'50%', background:'#0D0C0B',
@@ -112,53 +89,201 @@ export default function TabletFrame({ children }) {
               <div style={{ width:5, height:5, borderRadius:'50%', background:'#1A1714', boxShadow:'inset 0 0 2px rgba(0,0,0,.9)' }}/>
             </div>
 
-            {/* Screen */}
+            {/* 스크린 */}
             <div style={{
               position: 'absolute',
               top: BEZEL_TOP, left: BEZEL_SIDE,
-              width: SCREEN_W, height: SCREEN_H,
-              background: '#fafafa',
-              overflow: 'hidden',
-              borderRadius: 4,
+              width: CONTENT_W, height: CONTENT_H,
+              background: '#fafafa', overflow: 'hidden', borderRadius: 4,
               boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.15)',
             }}>
               {children}
             </div>
 
-            {/* Bottom bezel */}
+            {/* 하단 베젤 (홈 바) */}
             <div style={{ position:'absolute', bottom:0, left:BEZEL_SIDE, right:BEZEL_SIDE, height:BEZEL_BOT,
               display:'flex', alignItems:'center', justifyContent:'center' }}>
               <div style={{ width:90, height:4, borderRadius:999, background:'rgba(255,255,255,.15)' }}/>
             </div>
 
-            {/* Top shine */}
+            {/* 상단 광택 */}
             <div style={{ position:'absolute', top:0, left:28, right:28, height:1, borderRadius:'28px 28px 0 0',
               background:'linear-gradient(90deg, transparent, rgba(255,255,255,.12) 30%, rgba(255,255,255,.18) 50%, rgba(255,255,255,.12) 70%, transparent)' }}/>
           </div>
         </div>
       </div>
 
-      {/* Home button */}
+      {/* 홈 버튼 */}
       {isActivity && (
-        <button onClick={goHome} title="처음 화면으로" style={{
-          position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
-          padding: '7px 18px', borderRadius: 999,
-          background: 'rgba(255,255,255,.08)',
-          color: 'rgba(255,255,255,.5)',
-          border: '1px solid rgba(255,255,255,.15)',
-          fontSize: 12, fontWeight: 600, cursor: 'pointer',
-          fontFamily: 'system-ui, sans-serif',
-          display: 'flex', alignItems: 'center', gap: 5,
-          backdropFilter: 'blur(6px)',
-          transition: 'all .2s',
-          zIndex: 9999,
+        <button onClick={onGoHome} title="처음 화면으로" style={{
+          position:'fixed', bottom:20, left:'50%', transform:'translateX(-50%)',
+          padding:'7px 18px', borderRadius:999,
+          background:'rgba(255,255,255,.08)', color:'rgba(255,255,255,.5)',
+          border:'1px solid rgba(255,255,255,.15)',
+          fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'system-ui, sans-serif',
+          display:'flex', alignItems:'center', gap:5,
+          backdropFilter:'blur(6px)', transition:'all .2s', zIndex:9999,
         }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.18)'; e.currentTarget.style.color = 'rgba(255,255,255,.85)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.08)'; e.currentTarget.style.color = 'rgba(255,255,255,.5)' }}
-        >
-          🏠 처음 화면으로
-        </button>
+          onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,.18)'; e.currentTarget.style.color='rgba(255,255,255,.85)' }}
+          onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,.08)'; e.currentTarget.style.color='rgba(255,255,255,.5)' }}
+        >🏠 처음 화면으로</button>
       )}
     </div>
   )
+}
+
+// ── 세로 모드 안내 화면 ──────────────────────────────────────────────────────
+function PortraitGuide() {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 100%)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      color: '#fff', fontFamily: 'system-ui, -apple-system, sans-serif',
+      textAlign: 'center', padding: 32, gap: 20,
+      userSelect: 'none',
+    }}>
+      <div style={{
+        width: 88, height: 88, borderRadius: 22,
+        background: 'rgba(255,255,255,.08)',
+        border: '2px solid rgba(255,255,255,.15)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 44,
+        animation: 'rotateTip 2.6s ease-in-out infinite',
+      }}>📱</div>
+
+      <div>
+        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, letterSpacing: '-0.3px' }}>
+          가로 모드로 전환해 주세요
+        </div>
+        <div style={{ fontSize: 14, color: 'rgba(255,255,255,.55)', lineHeight: 1.8 }}>
+          이 앱은 가로(landscape) 모드에서<br />최적으로 동작해요
+        </div>
+      </div>
+
+      <div style={{
+        display:'flex', alignItems:'center', gap:10, marginTop:4,
+        padding:'10px 22px', borderRadius:999,
+        background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)',
+      }}>
+        <span style={{ fontSize:18 }}>↺</span>
+        <span style={{ fontSize:13, color:'rgba(255,255,255,.6)', fontWeight:600 }}>
+          기기를 90° 회전해 주세요
+        </span>
+      </div>
+
+      <style>{`
+        @keyframes rotateTip {
+          0%,15%  { transform: rotate(0deg); }
+          45%,70% { transform: rotate(-90deg); }
+          90%,100%{ transform: rotate(0deg); }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+// ── 모바일/태블릿 — 가로 모드 스케일 콘텐츠 ───────────────────────────────
+function MobileScaled({ children, scale }) {
+  const scaledW = CONTENT_W * scale
+  const scaledH = CONTENT_H * scale
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: '#000',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden',
+    }}>
+      <div style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}>
+        <div style={{
+          width: CONTENT_W, height: CONTENT_H,
+          transformOrigin: 'top left',
+          transform: `scale(${scale})`,
+          position: 'absolute', top: 0, left: 0,
+          overflow: 'hidden',
+        }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── 메인 컴포넌트 ─────────────────────────────────────────────────────────
+export default function TabletFrame({ children }) {
+  const [scale,      setScale]      = useState(1)
+  const [device,     setDevice]     = useState('pc')
+  const [isPortrait, setIsPortrait] = useState(false)
+  const [ready,      setReady]      = useState(false)  // hydration 전 깜빡임 방지
+
+  const router     = useRouter()
+  const pathname   = usePathname()
+  const isActivity = pathname === '/activity'
+
+  useEffect(() => {
+    const d = detectDevice()
+    setDevice(d)
+
+    function fit() {
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+
+      if (d === 'pc') {
+        // PC: 태블릿 프레임(FRAME_W × FRAME_H)을 뷰포트에 맞게 스케일
+        const pad = 24
+        const sx  = (vw - pad) / FRAME_W
+        const sy  = (vh - pad) / FRAME_H
+        setScale(Math.min(sx, sy, 1))  // 1 초과 확대는 하지 않음
+        setIsPortrait(false)
+      } else {
+        // 모바일/태블릿: 가로/세로 판별
+        const landscape = vw >= vh
+        setIsPortrait(!landscape)
+        if (landscape) {
+          // 콘텐츠(1024×768)를 뷰포트 전체에 꽉 차게 스케일
+          const sx = vw / CONTENT_W
+          const sy = vh / CONTENT_H
+          setScale(Math.min(sx, sy))
+        }
+      }
+    }
+
+    fit()
+    setReady(true)
+
+    window.addEventListener('resize', fit)
+    // orientationchange 직후엔 innerWidth/Height가 아직 갱신 전일 수 있어서 딜레이
+    const onOrient = () => setTimeout(fit, 150)
+    window.addEventListener('orientationchange', onOrient)
+
+    return () => {
+      window.removeEventListener('resize', fit)
+      window.removeEventListener('orientationchange', onOrient)
+    }
+  }, [])
+
+  function goHome() {
+    sessionStorage.removeItem('gts_user')
+    router.push('/')
+  }
+
+  // SSR/hydration 중 렌더 방지 (레이아웃 깜빡임 방지)
+  if (!ready) return null
+
+  // ── PC ──
+  if (device === 'pc') {
+    return (
+      <PCFrame scale={scale} isActivity={isActivity} onGoHome={goHome}>
+        {children}
+      </PCFrame>
+    )
+  }
+
+  // ── 모바일/태블릿 — 세로 모드 ──
+  if (isPortrait) return <PortraitGuide />
+
+  // ── 모바일/태블릿 — 가로 모드 ──
+  return <MobileScaled scale={scale}>{children}</MobileScaled>
 }

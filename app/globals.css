@@ -59,14 +59,14 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html {
-  width: 1024px;
-  height: 768px;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
 body {
-  width: 1024px;
-  height: 768px;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   font-family: 'Nanum Round Gothic', 'Nanum Gothic', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   background: var(--cream);
@@ -75,6 +75,7 @@ body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
