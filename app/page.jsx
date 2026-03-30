@@ -81,6 +81,20 @@ export default function JoinPage() {
       position: 'relative', overflow: 'hidden',
     }}>
 
+      {/* ── Spurout 캐릭터: 로그인창 좌측 상단 ── */}
+      <img
+        src="/char-spurout.png"
+        alt=""
+        style={{
+          position: 'absolute',
+          left: 400, top: 130,
+          width: 168,
+          zIndex: 6,
+          pointerEvents: 'none',
+          filter: 'drop-shadow(0 8px 16px rgba(0,0,0,.15))',
+        }}
+      />
+
       {/* ── 왼쪽: 타이틀 영역 ── */}
       <div style={{ width: 420, padding: '0 40px', flexShrink: 0 }}>
 
@@ -110,7 +124,20 @@ export default function JoinPage() {
       </div>
 
       {/* ── 오른쪽: 입장 카드 ── */}
-      <div style={{ width: 400, padding: '0 16px' }}>
+      <div style={{ width: 400, padding: '0 16px', position: 'relative' }}>
+
+        {/* ── Sun 캐릭터: 카드 우측 상단 뒤 (DOM 최상단 = 카드 아래에 렌더) ── */}
+        <img
+          src="/char-sun.png"
+          alt=""
+          style={{
+            position: 'absolute',
+            right: -42, top: lastGroup ? -105 : -95,
+            width: 138,
+            pointerEvents: 'none',
+            filter: 'drop-shadow(0 6px 14px rgba(0,0,0,.18))',
+          }}
+        />
 
         {/* 이전 모둠 빠른 재참여 */}
         {lastGroup && (
@@ -124,6 +151,7 @@ export default function JoinPage() {
             display:'flex', alignItems:'center', gap:12,
             cursor:'pointer', boxShadow:'0 3px 10px rgba(150,100,60,.08)',
             transition:'transform .15s, box-shadow .15s',
+            position:'relative', zIndex: 2,
           }}
           onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(150,100,60,.14)' }}
           onMouseLeave={e => { e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 3px 10px rgba(150,100,60,.08)' }}
@@ -148,11 +176,12 @@ export default function JoinPage() {
           </div>
         )}
 
-        {/* 메인 카드 */}
+        {/* 메인 카드 — position:relative로 Sun(absolute, DOM상단)보다 위에 렌더링 */}
         <div style={{
           background:'#fff', borderRadius:24, padding:'28px 28px 24px',
           boxShadow:'0 6px 28px rgba(150,100,60,.12), 0 2px 6px rgba(150,100,60,.06)',
           border:'2.5px solid #E8DFD4',
+          position:'relative', zIndex: 2,
         }}>
           {/* 탭 */}
           <div style={{
@@ -251,7 +280,19 @@ export default function JoinPage() {
           )}
         </div>
 
-
+        {/* ── Water 캐릭터: 카드 우측 하단 앞 ── */}
+        <img
+          src="/char-water.png"
+          alt=""
+          style={{
+            position: 'absolute',
+            right: -48, bottom: -72,
+            width: 155,
+            zIndex: 10,
+            pointerEvents: 'none',
+            filter: 'drop-shadow(0 8px 18px rgba(0,0,0,.18))',
+          }}
+        />
       </div>
     </div>
   )
