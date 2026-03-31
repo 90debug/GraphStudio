@@ -78,7 +78,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
   }, [surveyResponses]) // eslint-disable-line
 
   async function doCreateSurvey() {
-    if (!selectedPost) return alert('Step 1에서 탐구 문제를 먼저 선정해 주세요')
+    if (!selectedPost) return alert('탐구 문제를 먼저 선정해 주세요')
     await createSurvey(code, { groupName: user.groupName, topic: selectedPost.topic, question: selectedPost.question, items: selectedPost.items, roomCode: code })
     setTab('results')
   }
@@ -96,8 +96,8 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
   }
 
   const TABS = [
-    { id: 'create',  label: '📨 설문 만들기' },
-    { id: 'results', label: '📊 응답 확인' },
+    { id: 'create',  label: '📨 설문조사 만들기' },
+    { id: 'results', label: '📊 설문조사 결과 확인하기' },
     { id: 'join',    label: '🙋 설문조사 참여하기' },
   ]
 
@@ -119,7 +119,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
         ))}
       </div>
 
-      {/* 설문 만들기 탭 */}
+      {/* 설문조사 만들기 탭 */}
       {tab==='create'&&(
         <div style={{display:'flex',flexDirection:isMobile?'column':'row',gap:14,alignItems:'flex-start'}}>
           {/* 선정된 탐구 문제 */}
@@ -143,12 +143,12 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
           <div style={{flex:1}}>
             {!surveyActive?(
               <Sec style={{marginBottom:0}}>
-                <div style={{fontWeight:700,fontSize:15,marginBottom:10}}>📨 설문조사 시작하기</div>
+                <div style={{fontWeight:700,fontSize:15,marginBottom:10}}>📨 설문조사 만들기</div>
                 <div style={{fontSize:14,color:'#8C7B6E',marginBottom:14,lineHeight:1.75}}>
                   선정된 탐구 문제로 설문조사를 만들어요.<br/>
                   모둠 코드 <b style={{color:'#4EACD9',letterSpacing:1}}>{code}</b>를 친구들에게 알려 주세요!
                 </div>
-                <Btn onClick={doCreateSurvey} color="blue" disabled={!selectedPost}>📨 설문조사 생성하기</Btn>
+                <Btn onClick={doCreateSurvey} color="blue" disabled={!selectedPost}>만들기</Btn>
               </Sec>
             ):(
               <Sec style={{background:'#EBF7FF',border:'1px solid #BFDBFE',marginBottom:0}}>
@@ -179,7 +179,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
               <div style={{textAlign:'center',padding:'28px 0',color:'#8C7B6E'}}>
                 <div style={{fontSize:36,marginBottom:10}}>📭</div>
                 <div style={{fontSize:15,fontWeight:700,color:'#64748B'}}>진행 중인 설문조사가 없어요.</div>
-                <div style={{fontSize:13,marginTop:6}}>설문 만들기 탭에서 설문조사를 먼저 시작해 주세요.</div>
+                <div style={{fontSize:13,marginTop:6}}>설문조사를 먼저 만들어 주세요.</div>
               </div>
             </Sec>
           ):items.length===0?(
