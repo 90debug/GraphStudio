@@ -135,7 +135,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
               </Sec>
             ):(
               <Sec style={{background:'#FFFBEB',border:'1px dashed #F59E0B',marginBottom:0}}>
-                <div style={{fontSize:14,color:'#B45309',fontWeight:700}}>⚠️ Step 1에서 탐구 문제를 먼저 선정해 주세요</div>
+                <div style={{fontSize:14,color:'#B45309',fontWeight:700}}>⚠️ 우리 모둠의 탐구 문제를 먼저 선정해 주세요.</div>
               </Sec>
             )}
           </div>
