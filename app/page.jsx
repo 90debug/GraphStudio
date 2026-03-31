@@ -58,9 +58,7 @@ export default function JoinPage() {
       backgroundSize: 'cover', backgroundPosition: 'center',
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* 캐릭터 */}
-      <img src="/char-spurout.png" alt="" style={{ position:'absolute', left:400, top:130, width:168, zIndex:6, pointerEvents:'none', filter:'drop-shadow(0 8px 16px rgba(0,0,0,.15))' }}/>
-
+      {/* 캐릭터 — 바깥 컨테이너가 아닌 오른쪽 카드 컬럼 안에서 위치 잡기 */}
       {/* 왼쪽: 타이틀 */}
       <div style={{ width: 420, padding: '0 40px', flexShrink: 0 }}>
         <div style={{ marginBottom: 18, marginTop: 20 }}>
@@ -79,6 +77,8 @@ export default function JoinPage() {
 
       {/* 오른쪽: 입장 카드 */}
       <div style={{ width: 400, padding: '0 16px', position: 'relative' }}>
+        {/* char-spurout: 카드 컬럼 기준으로 좌상단에 위치 — 뷰포트가 바뀌어도 카드와의 상대 위치 유지 */}
+        <img src="/char-spurout.png" alt="" style={{ position:'absolute', left:-118, top:-10, width:168, zIndex:6, pointerEvents:'none', filter:'drop-shadow(0 8px 16px rgba(0,0,0,.15))' }}/>
         <img src="/char-sun.png" alt="" style={{ position:'absolute', right:-42, top:lastGroup?-105:-95, width:138, pointerEvents:'none', filter:'drop-shadow(0 6px 14px rgba(0,0,0,.18))' }}/>
 
         {/* 이전 모둠 재참여 */}
