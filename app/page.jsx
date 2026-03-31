@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useDevice } from '../lib/DeviceContext'
 
 function randCode() {
   return Array.from({ length: 6 }, () =>
@@ -10,10 +9,7 @@ function randCode() {
 }
 
 export default function JoinPage() {
-  const router  = useRouter()
-  const device  = useDevice()
-  const isMobile = device !== 'pc'
-
+  const router = useRouter()
   const [mode,      setMode]      = useState('new')
   const [name,      setName]      = useState('')
   const [groupName, setGroupName] = useState('')
@@ -46,37 +42,30 @@ export default function JoinPage() {
   }
 
   const inputBase = {
-    width:'100%', padding:'13px 16px', borderRadius:14,
-    border:'2.5px solid #E8DFD4', fontSize:15, color:'#3D2B1F',
-    background:'#FFFCF8', outline:'none', marginTop:8,
-    transition:'border-color .15s, box-shadow .15s',
-    boxSizing:'border-box', fontFamily:'inherit', fontWeight:600,
+    width: '100%', padding: '13px 16px', borderRadius: 14,
+    border: '2.5px solid #E8DFD4', fontSize: 15, color: '#3D2B1F',
+    background: '#FFFCF8', outline: 'none', marginTop: 8,
+    transition: 'border-color .15s, box-shadow .15s',
+    boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 600,
   }
-  const labelBase = { fontSize:13, fontWeight:800, color:'#8C7B6E', display:'block', letterSpacing:'0.3px' }
+  const labelBase = { fontSize: 13, fontWeight: 800, color: '#8C7B6E', display: 'block', letterSpacing: '0.3px' }
 
   return (
     <div style={{
-      width:'100%', height:'100%',
-      display:'flex',
-      flexDirection: isMobile ? 'column' : 'row',
-      alignItems:'center', justifyContent:'center',
-      backgroundImage:"url('/bg-main.png')",
-      backgroundSize:'cover', backgroundPosition:'center',
-      position:'relative', overflow: isMobile ? 'auto' : 'hidden',
-      padding: isMobile ? '24px 16px' : 0,
-      gap: isMobile ? 24 : 0,
+      width: '100%', height: '100%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      backgroundImage: "url('/bg-main.png')",
+      backgroundSize: 'cover', backgroundPosition: 'center',
+      position: 'relative', overflow: 'hidden',
     }}>
+      {/* 캐릭터 */}
+      <img src="/char-spurout.png" alt="" style={{ position:'absolute', left:400, top:130, width:168, zIndex:6, pointerEvents:'none', filter:'drop-shadow(0 8px 16px rgba(0,0,0,.15))' }}/>
 
-      {/* 캐릭터 (PC only) */}
-      {!isMobile && (
-        <img src="/char-spurout.png" alt="" style={{ position:'absolute', left:400, top:130, width:168, zIndex:6, pointerEvents:'none', filter:'drop-shadow(0 8px 16px rgba(0,0,0,.15))' }}/>
-      )}
-
-      {/* 왼쪽/상단: 타이틀 */}
-      <div style={{ width: isMobile ? '100%' : 420, padding: isMobile ? '0' : '0 40px', flexShrink:0 }}>
-        <div style={{ marginBottom:18, marginTop: isMobile ? 0 : 20 }}>
+      {/* 왼쪽: 타이틀 */}
+      <div style={{ width: 420, padding: '0 40px', flexShrink: 0 }}>
+        <div style={{ marginBottom: 18, marginTop: 20 }}>
           <div style={{ display:'inline-block', padding:'5px 16px', borderRadius:999, background:'#FF8C42', color:'#fff', fontSize:12, fontWeight:800, letterSpacing:1.5, marginBottom:10 }}>6. 여러 가지 그래프</div>
-          <h1 style={{ fontSize: isMobile ? 24 : 32, fontWeight:800, color:'#3D2B1F', lineHeight:1.25, letterSpacing:'-0.5px' }}>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color:'#3D2B1F', lineHeight: 1.25, letterSpacing:'-0.5px' }}>
             자료를 수집하여<br/>
             <span style={{ color:'#4EACD9' }}>알맞은 그래프로</span><br/>
             나타내고 해석해요!
@@ -88,11 +77,9 @@ export default function JoinPage() {
         </div>
       </div>
 
-      {/* 오른쪽/하단: 입장 카드 */}
-      <div style={{ width: isMobile ? '100%' : 400, padding: isMobile ? '0' : '0 16px', position:'relative' }}>
-        {!isMobile && (
-          <img src="/char-sun.png" alt="" style={{ position:'absolute', right:-42, top:lastGroup?-105:-95, width:138, pointerEvents:'none', filter:'drop-shadow(0 6px 14px rgba(0,0,0,.18))' }}/>
-        )}
+      {/* 오른쪽: 입장 카드 */}
+      <div style={{ width: 400, padding: '0 16px', position: 'relative' }}>
+        <img src="/char-sun.png" alt="" style={{ position:'absolute', right:-42, top:lastGroup?-105:-95, width:138, pointerEvents:'none', filter:'drop-shadow(0 6px 14px rgba(0,0,0,.18))' }}/>
 
         {/* 이전 모둠 재참여 */}
         {lastGroup && (
@@ -114,6 +101,7 @@ export default function JoinPage() {
         <div style={{ background:'#fff', borderRadius:24, padding:'28px 28px 24px',
           boxShadow:'0 6px 28px rgba(150,100,60,.12), 0 2px 6px rgba(150,100,60,.06)',
           border:'2.5px solid #E8DFD4', position:'relative', zIndex:2 }}>
+
           <div style={{ display:'flex', gap:4, marginBottom:24, background:'#FFF3E8', borderRadius:14, padding:4 }}>
             {[['new','🏠 새 모둠 만들기'],['join','🔑 코드로 참여']].map(([m,label])=>(
               <button key={m} onClick={()=>{ setMode(m); setError('') }} style={{
@@ -127,7 +115,7 @@ export default function JoinPage() {
 
           {error && <div style={{ fontSize:13, color:'#D4601A', padding:'10px 14px', background:'#FFF3E8', borderRadius:12, marginBottom:16, border:'2px solid #FFDAB9', fontWeight:700 }}>⚠️ {error}</div>}
 
-          {mode==='new' ? (
+          {mode === 'new' ? (
             <form onSubmit={handleNew}>
               <div style={{ marginBottom:18 }}><label style={labelBase}>✏️ 이름</label><input className="edu-input" style={inputBase} placeholder="예: 김민준" value={name} onChange={e=>{ setName(e.target.value); setError('') }}/></div>
               <div style={{ marginBottom:20 }}><label style={labelBase}>🏷️ 모둠 이름</label><input className="edu-input" style={inputBase} placeholder="예: 2모둠" value={groupName} onChange={e=>{ setGroupName(e.target.value); setError('') }}/></div>
@@ -137,7 +125,8 @@ export default function JoinPage() {
           ) : (
             <form onSubmit={handleJoin}>
               <div style={{ marginBottom:18 }}><label style={labelBase}>✏️ 이름</label><input className="edu-input" style={inputBase} placeholder="예: 이서연" value={name} onChange={e=>{ setName(e.target.value); setError('') }}/></div>
-              <div style={{ marginBottom:20 }}><label style={labelBase}>🔑 참여 코드 (6자리)</label>
+              <div style={{ marginBottom:20 }}>
+                <label style={labelBase}>🔑 참여 코드 (6자리)</label>
                 <input className="edu-input" style={{ ...inputBase, textTransform:'uppercase', letterSpacing:10, fontWeight:800, fontSize:22, textAlign:'center', padding:'14px 16px' }} placeholder="ABC123" maxLength={6} value={joinCode} onChange={e=>{ setJoinCode(e.target.value.toUpperCase()); setError('') }}/>
               </div>
               <button type="submit" className="edu-btn" style={{ width:'100%', padding:'15px', borderRadius:16, fontSize:16, fontWeight:800, fontFamily:'inherit', background:'linear-gradient(135deg,#4EACD9,#2785B5)', color:'#fff', border:'none', cursor:'pointer', boxShadow:'0 5px 16px rgba(78,172,217,.40)' }}>🙋 모둠 활동 참여하기!</button>
@@ -146,7 +135,7 @@ export default function JoinPage() {
           )}
         </div>
 
-        {!isMobile && <img src="/char-water.png" alt="" style={{ position:'absolute', right:-48, bottom:-72, width:155, zIndex:10, pointerEvents:'none', filter:'drop-shadow(0 8px 18px rgba(0,0,0,.18))' }}/>}
+        <img src="/char-water.png" alt="" style={{ position:'absolute', right:-48, bottom:-72, width:155, zIndex:10, pointerEvents:'none', filter:'drop-shadow(0 8px 18px rgba(0,0,0,.18))' }}/>
       </div>
     </div>
   )

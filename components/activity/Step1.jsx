@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useDevice } from '../../lib/DeviceContext'
 import { CHART_COLORS, padletPalette, tsNow } from '../../lib/constants'
 import { Sec, Tag, Btn } from './ui'
 import { addStep1Post, toggleLike1, addComment1 } from '../../lib/firestore'
@@ -99,9 +98,6 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
 
 // ─── Step1 ────────────────────────────────────────────────────────────────
 export default function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, onSelectRequest, onDelete }) {
-  const device   = useDevice()
-  const isMobile = device !== 'pc'
-
   const [showModal, setShowModal] = useState(false)
   const [form,      setForm]      = useState({ topic:'', question:'', items:[] })
   const [itemInput, setItemInput] = useState('')
@@ -137,8 +133,8 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
 
   const ready = form.topic.trim()&&form.question.trim()&&form.items.length>0
 
-  // 반응형 그리드: PC=3열, 모바일=1~2열
-  const gridCols = isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)'
+  // 항상 3열 그리드 (PC / 태블릿 동일)
+  const gridCols = 'repeat(3, 1fr)'
 
   return (
     <div style={{position:'relative',flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
@@ -153,11 +149,11 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
       </div>
 
       {/* 스크롤 영역 */}
-      <div style={{flex:1,overflowY:'auto',padding:isMobile?'12px 12px 80px':'16px 20px 80px',backgroundImage:"url('/bg-activity.png')",backgroundSize:'cover',backgroundPosition:'center',backgroundAttachment:'local'}}>
+      <div style={{flex:1,overflowY:'auto',padding:'16px 20px 80px',backgroundImage:"url('/bg-activity.png')",backgroundSize:'cover',backgroundPosition:'center',backgroundAttachment:'local'}}>
 
         {/* 전광판 배너 */}
         {selectedPost&&(
-          <div style={{background:'linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#0F172A 100%)',border:'2px solid #22D3EE',borderRadius:14,padding:isMobile?'12px 14px':'14px 18px',marginBottom:14,boxShadow:'0 0 0 1px #22D3EE30,0 0 20px #22D3EE40,0 8px 24px rgba(0,0,0,.5)',position:'relative',overflow:'hidden'}}>
+          <div style={{background:'linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#0F172A 100%)',border:'2px solid #22D3EE',borderRadius:14,padding:'14px 18px',marginBottom:14,boxShadow:'0 0 0 1px #22D3EE30,0 0 20px #22D3EE40,0 8px 24px rgba(0,0,0,.5)',position:'relative',overflow:'hidden'}}>
             <div style={{position:'absolute',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.15) 3px,rgba(0,0,0,.15) 4px)'}}/>
             <div style={{position:'absolute',top:-30,left:-30,width:80,height:80,borderRadius:'50%',background:'radial-gradient(circle,rgba(34,211,238,.25) 0%,transparent 70%)',pointerEvents:'none'}}/>
             <div style={{position:'absolute',bottom:-30,right:-30,width:80,height:80,borderRadius:'50%',background:'radial-gradient(circle,rgba(16,185,129,.20) 0%,transparent 70%)',pointerEvents:'none'}}/>
@@ -167,7 +163,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
               </div>
               <span style={{fontSize:10,fontWeight:800,color:'#22D3EE',letterSpacing:3,textShadow:'0 0 8px #22D3EE',textTransform:'uppercase'}}>✅ 우리 모둠의 탐구 문제</span>
             </div>
-            <div style={{fontSize:isMobile?16:18,fontWeight:800,color:'#F0FDF4',letterSpacing:'-0.3px',lineHeight:1.3,marginBottom:8,textShadow:'0 0 12px rgba(34,211,238,.6),0 0 24px rgba(34,211,238,.3)'}}>{selectedPost.topic}</div>
+            <div style={{fontSize:18,fontWeight:800,color:'#F0FDF4',letterSpacing:'-0.3px',lineHeight:1.3,marginBottom:8,textShadow:'0 0 12px rgba(34,211,238,.6),0 0 24px rgba(34,211,238,.3)'}}>{selectedPost.topic}</div>
             <div style={{fontSize:13,color:'#94A3B8',marginBottom:10,lineHeight:1.6,borderLeft:'2px solid #22D3EE60',paddingLeft:10}}>
               <span style={{color:'#22D3EE',fontWeight:700}}>Q.</span> {selectedPost.question}
             </div>
@@ -187,7 +183,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
             <div style={{fontSize:13}}>우측 하단 <b style={{color:'#F97316'}}>+</b> 버튼을 눌러서 첫 번째 아이디어를 올려보세요!</div>
           </div>
         ):(
-          <div style={{display:'grid',gridTemplateColumns:gridCols,gap:isMobile?10:12}}>
+          <div style={{display:'grid',gridTemplateColumns:gridCols,gap:12}}>
             {posts.map(post=>(
               <PadletStep1Card key={post.id} post={post} myName={user.name} selectedPost={selectedPost}
                 onLike={onLike} onComment={onComment} onSelectRequest={onSelectRequest} onDelete={onDelete}/>

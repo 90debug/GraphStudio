@@ -443,9 +443,9 @@ export default function TabletFrame({ children }) {
   // ── 모바일/태블릿 — 세로 모드 ──
   if (isPortrait) return <PortraitGuide />
 
-  // ── 모바일/태블릿 — 가로 모드: 프레임 없이 전체 화면 ──────────────────────
+  // ── 모바일/태블릿 — 가로 모드: 프레임 없이 전체 화면, PC와 동일 레이아웃 ──
   return (
-    <DeviceContext.Provider value={device}>
+    <DeviceContext.Provider value="pc">
       <div style={{
         position: 'fixed', inset: 0,
         background: '#FFFDF9',

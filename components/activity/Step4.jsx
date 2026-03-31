@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { useDevice } from '../../lib/DeviceContext'
 import { CHART_COLORS, CHECKLIST, padletPalette } from '../../lib/constants'
 import { Btn } from './ui'
 import { CHART_CMPS } from './charts'
@@ -237,9 +236,6 @@ function BoardPanel({ posts4, user, onLike4, onComment4, onDelete4 }) {
 
 // ─── Step4 ────────────────────────────────────────────────────────────────
 export default function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4State, posts4, onLike4, onComment4, onDelete4 }) {
-  const device    = useDevice()
-  const isMobile  = device !== 'pc'
-  const [mobileTab, setMobileTab] = useState('work') // 'work' | 'board'
   const [sharing,   setSharing]   = useState(false)
   const [collapsed, setCollapsed] = useState(false)
 
@@ -270,39 +266,25 @@ export default function Step4({ user, code, items, dataTable, chartConfig, step4
         </div>
       </div>
 
-      {isMobile ? (
-        // ── 모바일: 탭 전환 ──
-        <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
-          {/* 탭 헤더 */}
-          <div style={{display:'flex',borderBottom:'1.5px solid #E6D8C8',flexShrink:0,background:'#fff'}}>
-            {[['work','✏️ 내 해석 작성'],['board','📋 보드 보기']].map(([t,l])=>(
-              <button key={t} onClick={()=>setMobileTab(t)} style={{flex:1,padding:'11px 8px',fontSize:13,fontWeight:mobileTab===t?800:600,color:mobileTab===t?'#8B5CF6':'#8C7B6E',borderBottom:`2px solid ${mobileTab===t?'#8B5CF6':'transparent'}`,marginBottom:-2,background:'none',border:'none',borderBottom:`2px solid ${mobileTab===t?'#8B5CF6':'transparent'}`,cursor:'pointer',fontFamily:'inherit',transition:'all .15s'}}>
-                {l} {t==='board'&&posts4?.length>0&&<span style={{fontSize:11,background:'#8B5CF6',color:'#fff',borderRadius:999,padding:'1px 6px',marginLeft:3}}>{posts4.length}</span>}
-              </button>
-            ))}
+      {/* 좌우 분할 — PC / 태블릿 동일 */}
+      <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+        {/* 왼쪽 작업 패널 — 고정폭 대신 min/max로 태블릿 대응 */}
+        <div style={{
+          width: collapsed ? 48 : 'clamp(260px, 32%, 340px)',
+          flexShrink:0, borderRight:'1.5px solid #E2E8F2',
+          background:'#fff', display:'flex', flexDirection:'column',
+          overflow:'hidden', transition:'width .3s cubic-bezier(.4,0,.2,1)',
+        }}>
+          <div style={{padding:'10px 12px',borderBottom:'1px solid #F1F5F9',display:'flex',alignItems:'center',gap:8,flexShrink:0,background:'#F8FAFC'}}>
+            {!collapsed&&<span style={{fontSize:13,fontWeight:700,color:'#1E293B',flex:1,whiteSpace:'nowrap'}}>✏️ 내 해석 작성</span>}
+            <button onClick={()=>setCollapsed(c=>!c)} style={{width:28,height:28,borderRadius:8,border:'1.5px solid #E2E8F2',background:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',color:'#64748B',flexShrink:0,marginLeft:collapsed?'auto':0,transition:'transform .3s'}}>{collapsed?'▶':'◀'}</button>
           </div>
-          {/* 탭 콘텐츠 */}
-          {mobileTab==='work'?(
+          {!collapsed&&(
             <WorkPanel code={code} user={user} items={items} dataTable={dataTable} chartConfig={chartConfig} step4State={step4State} onStep4State={onStep4State} onShare={doShare} sharing={sharing}/>
-          ):(
-            <BoardPanel posts4={posts4} user={user} onLike4={onLike4} onComment4={onComment4} onDelete4={onDelete4}/>
           )}
         </div>
-      ) : (
-        // ── PC: 기존 좌우 분할 ──
-        <div style={{flex:1,display:'flex',overflow:'hidden'}}>
-          <div style={{width:collapsed?48:316,flexShrink:0,borderRight:'1.5px solid #E2E8F2',background:'#fff',display:'flex',flexDirection:'column',overflow:'hidden',transition:'width .3s cubic-bezier(.4,0,.2,1)'}}>
-            <div style={{padding:'10px 12px',borderBottom:'1px solid #F1F5F9',display:'flex',alignItems:'center',gap:8,flexShrink:0,background:'#F8FAFC'}}>
-              {!collapsed&&<span style={{fontSize:13,fontWeight:700,color:'#1E293B',flex:1,whiteSpace:'nowrap'}}>✏️ 내 해석 작성</span>}
-              <button onClick={()=>setCollapsed(c=>!c)} style={{width:28,height:28,borderRadius:8,border:'1.5px solid #E2E8F2',background:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',color:'#64748B',flexShrink:0,marginLeft:collapsed?'auto':0,transition:'transform .3s'}}>{collapsed?'▶':'◀'}</button>
-            </div>
-            {!collapsed&&(
-              <WorkPanel code={code} user={user} items={items} dataTable={dataTable} chartConfig={chartConfig} step4State={step4State} onStep4State={onStep4State} onShare={doShare} sharing={sharing}/>
-            )}
-          </div>
-          <BoardPanel posts4={posts4} user={user} onLike4={onLike4} onComment4={onComment4} onDelete4={onDelete4}/>
-        </div>
-      )}
+        <BoardPanel posts4={posts4} user={user} onLike4={onLike4} onComment4={onComment4} onDelete4={onDelete4}/>
+      </div>
     </div>
   )
 }

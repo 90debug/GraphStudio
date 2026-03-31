@@ -1,14 +1,10 @@
 'use client'
-import { useDevice } from '../../lib/DeviceContext'
 import { CHART_COLORS } from '../../lib/constants'
 import { Sec, Lbl, Inp } from './ui'
 import DrawingCanvas from './DrawingCanvas'
 import { CHART_CMPS } from './charts'
 
 export default function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strokes, currentDrawer, drawMode, onDrawMode, livePreview, selectedPost, step3SnapshotImg, onStep3SnapshotImg }) {
-  const device   = useDevice()
-  const isMobile = device !== 'pc'
-
   const chartData = items.map((label, i) => ({ label, value: dataTable[i]?.value || 0 }))
   const ChartComp = CHART_CMPS[chartConfig.type] || CHART_CMPS.bar
   const total = dataTable.reduce((s, d) => s + (Number(d.value) || 0), 0)

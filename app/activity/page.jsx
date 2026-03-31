@@ -59,7 +59,6 @@ function StepHeader({ step, activeStep }) {
 export default function ActivityPage() {
   const router   = useRouter()
   const device   = useDevice()
-  const isMobile = device !== 'pc'
 
   const [user,        setUser]        = useState(null)
   const [loading,     setLoading]     = useState(true)
@@ -235,14 +234,15 @@ export default function ActivityPage() {
 
   if (loading || !user) return (
     <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center',
-      flexDirection:'column', gap:18, backgroundImage:"url('/bg-activity.png')", backgroundSize:'cover', backgroundPosition:'center' }}>
+      flexDirection:'column', gap:18,
+      backgroundImage:"url('/bg-loading.png')", backgroundSize:'cover', backgroundPosition:'center' }}>
       <div style={{ position:'relative' }}>
         <div className="bounce" style={{ fontSize:60 }}>📚</div>
         <div style={{ position:'absolute', top:-4, right:-8, width:20, height:20, borderRadius:'50%',
           background:'#FF8C42', animation:'pulse 1s infinite', boxShadow:'0 2px 8px rgba(255,140,66,.4)' }}/>
       </div>
       <div style={{ fontSize:17, fontWeight:800, color:'#3D2B1F', letterSpacing:'-0.3px' }}>연결 중...</div>
-      <div style={{ fontSize:13, color:'#8C7B6E', fontWeight:700, background:'#fff', padding:'8px 20px',
+      <div style={{ fontSize:13, color:'#8C7B6E', fontWeight:700, background:'rgba(255,255,255,.9)', padding:'8px 20px',
         borderRadius:999, border:'2.5px solid #E6D8C8', boxShadow:'0 3px 10px rgba(140,90,50,.08)' }}>잠시만 기다려 주세요 😊</div>
     </div>
   )

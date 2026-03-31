@@ -1,6 +1,5 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { useDevice } from '../../lib/DeviceContext'
 import { CHART_COLORS } from '../../lib/constants'
 import { Sec, Tag, Btn, Modal } from './ui'
 import { createSurvey, getSurvey, addSurveyResponse } from '../../lib/firestore'
@@ -50,9 +49,6 @@ function SurveyModal({ survey, userName, surveyCode, onClose }) {
 
 // ─── Step2 ────────────────────────────────────────────────────────────────
 export default function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, survey, surveyResponses }) {
-  const device   = useDevice()
-  const isMobile = device !== 'pc'
-
   const [tab,         setTab]         = useState('create')
   const [lookupCode,  setLookupCode]  = useState('')
   const [surveyModal, setSurveyModal] = useState(null)
@@ -107,8 +103,8 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
       <div style={{display:'flex',gap:0,marginBottom:16,borderBottom:'1px solid #dbdbdb',overflowX:'auto'}}>
         {TABS.map(t=>(
           <button key={t.id} onClick={()=>setTab(t.id)} style={{
-            padding:isMobile?'10px 12px':'10px 16px',
-            fontSize:isMobile?12:14,
+            padding:'10px 16px',
+            fontSize:14,
             fontWeight:tab===t.id?700:400,
             color:tab===t.id?'#3D2B1F':'#8C7B6E',
             borderBottom:`2px solid ${tab===t.id?'#3D2B1F':'transparent'}`,
@@ -121,7 +117,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
 
       {/* 설문조사 만들기 탭 */}
       {tab==='create'&&(
-        <div style={{display:'flex',flexDirection:isMobile?'column':'row',gap:14,alignItems:'flex-start'}}>
+        <div style={{display:'flex',flexDirection:'row',gap:14,alignItems:'flex-start'}}>
           {/* 선정된 탐구 문제 */}
           <div style={{flex:1}}>
             {selectedPost?(
@@ -189,7 +185,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
               <div style={{marginBottom:12,padding:'9px 14px',background:'#FFF7ED',borderRadius:8,border:'1px solid #FED7AA',fontSize:13,color:'#C2410C',fontWeight:600,lineHeight:1.6}}>
                 📌 {selectedPost?.topic} — {selectedPost?.question}
               </div>
-              <div style={{display:'flex',flexDirection:isMobile?'column':'row',gap:12,alignItems:'flex-start'}}>
+              <div style={{display:'flex',flexDirection:'row',gap:12,alignItems:'flex-start'}}>
                 {surveyActive&&surveyResponses.length>0&&(
                   <Sec style={{flex:1,background:'#EBF7FF',border:'1px solid #BFDBFE',marginBottom:0}}>
                     <div style={{fontSize:14,fontWeight:700,color:'#4EACD9',marginBottom:10}}>📊 실시간 응답 ({surveyResponses.length}명)</div>
