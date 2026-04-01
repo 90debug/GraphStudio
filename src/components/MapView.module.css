@@ -1,0 +1,61 @@
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px 10px; background: var(--g); flex-shrink: 0; gap: 8px;
+}
+.headerTitle { font-size: 14px; font-weight: 700; color: white; white-space: nowrap; }
+.headerRight  { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.whoChip {
+  font-size: 10.5px; font-weight: 600; color: white;
+  background: rgba(255,255,255,.22); padding: 3px 10px; border-radius: 10px;
+  max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.adminBtn {
+  font-size: 10.5px; font-weight: 700;
+  background: rgba(255,255,255,.18); color: white;
+  border: 1px solid rgba(255,255,255,.35); border-radius: 8px; padding: 4px 9px;
+}
+.homeBtn  { font-size: 15px; background: none; border: none; padding: 2px 4px; cursor: pointer; color: rgba(255,255,255,.8); }
+.logoutBtn{ font-size: 14px; background: none; border: none; padding: 2px 4px; cursor: pointer; color: rgba(255,255,255,.6); }
+
+.errorBanner {
+  background: #FEF0EE; border-bottom: 1.5px solid #F0997B;
+  padding: 8px 14px; font-size: 12px; color: #8A3020;
+  display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+.errorBanner button { background: none; border: none; font-size: 13px; color: #8A3020; cursor: pointer; }
+
+.mapPlaceholder {
+  height: 260px; background: #C4E4F2;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.statusWrap { flex: 1; overflow-y: auto; }
+
+/* ── 바텀 네비 ── */
+.bnav { display: flex; border-top: 1px solid #EBF2ED; background: white; flex-shrink: 0; }
+.bni  { flex: 1; padding: 9px 0 7px; text-align: center; font-size: 9.5px; font-weight: 600; color: var(--muted); }
+.bniOn { color: var(--g); }
+.bniIc { font-size: 17px; display: block; margin-bottom: 2px; }
+
+/* ── 확대 오버레이 ── */
+.expandOverlay {
+  position: fixed;
+  inset: 0;
+  background: #1C2B22;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+.expandHeader {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px 10px; flex-shrink: 0;
+}
+.expandTitle { font-size: 15px; font-weight: 700; color: white; flex: 1; }
+.expandHint  { font-size: 11px; color: rgba(255,255,255,.5); }
+.expandClose {
+  font-size: 18px; color: rgba(255,255,255,.8); background: none; border: none; cursor: pointer; padding: 2px 6px;
+}
+.expandMapWrap {
+  flex: 1; overflow: hidden; position: relative;
+}
+/* 확대 모드에서 지도가 전체 높이를 채우도록 */
+.expandMapWrap > div { height: 100% !important; }

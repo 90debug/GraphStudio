@@ -1,108 +1,137 @@
-# 📊 그래프 탐구 스튜디오
+# 🍊 Jeju Workshop Tracker
 
-초등 수학 5단원 「여러 가지 그래프」 모둠 활동 협업 플랫폼  
-Firebase Firestore 기반 실시간 다기기 동기화
-
----
-
-## 🚀 배포 방법 (총 소요 시간: 약 20분)
-
-### STEP 1 — Firebase 프로젝트 만들기 (10분)
-
-1. **https://firebase.google.com** 접속 → Google 계정으로 로그인
-2. "프로젝트 만들기" 클릭 → 이름 입력 (예: graph-studio) → 생성
-3. 좌측 메뉴 빌드 → Firestore Database → "데이터베이스 만들기"
-   - 테스트 모드로 시작 선택
-   - 위치: asia-northeast3 (Seoul) 선택 → 완료
-4. 프로젝트 설정(⚙️) → 내 앱 → 웹 앱 추가(</>) → 앱 등록
-   - 표시되는 firebaseConfig 값을 전부 복사해 두세요
+파트별 실시간 위치 공유 앱 — Firebase + Vite + Vercel
 
 ---
 
-### STEP 2 — GitHub에 코드 올리기 (5분)
+## 빠른 시작
 
-1. https://github.com 로그인 → New repository → 저장소 생성
-2. ZIP 해제 후 graph-explorer 폴더 안 파일 전체를 업로드
-3. Commit changes 클릭
+### 1. 의존성 설치
 
----
+```bash
+npm install
+```
 
-### STEP 3 — Vercel 배포 + 환경 변수 입력 (5분)
+### 2. Firebase 프로젝트 설정
 
-1. https://vercel.com → GitHub으로 로그인
-2. New Project → 위 저장소 선택 → Import
-3. Environment Variables 섹션에 아래 6개 변수 추가
+1. [Firebase 콘솔](https://console.firebase.google.com) → 새 프로젝트 생성
+2. **Realtime Database** 생성 (테스트 모드로 시작)
+3. **Authentication** → 로그인 방법 → **익명** 활성화
+4. 프로젝트 설정 → 웹 앱 등록 → config 값 복사
 
-| 변수명 | Firebase 설정의 어느 값? |
-|--------|------------------------|
-| NEXT_PUBLIC_FIREBASE_API_KEY | apiKey |
-| NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN | authDomain |
-| NEXT_PUBLIC_FIREBASE_PROJECT_ID | projectId |
-| NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET | storageBucket |
-| NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID | messagingSenderId |
-| NEXT_PUBLIC_FIREBASE_APP_ID | appId |
+### 3. 환경변수 설정
 
-4. Deploy 클릭 → 1~2분 후 URL 생성!
+```bash
+cp .env.example .env
+```
 
----
-
-### STEP 4 — Firestore 보안 규칙 (30일 이내 설정 권장)
-
-Firebase 콘솔 → Firestore → 규칙 탭에 붙여넣기:
+`.env`에 Firebase config 값 입력:
 
 ```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /rooms/{roomId} {
-      allow read, write: if true;
-      match /posts/{postId} {
-        allow read, write: if true;
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_DATABASE_URL=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+```
+
+### 4. Firebase 보안 규칙 적용
+
+Firebase 콘솔 → Realtime Database → 규칙 탭:
+
+```json
+{
+  "rules": {
+    "config": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "parts": {
+      ".read": "auth != null",
+      "$partKey": {
+        ".read": "auth != null",
+        ".write": "auth != null"
       }
+    },
+    "announcements": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }
 ```
 
----
+### 5. 관리자 코드 설정 (Firebase 콘솔에서 직접)
 
-## 💻 로컬 테스트
+Firebase 콘솔 → Realtime Database → 데이터 탭 → 우측 상단 **+** 버튼:
+
+```
+/config
+  adminCode:     "원하는코드"      ← 관리자 접속 코드
+  workshopTitle: "2025 하반기 본부 워크숍"
+```
+
+> config를 추가하지 않으면 기본값 adminCode = `"0000"` 이 사용돼요.
+
+### 6. 로컬 실행
 
 ```bash
-cp .env.local.example .env.local
-# .env.local 파일에 Firebase 설정값 입력
-npm install
 npm run dev
 ```
 
 ---
 
-## 📁 파일 구조
+## 배포 (Vercel)
 
+```bash
+git init
+git add .
+git commit -m "init"
+git remote add origin https://github.com/your/repo.git
+git push -u origin main
 ```
-graph-explorer/
-├── app/
-│   ├── layout.jsx
-│   ├── globals.css
-│   ├── page.jsx            # 입장 화면
-│   └── activity/
-│       └── page.jsx        # 메인 활동 화면
-├── lib/
-│   ├── firebase.js         # Firebase 초기화
-│   └── firestore.js        # Firestore 헬퍼
-├── .env.local.example
-├── package.json
-└── next.config.mjs
-```
+
+Vercel에서 Import → Environment Variables에 `.env` 내용 입력 → Deploy
 
 ---
 
-## 🔧 Firestore 데이터 구조
+## 역할별 기능
+
+| 역할     | 코드 필요 | 기능 |
+|----------|-----------|------|
+| 팀원     | 없음      | 지도 열람, 공지 확인 |
+| 리더     | 없음      | 팀원 기능 + 지도 탭하여 체크인 |
+| 관리자   | adminCode | 리더 기능 + 공지 발송, 파트 리셋, 이력 조회 |
+
+**재접속**: 브라우저 localStorage에 저장 → 다음 방문 시 원터치 진입
+
+---
+
+## Firebase 데이터 구조
 
 ```
-rooms/{code}
-  groupName, currentStep, step1, dataTable, chartConfig, createdAt
+/config
+  adminCode:     "0000"
+  workshopTitle: "2025 하반기 본부 워크숍"
 
-rooms/{code}/posts/{postId}
-  name, step, content, likes, comments, time, createdAt
+/parts
+  {partKey}:
+    partName: "전략기획파트"
+    current:
+      label:     "성산일출봉"
+      x:         52.3
+      y:         38.7
+      timestamp: 1700000000
+      updatedBy: "홍길동"
+    history:
+      {pushId}: { label, x, y, timestamp, updatedBy }
+
+/announcements
+  {pushId}:
+    title:     "점심 장소 변경"
+    body:      "..."
+    createdAt: 1700001000
+    active:    true
 ```

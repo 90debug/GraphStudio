@@ -1,0 +1,88 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --g:      #2D7A4F;
+  --g2:     #1A9E80;
+  --coral:  #E8634A;
+  --yellow: #F7C948;
+  --dark:   #1C2B22;
+  --muted:  #6B8070;
+  --border: #D0E8D8;
+  --bg:     #E8F2EC;
+  --card:   #FFFFFF;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg);
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--dark);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Max-width wrapper ── */
+.app-shell {
+  max-width: 480px;
+  min-height: 100%;
+  margin: 0 auto;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Inputs ── */
+input, textarea, select {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  outline: none;
+}
+
+button { font-family: 'Noto Sans KR', sans-serif; cursor: pointer; }
+
+/* ── Scrollable content area ── */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Generic card ── */
+.card {
+  background: var(--card);
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  padding: 14px 16px;
+}
+
+/* ── Loading spinner ── */
+.spinner-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--g);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Fade-in ── */
+.fade-in { animation: fadeIn .25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── Pulse ring for live marker ── */
+@keyframes pulseRing {
+  0%, 100% { transform: scale(1); opacity: .7; }
+  70%       { transform: scale(2.2); opacity: 0; }
+}
