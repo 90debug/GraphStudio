@@ -95,11 +95,12 @@ function PadletStep4Card({ post, myName, onLike, onComment, onDelete }) {
 }
 
 // ─── WorkPanel (해석 작성) ─────────────────────────────────────────────────
-function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onStep4State, onShare, sharing }) {
+function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onStep4State }) {
   const [loadingImg, setLoadingImg] = useState(false)
   const [noteInput,  setNoteInput]  = useState('')
+  const [notes,      setNotes]      = useState([])
+  const [sharing,    setSharing]    = useState(false)
 
-  const notes    = step4State?.notes    || []
   const checks   = step4State?.checks  || {}
   const ps       = step4State?.ps      || ''
   const loadedImg = step4State?.loadedImg || null
@@ -120,13 +121,21 @@ function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onSt
 
   function addNote() {
     if (!noteInput.trim()) return
-    onStep4State({ notes: [...notes, { id: Date.now(), text: noteInput.trim() }] })
+    setNotes(prev => [...prev, { id: Date.now(), text: noteInput.trim() }])
     setNoteInput('')
   }
-  function removeNote(id) { onStep4State({ notes: notes.filter(n => n.id !== id) }) }
+  function removeNote(id) { setNotes(prev => prev.filter(n => n.id !== id)) }
+
+  async function doShare() {
+    setSharing(true)
+    const noteTexts = notes.map(n => n.text)
+    const content = `💡 탐구 결과!\n사실: ${noteTexts.join(' · ')}\n성찰: ${doneCount}/${CHECKLIST.length}개 달성`
+    await addStep4Post(code, { name:user.name, step:4, content, time:tsNow(), noteTexts, ps, doneCount })
+    setSharing(false)
+  }
 
   return (
-    <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
+    <div style={{display:'flex',flexDirection:'column',flex:1,overflow:'hidden'}}>
       <div style={{flex:1,overflowY:'auto',padding:14}}>
         {/* 그래프 썸네일 */}
         <div style={{background:'#F0FDF4',border:'1.5px solid #A7F3D0',borderRadius:12,padding:12,marginBottom:12}}>
@@ -136,7 +145,7 @@ function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onSt
               <ChartComp data={chartData}/>
             </div>
           ):(
-            <div style={{fontSize:12,color:'#94A3B8',textAlign:'center',padding:'8px 0'}}>2단계에서 데이터를 입력해 주세요</div>
+            <div style={{fontSize:12,color:'#94A3B8',textAlign:'center',padding:'8px 0'}}>설문 조사 결과를 그래프로 나타내 주세요.</div>
           )}
           <button onClick={doLoadCanvas} disabled={loadingImg} style={{marginTop:8,width:'100%',padding:'6px',borderRadius:7,border:'1px solid #A7F3D0',background:'#fff',color:'#047857',fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
             {loadingImg?'불러오는 중...':'📂 직접 그린 그래프 불러오기'}
@@ -165,7 +174,7 @@ function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onSt
               ))}
             </div>
           ):(
-            <div style={{fontSize:12,color:'#94A3B8',textAlign:'center',padding:'8px 0'}}>그래프를 보고 사실을 적어 보세요</div>
+            <div style={{fontSize:12,color:'#94A3B8',textAlign:'center',padding:'8px 0'}}>그래프를 보고 알 수 있는 사실을 적어 보세요.</div>
           )}
         </div>
 
@@ -173,7 +182,7 @@ function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onSt
         <div style={{marginBottom:12}}>
           <div style={{fontSize:12,fontWeight:700,color:'#64748B',marginBottom:6}}>📝 문제 해결 과정</div>
           <textarea value={ps} onChange={e=>onStep4State({ps:e.target.value})}
-            placeholder="그래프를 이용하여 문제를 해결한 과정을 써 보세요..." rows={4}
+            placeholder="탐구 문제를 그래프로 나타낸 과정을 써 보세요." rows={4}
             style={{width:'100%',padding:'9px 10px',borderRadius:8,border:'1.5px solid #CBD5E1',fontSize:12,background:'#F8FAFC',outline:'none',resize:'none',lineHeight:1.6,fontFamily:'inherit'}}
             onFocus={e=>e.target.style.borderColor='#8B5CF6'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
         </div>
@@ -201,7 +210,7 @@ function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onSt
 
       {/* 공유 버튼 */}
       <div style={{padding:12,flexShrink:0,borderTop:'1px solid #F1F5F9'}}>
-        <button onClick={onShare} disabled={sharing||!canShare} style={{width:'100%',padding:12,borderRadius:10,
+        <button onClick={doShare} disabled={sharing||!canShare} style={{width:'100%',padding:12,borderRadius:10,
           background:(sharing||!canShare)?'#E2E8F2':'linear-gradient(135deg,#8B5CF6,#6D28D9)',
           color:(sharing||!canShare)?'#94A3B8':'#fff',border:'none',fontSize:13,fontWeight:700,
           cursor:(sharing||!canShare)?'not-allowed':'pointer',fontFamily:'inherit',
@@ -236,21 +245,7 @@ function BoardPanel({ posts4, user, onLike4, onComment4, onDelete4 }) {
 
 // ─── Step4 ────────────────────────────────────────────────────────────────
 export default function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4State, posts4, onLike4, onComment4, onDelete4 }) {
-  const [sharing,   setSharing]   = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-
-  const notes    = step4State?.notes   || []
-  const checks   = step4State?.checks  || {}
-  const ps       = step4State?.ps      || ''
-  const doneCount = Object.values(checks).filter(Boolean).length
-
-  async function doShare() {
-    setSharing(true)
-    const noteTexts = notes.map(n => n.text)
-    const content = `💡 탐구 결과!\n사실: ${noteTexts.join(' · ')}\n성찰: ${doneCount}/${CHECKLIST.length}개 달성`
-    await addStep4Post(code, { name:user.name, step:4, content, time:tsNow(), noteTexts, ps, doneCount })
-    setSharing(false)
-  }
 
   const step4Info = { bg:'#F8EFFE', bd:'#D9A4F5', c:'#C97DE8', dk:'#9A45C2' }
 
@@ -280,7 +275,7 @@ export default function Step4({ user, code, items, dataTable, chartConfig, step4
             <button onClick={()=>setCollapsed(c=>!c)} style={{width:28,height:28,borderRadius:8,border:'1.5px solid #E2E8F2',background:'#fff',cursor:'pointer',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',color:'#64748B',flexShrink:0,marginLeft:collapsed?'auto':0,transition:'transform .3s'}}>{collapsed?'▶':'◀'}</button>
           </div>
           {!collapsed&&(
-            <WorkPanel code={code} user={user} items={items} dataTable={dataTable} chartConfig={chartConfig} step4State={step4State} onStep4State={onStep4State} onShare={doShare} sharing={sharing}/>
+            <WorkPanel code={code} user={user} items={items} dataTable={dataTable} chartConfig={chartConfig} step4State={step4State} onStep4State={onStep4State}/>
           )}
         </div>
         <BoardPanel posts4={posts4} user={user} onLike4={onLike4} onComment4={onComment4} onDelete4={onDelete4}/>

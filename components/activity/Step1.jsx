@@ -105,9 +105,8 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
   const [dragIdx,   setDragIdx]   = useState(null)
   const [shareErr,  setShareErr]  = useState('')
 
-  function addItem(e) {
-    if (e.key!=='Enter'||!itemInput.trim()) return
-    e.preventDefault()
+  function addItem() {
+    if (!itemInput.trim()) return
     if (form.items.length>=8) return
     setForm(f=>({...f,items:[...f.items,itemInput.trim()]})); setItemInput('')
   }
@@ -215,11 +214,15 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
               </div>
             ))}
 
-            <div style={{fontSize:13,fontWeight:700,color:'#64748B',marginBottom:4}}>📋 조사 항목 <span style={{fontSize:11,fontWeight:400,color:'#94A3B8',marginLeft:6}}>Enter로 추가 · 최대 8개</span></div>
-            <input value={itemInput} onChange={e=>setItemInput(e.target.value)} onKeyDown={addItem}
-              placeholder="항목 입력 후 Enter — 예: 과자"
-              style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1.5px solid #CBD5E1',fontSize:14,background:'#F8FAFC',outline:'none',fontFamily:'inherit'}}
-              onFocus={e=>e.target.style.borderColor='#F97316'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
+            <div style={{fontSize:13,fontWeight:700,color:'#64748B',marginBottom:4}}>📋 조사 항목 <span style={{fontSize:11,fontWeight:400,color:'#94A3B8',marginLeft:6}}>최대 8개</span></div>
+            <div style={{display:'flex',gap:6,marginBottom:form.items.length>0?10:0}}>
+              <input value={itemInput} onChange={e=>setItemInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addItem()}
+                placeholder="예: 과자"
+                style={{flex:1,padding:'10px 14px',borderRadius:10,border:'1.5px solid #CBD5E1',fontSize:14,background:'#F8FAFC',outline:'none',fontFamily:'inherit'}}
+                onFocus={e=>e.target.style.borderColor='#F97316'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
+              <button onClick={addItem} disabled={!itemInput.trim()||form.items.length>=8}
+                style={{padding:'10px 16px',borderRadius:10,background:(!itemInput.trim()||form.items.length>=8)?'#E2E8F2':'#1E293B',color:(!itemInput.trim()||form.items.length>=8)?'#94A3B8':'#fff',border:'none',fontSize:14,fontWeight:700,cursor:(!itemInput.trim()||form.items.length>=8)?'not-allowed':'pointer',fontFamily:'inherit',flexShrink:0,transition:'all .15s'}}>추가</button>
+            </div>
 
             {form.items.length>0&&(
               <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:10}}>
