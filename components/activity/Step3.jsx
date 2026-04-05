@@ -51,7 +51,7 @@ export default function Step3({ user, code, items, dataTable, chartConfig, onCha
 
       {/* 모드 토글 */}
       <div style={{display:'flex',gap:7,marginBottom:14,flexWrap:'wrap'}}>
-        {[['auto','📊 자동 그래프','#5BBF7A'],['draw','✏️ 직접 그리기','#C97DE8']].map(([mode,label,clr])=>(
+        {[['draw','✏️ 직접 그리기','#C97DE8'],['auto','📊 자동 그래프','#5BBF7A']].map(([mode,label,clr])=>(
           <button key={mode} type="button" onClick={()=>onDrawMode(mode)} style={{
             padding:'9px 20px',minHeight:42,borderRadius:999,fontSize:14,fontWeight:700,
             cursor:'pointer',border:'1.5px solid',fontFamily:'inherit',transition:'all .15s',
