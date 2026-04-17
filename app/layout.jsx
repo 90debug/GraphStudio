@@ -9,10 +9,9 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  // 모바일에서 가로 모드를 기본으로 유도
-  viewportFit: 'cover',
+  maximumScale: 5,     // 모바일에서 pinch-zoom 허용
+  userScalable: true,  // 접근성을 위해 허용
+  viewportFit: 'cover', // 노치/홈바 안전 영역
 }
 
 export default function RootLayout({ children }) {

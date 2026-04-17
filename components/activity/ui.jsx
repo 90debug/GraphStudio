@@ -2,7 +2,6 @@
 import { useEffect } from 'react'
 import { avBg, avFg, EDU_GRAD } from '../../lib/constants'
 
-// ─── Avatar ───────────────────────────────────────────────────────────────
 export function Avatar({ name, size = 30, gradient = false }) {
   return (
     <div style={{ width: size, height: size, borderRadius: '50%', flexShrink: 0,
@@ -20,7 +19,6 @@ export function Avatar({ name, size = 30, gradient = false }) {
   )
 }
 
-// ─── Button ───────────────────────────────────────────────────────────────
 export function Btn({ children, onClick, color = 'blue', pill = false, sm = false,
   outline = false, disabled = false, style: ex = {}, full = false }) {
   const m = {
@@ -56,7 +54,6 @@ export function Btn({ children, onClick, color = 'blue', pill = false, sm = fals
   )
 }
 
-// ─── Input ────────────────────────────────────────────────────────────────
 export function Inp({ value, onChange, placeholder, multi = false, rows = 3, style: ex = {}, onKeyDown, type = 'text' }) {
   const base = {
     width: '100%', padding: '12px 16px', borderRadius: 14,
@@ -74,7 +71,6 @@ export function Inp({ value, onChange, placeholder, multi = false, rows = 3, sty
         onBlur={e  => { e.target.style.borderColor='#E6D8C8'; e.target.style.boxShadow='none' }} />
 }
 
-// ─── Label ────────────────────────────────────────────────────────────────
 export function Lbl({ children, mt = 12 }) {
   return (
     <div style={{ fontSize: 13, fontWeight: 800, color: '#7B6858', marginBottom: 8, marginTop: mt,
@@ -82,7 +78,6 @@ export function Lbl({ children, mt = 12 }) {
   )
 }
 
-// ─── Section Card ─────────────────────────────────────────────────────────
 export function Sec({ children, style: ex = {} }) {
   return (
     <div style={{
@@ -93,7 +88,6 @@ export function Sec({ children, style: ex = {} }) {
   )
 }
 
-// ─── Tag ─────────────────────────────────────────────────────────────────
 export function Tag({ children, color = '#FF8C42' }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 14px',
@@ -103,11 +97,13 @@ export function Tag({ children, color = '#FF8C42' }) {
   )
 }
 
-// ─── Toast ────────────────────────────────────────────────────────────────
 export function Toast({ msg, onDone }) {
   useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t) }, []) // eslint-disable-line
   return (
-    <div style={{ position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+    <div style={{
+      position: 'fixed',
+      bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
+      left: '50%', transform: 'translateX(-50%)',
       background: 'linear-gradient(135deg,#3D2B1F,#5C3D28)', color: '#fff',
       borderRadius: 999, padding: '13px 28px',
       fontSize: 14, fontWeight: 800, zIndex: 9999,
@@ -116,12 +112,40 @@ export function Toast({ msg, onDone }) {
       whiteSpace: 'nowrap',
       border: '2px solid rgba(255,255,255,.18)',
       backdropFilter: 'blur(8px)',
+      maxWidth: 'calc(100vw - 40px)',
+      textAlign: 'center',
     }}>{msg}</div>
   )
 }
 
-// ─── Modal Wrapper ────────────────────────────────────────────────────────
 export function Modal({ children, onClose }) {
+  // 모바일 환경 감지
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
+  if (isMobile) {
+    // 모바일: 바텀시트 스타일
+    return (
+      <div style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(61,43,31,.50)', backdropFilter: 'blur(4px)',
+        zIndex: 10000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+      }} onClick={e => e.target === e.currentTarget && onClose()}>
+        <div style={{
+          background: '#fff', borderRadius: '24px 24px 0 0',
+          padding: '20px 20px calc(env(safe-area-inset-bottom, 0px) + 20px)',
+          maxHeight: '90vh', overflowY: 'auto',
+          boxShadow: '0 -8px 32px rgba(61,43,31,.18)',
+          border: '2px solid #E6D8C8', borderBottom: 'none',
+          animation: 'slideIn .28s cubic-bezier(.34,1.3,.64,1)',
+        }}>
+          {/* 핸들 */}
+          <div style={{ width:36, height:4, background:'#E2E8F2', borderRadius:999, margin:'-4px auto 16px' }}/>
+          {children}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(61,43,31,.50)',
       backdropFilter: 'blur(4px)', zIndex: 10000,
@@ -140,7 +164,6 @@ export function Modal({ children, onClose }) {
   )
 }
 
-// ─── Online Users ─────────────────────────────────────────────────────────
 export function OnlineUsers({ users }) {
   if (!users.length) return null
   const vis = users.slice(0, 4), extra = users.length - 4

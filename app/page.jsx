@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useDevice } from '../lib/DeviceContext'
 
 function randCode() {
   return Array.from({ length: 6 }, () =>
@@ -9,7 +10,10 @@ function randCode() {
 }
 
 export default function JoinPage() {
-  const router = useRouter()
+  const router   = useRouter()
+  const device   = useDevice()
+  const isMobile = device === 'mobile'
+
   const [mode,      setMode]      = useState('new')
   const [name,      setName]      = useState('')
   const [groupName, setGroupName] = useState('')
@@ -50,6 +54,88 @@ export default function JoinPage() {
   }
   const labelBase = { fontSize: 13, fontWeight: 800, color: '#8C7B6E', display: 'block', letterSpacing: '0.3px' }
 
+  // ── 모바일 레이아웃 ───────────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <div style={{
+        flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
+        backgroundImage: "url('/bg-main.png')",
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        padding: '24px 16px 32px',
+        display: 'flex', flexDirection: 'column', gap: 20,
+      }}>
+        {/* 타이틀 */}
+        <div>
+          <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:999, background:'#FF8C42', color:'#fff', fontSize:11, fontWeight:800, letterSpacing:1.2, marginBottom:10 }}>6. 여러 가지 그래프</div>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color:'#3D2B1F', lineHeight: 1.3, letterSpacing:'-0.5px', marginBottom:8 }}>
+            자료를 수집하여<br/>
+            <span style={{ color:'#4EACD9' }}>알맞은 그래프로</span><br/>
+            나타내고 해석해요!
+          </h1>
+          <p style={{ fontSize:13, color:'#8C7B6E', lineHeight:1.7, fontWeight:600 }}>
+            모둠원과 함께 탐구 주제를 정하고,<br/>
+            자료를 모아 그래프로 표현해 보세요 📊
+          </p>
+        </div>
+
+        {/* 이전 모둠 재참여 */}
+        {lastGroup && (
+          <div onClick={()=>{ sessionStorage.setItem('gts_user', JSON.stringify({...lastGroup, role:'member'})); router.push('/activity') }}
+            style={{ padding:'12px 16px', background:'#fff', borderRadius:16, border:'2.5px solid #E8DFD4',
+              display:'flex', alignItems:'center', gap:12, cursor:'pointer',
+              boxShadow:'0 3px 10px rgba(150,100,60,.08)' }}>
+            <div style={{ width:38, height:38, borderRadius:'50%', flexShrink:0, background:'linear-gradient(135deg,#5BBF7A,#4EACD9)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>🔁</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:'#3D2B1F', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{lastGroup.name} · {lastGroup.groupName}</div>
+              <div style={{ fontSize:11, color:'#8C7B6E', letterSpacing:1.5, fontWeight:700 }}>{lastGroup.code}</div>
+            </div>
+            <div style={{ fontSize:12, fontWeight:800, color:'#4EACD9', background:'#EBF7FF', padding:'4px 10px', borderRadius:999, border:'1.5px solid #B3DFFB', whiteSpace:'nowrap', flexShrink:0 }}>다시 참여 →</div>
+          </div>
+        )}
+
+        {/* 입장 카드 */}
+        <div style={{ background:'#fff', borderRadius:24, padding:'24px 20px 20px',
+          boxShadow:'0 6px 28px rgba(150,100,60,.12),0 2px 6px rgba(150,100,60,.06)',
+          border:'2.5px solid #E8DFD4' }}>
+
+          {/* 탭 토글 */}
+          <div style={{ display:'flex', gap:4, marginBottom:20, background:'#FFF3E8', borderRadius:14, padding:4 }}>
+            {[['new','🏠 새 모둠 만들기'],['join','🔑 코드로 참여']].map(([m,label])=>(
+              <button key={m} onClick={()=>{ setMode(m); setError('') }} style={{
+                flex:1, padding:'10px 0', fontSize:12, fontWeight:mode===m?800:600,
+                color:mode===m?'#fff':'#8C7B6E', background:mode===m?'#FF8C42':'transparent',
+                border:'none', borderRadius:11, cursor:'pointer', transition:'all .18s ease',
+                boxShadow:mode===m?'0 3px 10px rgba(255,140,66,.35)':'none', fontFamily:'inherit',
+              }}>{label}</button>
+            ))}
+          </div>
+
+          {error && <div style={{ fontSize:13, color:'#D4601A', padding:'10px 14px', background:'#FFF3E8', borderRadius:12, marginBottom:16, border:'2px solid #FFDAB9', fontWeight:700 }}>⚠️ {error}</div>}
+
+          {mode === 'new' ? (
+            <form onSubmit={handleNew}>
+              <div style={{ marginBottom:16 }}><label style={labelBase}>✏️ 이름</label><input className="edu-input" style={inputBase} placeholder="예: 김민준" value={name} onChange={e=>{ setName(e.target.value); setError('') }}/></div>
+              <div style={{ marginBottom:20 }}><label style={labelBase}>🏷️ 모둠 이름</label><input className="edu-input" style={inputBase} placeholder="예: 2모둠" value={groupName} onChange={e=>{ setGroupName(e.target.value); setError('') }}/></div>
+              <button type="submit" className="edu-btn" style={{ width:'100%', padding:'15px', borderRadius:16, fontSize:16, fontWeight:800, fontFamily:'inherit', background:'linear-gradient(135deg,#FF8C42,#FF6520)', color:'#fff', border:'none', cursor:'pointer', boxShadow:'0 5px 16px rgba(255,140,66,.40)' }}>🚀 모둠 활동 시작하기!</button>
+              <div style={{ marginTop:10, textAlign:'center', fontSize:12, color:'#8C7B6E', lineHeight:1.6, fontWeight:600 }}>💡 모둠을 만들면 <span style={{ fontWeight:800, color:'#FF8C42' }}>참여 코드</span>가 생성돼요</div>
+            </form>
+          ) : (
+            <form onSubmit={handleJoin}>
+              <div style={{ marginBottom:16 }}><label style={labelBase}>✏️ 이름</label><input className="edu-input" style={inputBase} placeholder="예: 이서연" value={name} onChange={e=>{ setName(e.target.value); setError('') }}/></div>
+              <div style={{ marginBottom:20 }}>
+                <label style={labelBase}>🔑 참여 코드 (6자리)</label>
+                <input className="edu-input" style={{ ...inputBase, textTransform:'uppercase', letterSpacing:10, fontWeight:800, fontSize:22, textAlign:'center', padding:'14px 16px' }} placeholder="ABC123" maxLength={6} value={joinCode} onChange={e=>{ setJoinCode(e.target.value.toUpperCase()); setError('') }}/>
+              </div>
+              <button type="submit" className="edu-btn" style={{ width:'100%', padding:'15px', borderRadius:16, fontSize:16, fontWeight:800, fontFamily:'inherit', background:'linear-gradient(135deg,#4EACD9,#2785B5)', color:'#fff', border:'none', cursor:'pointer', boxShadow:'0 5px 16px rgba(78,172,217,.40)' }}>🙋 모둠 활동 참여하기!</button>
+              <div style={{ marginTop:10, textAlign:'center', fontSize:12, color:'#8C7B6E', lineHeight:1.6, fontWeight:600 }}>💡 모둠장에게 받은 <span style={{ fontWeight:800, color:'#4EACD9' }}>6자리 코드</span>를 입력하세요</div>
+            </form>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ── PC / 태블릿 레이아웃 (기존 유지) ─────────────────────────────────────
   return (
     <div style={{
       width: '100%', height: '100%',
@@ -58,8 +144,6 @@ export default function JoinPage() {
       backgroundSize: 'cover', backgroundPosition: 'center',
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* 캐릭터 — 바깥 컨테이너가 아닌 오른쪽 카드 컬럼 안에서 위치 잡기 */}
-      {/* 왼쪽: 타이틀 */}
       <div style={{ width: 420, padding: '0 40px', flexShrink: 0 }}>
         <div style={{ marginBottom: 18, marginTop: 20 }}>
           <div style={{ display:'inline-block', padding:'5px 16px', borderRadius:999, background:'#FF8C42', color:'#fff', fontSize:12, fontWeight:800, letterSpacing:1.5, marginBottom:10 }}>6. 여러 가지 그래프</div>
@@ -75,13 +159,10 @@ export default function JoinPage() {
         </div>
       </div>
 
-      {/* 오른쪽: 입장 카드 */}
       <div style={{ width: 400, padding: '0 16px', position: 'relative' }}>
-        {/* char-spurout: 카드 컬럼 기준으로 좌상단에 위치 — 뷰포트가 바뀌어도 카드와의 상대 위치 유지 */}
         <img src="/char-spurout.png" alt="" style={{ position:'absolute', left:-118, top:-10, width:168, zIndex:6, pointerEvents:'none', filter:'drop-shadow(0 8px 16px rgba(0,0,0,.15))' }}/>
         <img src="/char-sun.png" alt="" style={{ position:'absolute', right:-42, top:lastGroup?-105:-95, width:138, pointerEvents:'none', filter:'drop-shadow(0 6px 14px rgba(0,0,0,.18))' }}/>
 
-        {/* 이전 모둠 재참여 */}
         {lastGroup && (
           <div onClick={()=>{ sessionStorage.setItem('gts_user', JSON.stringify({...lastGroup, role:'member'})); router.push('/activity') }}
             style={{ marginBottom:14, padding:'12px 16px', background:'#fff', borderRadius:16, border:'2.5px solid #E8DFD4',
@@ -99,9 +180,8 @@ export default function JoinPage() {
         )}
 
         <div style={{ background:'#fff', borderRadius:24, padding:'28px 28px 24px',
-          boxShadow:'0 6px 28px rgba(150,100,60,.12), 0 2px 6px rgba(150,100,60,.06)',
+          boxShadow:'0 6px 28px rgba(150,100,60,.12),0 2px 6px rgba(150,100,60,.06)',
           border:'2.5px solid #E8DFD4', position:'relative', zIndex:2 }}>
-
           <div style={{ display:'flex', gap:4, marginBottom:24, background:'#FFF3E8', borderRadius:14, padding:4 }}>
             {[['new','🏠 새 모둠 만들기'],['join','🔑 코드로 참여']].map(([m,label])=>(
               <button key={m} onClick={()=>{ setMode(m); setError('') }} style={{

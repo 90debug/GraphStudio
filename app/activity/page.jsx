@@ -267,50 +267,72 @@ export default function ActivityPage() {
 
       {/* ── 상단 헤더 ── */}
       <header style={{ background:'rgba(255,255,255,.92)', backdropFilter:'blur(12px)',
-        height:44, display:'flex', alignItems:'center', padding:'0 14px', gap:10, flexShrink:0,
+        height: device==='mobile' ? 48 : 44,
+        display:'flex', alignItems:'center',
+        padding: device==='mobile' ? '0 10px' : '0 14px',
+        gap: device==='mobile' ? 6 : 10,
+        flexShrink:0,
         borderBottom:'1.5px solid rgba(230,216,200,.6)', boxShadow:'0 2px 12px rgba(0,0,0,.08)' }}>
 
-        <span style={{ fontSize:15, fontWeight:800, letterSpacing:-0.3,
-          background:EDU_GRAD, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-          backgroundClip:'text', flexShrink:0 }}>📊 메모 보드</span>
+        {/* 로고: 모바일에서는 숨김 */}
+        {device !== 'mobile' && (
+          <span style={{ fontSize:15, fontWeight:800, letterSpacing:-0.3,
+            background:EDU_GRAD, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
+            backgroundClip:'text', flexShrink:0 }}>📊 메모 보드</span>
+        )}
 
         <div style={{ flex:1 }}/>
 
-        {/* 동기화 pill */}
-        <div style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:999,
-          background:hasSyncLead?iAmLeader?'#ECFDF5':'#EFF6FF':'#F8FAFC',
-          border:`1px solid ${hasSyncLead?iAmLeader?'#A7F3D0':'#BFDBFE':'#E2E8F2'}`,
-          fontSize:10, fontWeight:700, color:hasSyncLead?iAmLeader?'#047857':'#1D4ED8':'#64748B' }}>
-          {hasSyncLead && <span style={{ width:6, height:6, borderRadius:'50%',
-            background:iAmLeader?'#10B981':'#3B82F6', animation:'pulse 1.5s infinite', display:'inline-block', flexShrink:0 }}/>}
-          {hasSyncLead ? iAmLeader ? '내 화면 동기화 중' : `${room.syncLeader}님 동기화 중` : freeMode ? '🔓 자유 탐색' : '동기화 없음'}
-          {freeMode ? (
-            <button onClick={()=>{ setFreeMode(false); setActiveStep(remoteStep.current) }} style={{ marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'#FF8C42', color:'#fff', border:'none', cursor:'pointer', fontFamily:'inherit' }}>← 합류</button>
-          ) : (
-            <button onClick={()=>setFreeMode(true)} style={{ marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit' }}>자유</button>
-          )}
-          {!hasSyncLead ? (
-            <button onClick={async()=>{ await setSyncLeader(userRef.current?.code, userRef.current?.name, activeStep); setToast('🔗 화면 동기화를 시작했어요!') }} style={{ marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit' }}>동기화</button>
-          ) : iAmLeader ? (
-            <button onClick={async()=>await clearSyncLeader(userRef.current?.code)} style={{ padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit' }}>해제</button>
-          ) : null}
-        </div>
+        {/* 동기화 pill: 모바일에서는 점 표시만 */}
+        {device === 'mobile' ? (
+          hasSyncLead && (
+            <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:999,
+              background:iAmLeader?'#ECFDF5':'#EFF6FF',
+              border:`1px solid ${iAmLeader?'#A7F3D0':'#BFDBFE'}`,
+              fontSize:10, fontWeight:700, color:iAmLeader?'#047857':'#1D4ED8' }}>
+              <span style={{ width:6, height:6, borderRadius:'50%', background:iAmLeader?'#10B981':'#3B82F6', animation:'pulse 1.5s infinite', display:'inline-block', flexShrink:0 }}/>
+              {iAmLeader ? '동기화 중' : `${room.syncLeader}`}
+            </div>
+          )
+        ) : (
+          <div style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:999,
+            background:hasSyncLead?iAmLeader?'#ECFDF5':'#EFF6FF':'#F8FAFC',
+            border:`1px solid ${hasSyncLead?iAmLeader?'#A7F3D0':'#BFDBFE':'#E2E8F2'}`,
+            fontSize:10, fontWeight:700, color:hasSyncLead?iAmLeader?'#047857':'#1D4ED8':'#64748B' }}>
+            {hasSyncLead && <span style={{ width:6, height:6, borderRadius:'50%',
+              background:iAmLeader?'#10B981':'#3B82F6', animation:'pulse 1.5s infinite', display:'inline-block', flexShrink:0 }}/>}
+            {hasSyncLead ? iAmLeader ? '내 화면 동기화 중' : `${room.syncLeader}님 동기화 중` : freeMode ? '🔓 자유 탐색' : '동기화 없음'}
+            {freeMode ? (
+              <button onClick={()=>{ setFreeMode(false); setActiveStep(remoteStep.current) }} style={{ marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'#FF8C42', color:'#fff', border:'none', cursor:'pointer', fontFamily:'inherit' }}>← 합류</button>
+            ) : (
+              <button onClick={()=>setFreeMode(true)} style={{ marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit' }}>자유</button>
+            )}
+            {!hasSyncLead ? (
+              <button onClick={async()=>{ await setSyncLeader(userRef.current?.code, userRef.current?.name, activeStep); setToast('🔗 화면 동기화를 시작했어요!') }} style={{ marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit' }}>동기화</button>
+            ) : iAmLeader ? (
+              <button onClick={async()=>await clearSyncLeader(userRef.current?.code)} style={{ padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit' }}>해제</button>
+            ) : null}
+          </div>
+        )}
 
         <OnlineUsers users={onlineUsers}/>
 
         {/* 참여 코드 */}
-        <div style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 9px 4px 11px',
+        <div style={{ display:'flex', alignItems:'center', gap: device==='mobile' ? 3 : 5,
+          padding: device==='mobile' ? '4px 8px' : '4px 9px 4px 11px',
           borderRadius:999, background:'#FFF3E8', border:'1.5px solid #FFCB96', boxShadow:'0 2px 6px rgba(255,140,66,.14)' }}>
           <span style={{ fontSize:10, color:'#D4601A', fontWeight:800 }}>🔑</span>
-          <span style={{ fontSize:12, fontWeight:800, color:'#3D2B1F', letterSpacing:2 }}>{user.code}</span>
+          <span style={{ fontSize: device==='mobile' ? 11 : 12, fontWeight:800, color:'#3D2B1F', letterSpacing: device==='mobile' ? 1 : 2 }}>{user.code}</span>
           <button onClick={()=>navigator.clipboard.writeText(user.code).then(()=>setToast('✅ 코드가 복사되었어요!'))}
-            style={{ marginLeft:2, padding:'3px 8px', borderRadius:8, background:'#FF8C42', color:'#fff', border:'none', fontSize:10, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>복사</button>
+            style={{ marginLeft:2, padding:'3px 8px', borderRadius:8, background:'#FF8C42', color:'#fff', border:'none', fontSize:10, fontWeight:800, cursor:'pointer', fontFamily:'inherit', minHeight:28 }}>복사</button>
         </div>
 
         <button onClick={()=>{ sessionStorage.removeItem('gts_user'); router.push('/') }}
-          style={{ padding:'5px 12px', borderRadius:10, background:'#fff', color:'#8C7B6E', border:'1.5px solid #E6D8C8', fontSize:11, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}
+          style={{ padding: device==='mobile' ? '5px 8px' : '5px 12px', borderRadius:10, background:'#fff', color:'#8C7B6E', border:'1.5px solid #E6D8C8', fontSize:11, fontWeight:800, cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', minHeight:32 }}
           onMouseEnter={e=>{ e.currentTarget.style.background='#FFF0F1'; e.currentTarget.style.color='#C0364A' }}
-          onMouseLeave={e=>{ e.currentTarget.style.background='#fff'; e.currentTarget.style.color='#8C7B6E' }}>나가기 →</button>
+          onMouseLeave={e=>{ e.currentTarget.style.background='#fff'; e.currentTarget.style.color='#8C7B6E' }}>
+          {device==='mobile' ? '나가기' : '나가기 →'}
+        </button>
       </header>
 
       {/* ── 바디 ── */}
@@ -335,7 +357,7 @@ export default function ActivityPage() {
           {(activeStep === 2 || activeStep === 3) && (
             <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
               <StepHeader step={step} activeStep={activeStep}/>
-              <main ref={mainRef} style={{ flex:1, overflowY:'auto', padding:16, minWidth:0,
+              <main ref={mainRef} style={{ flex:1, overflowY:'auto', padding: device==='mobile' ? 0 : 16, minWidth:0,
                 backgroundImage:"url('/bg-activity.png')", backgroundSize:'cover',
                 backgroundPosition:'center', backgroundAttachment:'local' }}>
                 {activeStep === 2 && (
@@ -360,29 +382,32 @@ export default function ActivityPage() {
         </div>
 
         {/* ── 하단 탭 네비게이션 ── */}
-        <nav style={{ display:'flex', flexShrink:0, height:62,
+        <nav style={{ display:'flex', flexShrink:0, height: device==='mobile' ? 58 : 62,
           background:'rgba(255,255,255,.97)', backdropFilter:'blur(12px)',
-          borderTop:'1.5px solid #E6D8C8', boxShadow:'0 -4px 16px rgba(61,43,31,.08)' }}>
+          borderTop:'1.5px solid #E6D8C8', boxShadow:'0 -4px 16px rgba(61,43,31,.08)',
+          paddingBottom: device==='mobile' ? 'env(safe-area-inset-bottom, 0px)' : 0 }}>
           {STEPS.map((s, idx) => {
             const isActive = activeStep === s.n
             const isDone   = done[s.n] && !isActive
             const clr      = STEP_COLORS[idx]
+            const mobileLabel = ['탐구 문제','자료 수집','그래프','결과 해석'][idx]
             return (
               <button key={s.n} onClick={()=>changeStep(s.n)} style={{ flex:1, display:'flex', flexDirection:'column',
-                alignItems:'center', justifyContent:'center', gap:3, border:'none', background:'none',
-                cursor:'pointer', fontFamily:'inherit', position:'relative', padding:'6px 4px 4px', transition:'background .15s' }}>
+                alignItems:'center', justifyContent:'center', gap:2, border:'none', background:'none',
+                cursor:'pointer', fontFamily:'inherit', position:'relative', padding:'5px 2px 4px', transition:'background .15s',
+                minHeight: 44 }}>
                 {isActive && <div style={{ position:'absolute', top:0, left:'15%', right:'15%',
                   height:3, borderRadius:'0 0 3px 3px', background:clr, boxShadow:`0 2px 8px ${clr}60` }}/>}
-                <div style={{ width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:14, background:isActive?clr:isDone?'#DCFCE7':'#F1F5F9',
+                <div style={{ width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:12, background:isActive?clr:isDone?'#DCFCE7':'#F1F5F9',
                   color:isActive?'#fff':isDone?'#16A34A':'#64748B', fontWeight:800,
-                  transition:'all .2s', boxShadow:isActive?`0 3px 10px ${clr}50`:'none' }}>
+                  transition:'all .2s', boxShadow:isActive?`0 3px 10px ${clr}50`:'none', flexShrink:0 }}>
                   {isDone ? '✓' : s.n}
                 </div>
-                <div style={{ fontSize:10, fontWeight:isActive?800:600,
+                <div style={{ fontSize: device==='mobile' ? 9 : 10, fontWeight:isActive?800:600,
                   color:isActive?clr:isDone?'#16A34A':'#94A3B8',
                   lineHeight:1.3, textAlign:'center', letterSpacing:'-0.3px', whiteSpace:'nowrap' }}>
-                  {STEP_FULL_LABELS[idx]}
+                  {device==='mobile' ? mobileLabel : STEP_FULL_LABELS[idx]}
                 </div>
               </button>
             )

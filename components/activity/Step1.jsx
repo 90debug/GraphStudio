@@ -2,9 +2,9 @@
 import { useState } from 'react'
 import { CHART_COLORS, padletPalette, tsNow } from '../../lib/constants'
 import { Sec, Tag, Btn } from './ui'
+import { useDevice } from '../../lib/DeviceContext'
 import { addStep1Post, toggleLike1, addComment1 } from '../../lib/firestore'
 
-// ─── PadletStep1Card ──────────────────────────────────────────────────────
 function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSelectRequest, onDelete }) {
   const [showCmt, setShowCmt] = useState(false)
   const [cmtText, setCmtText] = useState('')
@@ -43,7 +43,7 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
           <div style={{fontSize:11,color:'#94A3B8'}}>{post.time}</div>
         </div>
         {onSelectRequest&&!isSelected&&(
-          <button onClick={()=>onSelectRequest(post)} style={{fontSize:12,fontWeight:700,padding:'5px 11px',borderRadius:8,border:'1.5px solid #10B981',background:'#fff',color:'#10B981',cursor:'pointer',flexShrink:0,fontFamily:'inherit',transition:'all .15s'}}
+          <button onClick={()=>onSelectRequest(post)} style={{fontSize:12,fontWeight:700,padding:'5px 11px',borderRadius:8,border:'1.5px solid #10B981',background:'#fff',color:'#10B981',cursor:'pointer',flexShrink:0,fontFamily:'inherit',transition:'all .15s',minHeight:36}}
             onMouseEnter={e=>{e.currentTarget.style.background='#10B981';e.currentTarget.style.color='#fff'}}
             onMouseLeave={e=>{e.currentTarget.style.background='#fff';e.currentTarget.style.color='#10B981'}}>선정</button>
         )}
@@ -70,11 +70,11 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
       ))}
 
       <div style={{padding:'7px 10px 9px',display:'flex',alignItems:'center',gap:5,borderTop:`1px solid ${pal.border}50`}}>
-        <button onClick={toggleLike} style={{background:'none',border:'none',cursor:'pointer',fontSize:18,lineHeight:1,transition:'transform .15s',padding:'2px 4px'}}
+        <button onClick={toggleLike} style={{background:'none',border:'none',cursor:'pointer',fontSize:18,lineHeight:1,transition:'transform .15s',padding:'4px',minWidth:36,minHeight:36,display:'flex',alignItems:'center',justifyContent:'center'}}
           onMouseEnter={e=>e.currentTarget.style.transform='scale(1.25)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
           {isLiked?'❤️':'🤍'}
         </button>
-        <button onClick={()=>setShowCmt(!showCmt)} style={{background:'none',border:'none',cursor:'pointer',fontSize:15,lineHeight:1,color:'#94A3B8',padding:'2px 4px'}}>💬</button>
+        <button onClick={()=>setShowCmt(!showCmt)} style={{background:'none',border:'none',cursor:'pointer',fontSize:15,lineHeight:1,color:'#94A3B8',padding:'4px',minWidth:36,minHeight:36,display:'flex',alignItems:'center',justifyContent:'center'}}>💬</button>
         {(post.likes>0||post.comments?.length>0)&&(
           <span style={{fontSize:11,color:'#94A3B8'}}>
             {post.likes>0&&<b style={{color:'#475569'}}>♥ {post.likes}</b>}
@@ -89,15 +89,17 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
           <input value={cmtText} onChange={e=>setCmtText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submitCmt()}
             placeholder="댓글 달기..."
             style={{flex:1,padding:'8px 12px',borderRadius:999,border:`1.5px solid ${pal.border}`,fontSize:12,background:'#fff',outline:'none',fontFamily:'inherit'}}/>
-          <button onClick={submitCmt} style={{fontSize:12,fontWeight:700,color:'#fff',background:'#4EACD9',border:'none',borderRadius:8,cursor:'pointer',padding:'8px 12px',fontFamily:'inherit'}}>게시</button>
+          <button onClick={submitCmt} style={{fontSize:12,fontWeight:700,color:'#fff',background:'#4EACD9',border:'none',borderRadius:8,cursor:'pointer',padding:'8px 12px',fontFamily:'inherit',minHeight:36}}>게시</button>
         </div>
       )}
     </div>
   )
 }
 
-// ─── Step1 ────────────────────────────────────────────────────────────────
 export default function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, onSelectRequest, onDelete }) {
+  const device   = useDevice()
+  const isMobile = device === 'mobile'
+
   const [showModal, setShowModal] = useState(false)
   const [form,      setForm]      = useState({ topic:'', question:'', items:[] })
   const [itemInput, setItemInput] = useState('')
@@ -132,8 +134,59 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
 
   const ready = form.topic.trim()&&form.question.trim()&&form.items.length>0
 
-  // 항상 3열 그리드 (PC / 태블릿 동일)
-  const gridCols = 'repeat(3, 1fr)'
+  // 모바일: 1열, PC/태블릿: 3열
+  const gridCols = isMobile ? '1fr' : 'repeat(3, 1fr)'
+
+  // ── 작성 폼 (모바일: 바텀시트 스타일 / PC: 기존 오버레이) ─────────────────
+  const formContent = (
+    <div style={{background:'#fff',borderRadius:isMobile?'20px 20px 0 0':20,padding:'24px 22px 20px',width:'100%',maxWidth:isMobile?'100%':'min(420px,96vw)',maxHeight:isMobile?'80vh':'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,.25)',animation:'fadeUp .25s cubic-bezier(.34,1.3,.64,1)'}}>
+      {/* 모바일 핸들 */}
+      {isMobile&&<div style={{width:36,height:4,background:'#E2E8F2',borderRadius:999,margin:'-8px auto 16px'}}/>}
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:18}}>
+        <span style={{fontSize:18}}>📝</span>
+        <span style={{fontSize:17,fontWeight:800,color:'#1E293B'}}>탐구 문제 작성</span>
+        <button onClick={()=>setShowModal(false)} style={{marginLeft:'auto',width:30,height:30,borderRadius:'50%',background:'#F1F5F9',border:'none',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#64748B'}}>✕</button>
+      </div>
+
+      {[{label:'📌 조사 주제',key:'topic',ph:'예: 우리 반 학생들이 좋아하는 간식의 종류'},{label:'🔍 조사 질문',key:'question',ph:'예: 가장 자주 먹는 간식은 무엇인가요?'}].map(f=>(
+        <div key={f.key} style={{marginBottom:14}}>
+          <div style={{fontSize:13,fontWeight:700,color:'#64748B',marginBottom:6}}>{f.label}</div>
+          <input value={form[f.key]} onChange={e=>{setForm(p=>({...p,[f.key]:e.target.value}));setShareErr('')}}
+            placeholder={f.ph} style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1.5px solid #CBD5E1',fontSize:14,background:'#F8FAFC',outline:'none',fontFamily:'inherit'}}
+            onFocus={e=>e.target.style.borderColor='#F97316'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
+        </div>
+      ))}
+
+      <div style={{fontSize:13,fontWeight:700,color:'#64748B',marginBottom:4}}>📋 조사 항목 <span style={{fontSize:11,fontWeight:400,color:'#94A3B8',marginLeft:6}}>최대 8개</span></div>
+      <div style={{display:'flex',gap:6,marginBottom:form.items.length>0?10:0}}>
+        <input value={itemInput} onChange={e=>setItemInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addItem()}
+          placeholder="예: 과자"
+          style={{flex:1,padding:'10px 14px',borderRadius:10,border:'1.5px solid #CBD5E1',fontSize:14,background:'#F8FAFC',outline:'none',fontFamily:'inherit'}}
+          onFocus={e=>e.target.style.borderColor='#F97316'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
+        <button onClick={addItem} disabled={!itemInput.trim()||form.items.length>=8}
+          style={{padding:'10px 16px',borderRadius:10,background:(!itemInput.trim()||form.items.length>=8)?'#E2E8F2':'#1E293B',color:(!itemInput.trim()||form.items.length>=8)?'#94A3B8':'#fff',border:'none',fontSize:14,fontWeight:700,cursor:(!itemInput.trim()||form.items.length>=8)?'not-allowed':'pointer',fontFamily:'inherit',flexShrink:0,transition:'all .15s',minHeight:44}}>추가</button>
+      </div>
+
+      {form.items.length>0&&(
+        <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:10}}>
+          {form.items.map((item,i)=>(
+            <div key={i} draggable onDragStart={()=>onDragStart(i)} onDragEnter={()=>onDragEnter(i)} onDragEnd={()=>setDragIdx(null)} onDragOver={e=>e.preventDefault()}
+              style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 12px',borderRadius:999,fontSize:12,fontWeight:700,background:CHART_COLORS[i%CHART_COLORS.length]+'15',color:CHART_COLORS[i%CHART_COLORS.length],border:`1.5px solid ${CHART_COLORS[i%CHART_COLORS.length]}35`,cursor:'grab',opacity:dragIdx===i?.5:1,userSelect:'none'}}>
+              {item}
+              <button onClick={()=>removeItem(i)} style={{fontSize:14,color:'inherit',background:'none',border:'none',cursor:'pointer',lineHeight:1,padding:0,minWidth:20,minHeight:20}}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {shareErr&&<div style={{marginTop:10,padding:'8px 12px',background:'#FEF2F2',border:'1px solid #FECACA',borderRadius:8,fontSize:12,color:'#DC2626',fontWeight:600}}>⚠️ {shareErr}</div>}
+
+      <button onClick={doShare} disabled={!ready||sharing} style={{width:'100%',padding:'13px',borderRadius:12,marginTop:16,background:ready&&!sharing?'linear-gradient(135deg,#F97316,#EF4444)':'#E2E8F2',color:ready&&!sharing?'#fff':'#94A3B8',border:'none',fontSize:15,fontWeight:700,cursor:ready&&!sharing?'pointer':'not-allowed',fontFamily:'inherit',transition:'all .15s',boxShadow:ready&&!sharing?'0 4px 14px rgba(249,115,22,.35)':'none',minHeight:48}}>
+        {sharing?'공유 중...':'🚀 보드에 올리기'}
+      </button>
+      <div style={{fontSize:12,color:'#94A3B8',textAlign:'center',marginTop:8}}>💡 올리면 모든 모둠원에게 바로 보여요</div>
+    </div>
+  )
 
   return (
     <div style={{position:'relative',flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
@@ -148,22 +201,20 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
       </div>
 
       {/* 스크롤 영역 */}
-      <div style={{flex:1,overflowY:'auto',padding:'16px 20px 80px',backgroundImage:"url('/bg-activity.png')",backgroundSize:'cover',backgroundPosition:'center',backgroundAttachment:'local'}}>
+      <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch',padding: isMobile ? '12px 12px 80px' : '16px 20px 80px',backgroundImage:"url('/bg-activity.png')",backgroundSize:'cover',backgroundPosition:'center',backgroundAttachment:'local'}}>
 
-        {/* 전광판 배너 */}
+        {/* 선정된 문제 배너 */}
         {selectedPost&&(
-          <div style={{background:'linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#0F172A 100%)',border:'2px solid #22D3EE',borderRadius:14,padding:'14px 18px',marginBottom:14,boxShadow:'0 0 0 1px #22D3EE30,0 0 20px #22D3EE40,0 8px 24px rgba(0,0,0,.5)',position:'relative',overflow:'hidden'}}>
+          <div style={{background:'linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#0F172A 100%)',border:'2px solid #22D3EE',borderRadius:14,padding: isMobile ? '10px 12px' : '14px 18px',marginBottom:14,boxShadow:'0 0 0 1px #22D3EE30,0 0 20px #22D3EE40,0 8px 24px rgba(0,0,0,.5)',position:'relative',overflow:'hidden'}}>
             <div style={{position:'absolute',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.15) 3px,rgba(0,0,0,.15) 4px)'}}/>
-            <div style={{position:'absolute',top:-30,left:-30,width:80,height:80,borderRadius:'50%',background:'radial-gradient(circle,rgba(34,211,238,.25) 0%,transparent 70%)',pointerEvents:'none'}}/>
-            <div style={{position:'absolute',bottom:-30,right:-30,width:80,height:80,borderRadius:'50%',background:'radial-gradient(circle,rgba(16,185,129,.20) 0%,transparent 70%)',pointerEvents:'none'}}/>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
               <div style={{display:'flex',gap:4}}>
                 {['#EF4444','#FBBF24','#22D3EE'].map(c=><div key={c} style={{width:8,height:8,borderRadius:'50%',background:c,boxShadow:`0 0 6px ${c}`}}/>)}
               </div>
               <span style={{fontSize:10,fontWeight:800,color:'#22D3EE',letterSpacing:3,textShadow:'0 0 8px #22D3EE',textTransform:'uppercase'}}>✅ 우리 모둠의 탐구 문제</span>
             </div>
-            <div style={{fontSize:18,fontWeight:800,color:'#F0FDF4',letterSpacing:'-0.3px',lineHeight:1.3,marginBottom:8,textShadow:'0 0 12px rgba(34,211,238,.6),0 0 24px rgba(34,211,238,.3)'}}>{selectedPost.topic}</div>
-            <div style={{fontSize:13,color:'#94A3B8',marginBottom:10,lineHeight:1.6,borderLeft:'2px solid #22D3EE60',paddingLeft:10}}>
+            <div style={{fontSize: isMobile ? 15 : 18,fontWeight:800,color:'#F0FDF4',letterSpacing:'-0.3px',lineHeight:1.3,marginBottom:8,textShadow:'0 0 12px rgba(34,211,238,.6)'}}>{selectedPost.topic}</div>
+            <div style={{fontSize:13,color:'#94A3B8',marginBottom:8,lineHeight:1.6,borderLeft:'2px solid #22D3EE60',paddingLeft:10}}>
               <span style={{color:'#22D3EE',fontWeight:700}}>Q.</span> {selectedPost.question}
             </div>
             <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
@@ -179,10 +230,10 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
           <div style={{textAlign:'center',padding:'40px 20px',color:'#475569'}}>
             <div style={{fontSize:48,marginBottom:12}}>📋</div>
             <div style={{fontSize:15,fontWeight:700,color:'#334155',marginBottom:6}}>아직 올라온 탐구 문제가 없어요</div>
-            <div style={{fontSize:13}}>우측 하단 <b style={{color:'#F97316'}}>+</b> 버튼을 눌러서 첫 번째 아이디어를 올려보세요!</div>
+            <div style={{fontSize:13}}>하단 <b style={{color:'#F97316'}}>+</b> 버튼을 눌러서 첫 번째 아이디어를 올려보세요!</div>
           </div>
         ):(
-          <div style={{display:'grid',gridTemplateColumns:gridCols,gap:12}}>
+          <div style={{display:'grid',gridTemplateColumns:gridCols,gap: isMobile ? 14 : 12}}>
             {posts.map(post=>(
               <PadletStep1Card key={post.id} post={post} myName={user.name} selectedPost={selectedPost}
                 onLike={onLike} onComment={onComment} onSelectRequest={onSelectRequest} onDelete={onDelete}/>
@@ -192,58 +243,21 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
       </div>
 
       {/* FAB */}
-      {!showModal&&<button className="padlet-fab" onClick={()=>setShowModal(true)} title="탐구 문제 추가하기">＋</button>}
+      {!showModal&&<button className="padlet-fab" onClick={()=>setShowModal(true)} title="탐구 문제 추가하기" style={{bottom: isMobile ? 16 : 22}}>＋</button>}
 
-      {/* 추가 모달 */}
+      {/* 모달: 모바일=바텀시트, PC=중앙 오버레이 */}
       {showModal&&(
-        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.45)',backdropFilter:'blur(3px)',zIndex:100,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}
-          onClick={e=>{if(e.target===e.currentTarget)setShowModal(false)}}>
-          <div style={{background:'#fff',borderRadius:20,padding:'24px 22px 20px',width:'100%',maxWidth:'min(420px,96vw)',maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,.25)',animation:'fadeUp .25s cubic-bezier(.34,1.3,.64,1)'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:18}}>
-              <span style={{fontSize:18}}>📝</span>
-              <span style={{fontSize:17,fontWeight:800,color:'#1E293B'}}>탐구 문제 작성</span>
-              <button onClick={()=>setShowModal(false)} style={{marginLeft:'auto',width:30,height:30,borderRadius:'50%',background:'#F1F5F9',border:'none',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#64748B'}}>✕</button>
-            </div>
-
-            {[{label:'📌 조사 주제',key:'topic',ph:'예: 우리 반 학생들이 좋아하는 간식의 종류'},{label:'🔍 조사 질문',key:'question',ph:'예: 가장 자주 먹는 간식은 무엇인가요?'}].map(f=>(
-              <div key={f.key} style={{marginBottom:14}}>
-                <div style={{fontSize:13,fontWeight:700,color:'#64748B',marginBottom:6}}>{f.label}</div>
-                <input value={form[f.key]} onChange={e=>{setForm(p=>({...p,[f.key]:e.target.value}));setShareErr('')}}
-                  placeholder={f.ph} style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1.5px solid #CBD5E1',fontSize:14,background:'#F8FAFC',outline:'none',fontFamily:'inherit'}}
-                  onFocus={e=>e.target.style.borderColor='#F97316'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
-              </div>
-            ))}
-
-            <div style={{fontSize:13,fontWeight:700,color:'#64748B',marginBottom:4}}>📋 조사 항목 <span style={{fontSize:11,fontWeight:400,color:'#94A3B8',marginLeft:6}}>최대 8개</span></div>
-            <div style={{display:'flex',gap:6,marginBottom:form.items.length>0?10:0}}>
-              <input value={itemInput} onChange={e=>setItemInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addItem()}
-                placeholder="예: 과자"
-                style={{flex:1,padding:'10px 14px',borderRadius:10,border:'1.5px solid #CBD5E1',fontSize:14,background:'#F8FAFC',outline:'none',fontFamily:'inherit'}}
-                onFocus={e=>e.target.style.borderColor='#F97316'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
-              <button onClick={addItem} disabled={!itemInput.trim()||form.items.length>=8}
-                style={{padding:'10px 16px',borderRadius:10,background:(!itemInput.trim()||form.items.length>=8)?'#E2E8F2':'#1E293B',color:(!itemInput.trim()||form.items.length>=8)?'#94A3B8':'#fff',border:'none',fontSize:14,fontWeight:700,cursor:(!itemInput.trim()||form.items.length>=8)?'not-allowed':'pointer',fontFamily:'inherit',flexShrink:0,transition:'all .15s'}}>추가</button>
-            </div>
-
-            {form.items.length>0&&(
-              <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:10}}>
-                {form.items.map((item,i)=>(
-                  <div key={i} draggable onDragStart={()=>onDragStart(i)} onDragEnter={()=>onDragEnter(i)} onDragEnd={()=>setDragIdx(null)} onDragOver={e=>e.preventDefault()}
-                    style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 12px',borderRadius:999,fontSize:12,fontWeight:700,background:CHART_COLORS[i%CHART_COLORS.length]+'15',color:CHART_COLORS[i%CHART_COLORS.length],border:`1.5px solid ${CHART_COLORS[i%CHART_COLORS.length]}35`,cursor:'grab',opacity:dragIdx===i?.5:1,userSelect:'none'}}>
-                    {item}
-                    <button onClick={()=>removeItem(i)} style={{fontSize:14,color:'inherit',background:'none',border:'none',cursor:'pointer',lineHeight:1,padding:0}}>×</button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {shareErr&&<div style={{marginTop:10,padding:'8px 12px',background:'#FEF2F2',border:'1px solid #FECACA',borderRadius:8,fontSize:12,color:'#DC2626',fontWeight:600}}>⚠️ {shareErr}</div>}
-
-            <button onClick={doShare} disabled={!ready||sharing} style={{width:'100%',padding:'13px',borderRadius:12,marginTop:16,background:ready&&!sharing?'linear-gradient(135deg,#F97316,#EF4444)':'#E2E8F2',color:ready&&!sharing?'#fff':'#94A3B8',border:'none',fontSize:15,fontWeight:700,cursor:ready&&!sharing?'pointer':'not-allowed',fontFamily:'inherit',transition:'all .15s',boxShadow:ready&&!sharing?'0 4px 14px rgba(249,115,22,.35)':'none'}}>
-              {sharing?'공유 중...':'🚀 보드에 올리기'}
-            </button>
-            <div style={{fontSize:12,color:'#94A3B8',textAlign:'center',marginTop:8}}>💡 올리면 모든 모둠원에게 바로 보여요</div>
+        isMobile ? (
+          <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.5)',zIndex:100,display:'flex',flexDirection:'column',justifyContent:'flex-end'}}
+            onClick={e=>{if(e.target===e.currentTarget)setShowModal(false)}}>
+            {formContent}
           </div>
-        </div>
+        ) : (
+          <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.45)',backdropFilter:'blur(3px)',zIndex:100,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}
+            onClick={e=>{if(e.target===e.currentTarget)setShowModal(false)}}>
+            {formContent}
+          </div>
+        )
       )}
     </div>
   )

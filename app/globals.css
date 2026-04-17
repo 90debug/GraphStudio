@@ -401,3 +401,48 @@ input[type="range"]    { accent-color: var(--s2); }
 .note-chip-wrap:hover {
   box-shadow: 0 2px 8px rgba(0,0,0,.10);
 }
+
+/* ── 모바일 대응 ─────────────────────────────────────────────────────────── */
+
+/* 터치 디바이스: hover 효과 제거 & 클릭 요소 항상 표시 */
+@media (hover: none) {
+  .postcard-close {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .note-chip-delete {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .postcard-wrap:hover {
+    transform: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,.13) !important;
+  }
+  .padlet-card-item:hover {
+    transform: none;
+  }
+  .edu-btn:not(:disabled):hover {
+    transform: none;
+    filter: none;
+    box-shadow: inherit !important;
+  }
+}
+
+/* 모바일: FAB 하단 네비와 겹치지 않도록 */
+@media (max-width: 767px) {
+  .padlet-fab {
+    bottom: 72px !important;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+}
+
+/* 안전 영역 지원 (노치, 홈 바) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+}
