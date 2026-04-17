@@ -59,9 +59,6 @@ export function VoteModal({ vote, myName, onAgree, onClose, onCancel, isRequeste
           background:'rgba(91,191,122,.08)',pointerEvents:'none' }}/>
         <div style={{ position:'absolute',bottom:-15,left:-15,width:60,height:60,borderRadius:'50%',
           background:'rgba(78,172,217,.08)',pointerEvents:'none' }}/>
-        <button onClick={onClose} style={{ position:'absolute',top:16,right:16,width:30,height:30,borderRadius:'50%',
-          background:'#F2EAE0',color:'#8C7B6E',border:'2px solid #E6D8C8',fontSize:14,fontWeight:800,
-          cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'inherit' }}>✕</button>
 
         <div style={{ textAlign:'center',marginBottom:20 }}>
           <div style={{ fontSize:40,marginBottom:8 }}>🗳️</div>
@@ -118,17 +115,66 @@ export function VoteModal({ vote, myName, onAgree, onClose, onCancel, isRequeste
             )}
           </div>
         ):(
-          <div style={{ display:'flex',gap:10 }}>
-            <button onClick={onClose} style={{ flex:1,padding:'13px',borderRadius:14,background:'#F2EAE0',
-              color:'#8C7B6E',border:'2px solid #E6D8C8',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit' }}>나중에</button>
-            <button onClick={onAgree} className="edu-btn" style={{ flex:2,padding:'13px',borderRadius:14,
-              background:'linear-gradient(135deg,#5BBF7A,#2D9950)',color:'#fff',border:'none',
-              fontSize:14,fontWeight:800,cursor:'pointer',fontFamily:'inherit',boxShadow:'0 5px 16px rgba(91,191,122,.40)' }}>
-              👍 찬성하기
-            </button>
+          <div style={{ display:'flex',flexDirection:'column',gap:9 }}>
+            {/* 안내 문구 */}
+            <div style={{ padding:'10px 14px',background:'#FFFBEB',border:'1.5px solid #FDE68A',borderRadius:12,
+              fontSize:12,color:'#92400E',lineHeight:1.65,fontWeight:600 }}>
+              💡 <b>나중에</b>를 누르면 이번 투표가 <b>즉시 취소</b>돼요.<br/>
+              모둠원 모두가 찬성해야 탐구 문제가 선정됩니다.
+            </div>
+            <div style={{ display:'flex',gap:10 }}>
+              <button onClick={onCancel} style={{ flex:1,padding:'13px',borderRadius:14,background:'#F2EAE0',
+                color:'#8C7B6E',border:'2px solid #E6D8C8',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',
+                minHeight:48 }}>나중에</button>
+              <button onClick={onAgree} className="edu-btn" style={{ flex:2,padding:'13px',borderRadius:14,
+                background:'linear-gradient(135deg,#5BBF7A,#2D9950)',color:'#fff',border:'none',
+                fontSize:14,fontWeight:800,cursor:'pointer',fontFamily:'inherit',boxShadow:'0 5px 16px rgba(91,191,122,.40)',
+                minHeight:48 }}>
+                👍 찬성하기
+              </button>
+            </div>
           </div>
         )}
       </div>
     </div>
   )
 }
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(61,43,31,.52)', backdropFilter:'blur(3px)', zIndex:10002,
+      display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+      <div style={{ background:'#fff', borderRadius:24, padding:'28px 24px 22px',
+        maxWidth:'min(400px,94vw)', width:'100%',
+        boxShadow:'0 20px 60px rgba(61,43,31,.28)', animation:'fadeUp .25s cubic-bezier(.34,1.3,.64,1)',
+        border:'3px solid #FECACA', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute',top:-20,right:-20,width:80,height:80,borderRadius:'50%',
+          background:'rgba(239,68,68,.06)',pointerEvents:'none' }}/>
+        <div style={{ width:52,height:52,borderRadius:'50%',background:'linear-gradient(135deg,#FEF2F2,#FECACA)',
+          display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,margin:'0 auto 16px',
+          boxShadow:'0 4px 12px rgba(239,68,68,.20)' }}>⚠️</div>
+        <div style={{ textAlign:'center', marginBottom:18 }}>
+          <div style={{ fontSize:16,fontWeight:800,color:'#1E293B',marginBottom:10 }}>탐구 문제를 다시 선정할까요?</div>
+          <div style={{ fontSize:13,color:'#64748B',lineHeight:1.75,padding:'10px 14px',
+            background:'#FEF2F2',borderRadius:12,border:'1px solid #FECACA' }}>
+            이미 설문 조사가 진행 중인 탐구 문제가 있습니다.<br/>
+            <b style={{ color:'#DC2626' }}>새로운 문제를 선정하면 모든 내용이 초기화됩니다.</b>
+          </div>
+          {topicName && (
+            <div style={{ marginTop:10,fontSize:12,color:'#94A3B8' }}>
+              현재 선정된 문제: <b style={{ color:'#475569' }}>{topicName}</b>
+            </div>
+          )}
+        </div>
+        <div style={{ display:'flex',gap:10 }}>
+          <button onClick={onCancel} style={{ flex:1,padding:'12px',borderRadius:12,background:'#F8FAFC',
+            color:'#64748B',border:'1.5px solid #E2E8F2',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit' }}>취소</button>
+          <button onClick={onConfirm} style={{ flex:1,padding:'12px',borderRadius:12,
+            background:'linear-gradient(135deg,#EF4444,#DC2626)',color:'#fff',border:'none',
+            fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',
+            boxShadow:'0 4px 12px rgba(239,68,68,.35)' }}>다시 선정하기</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+

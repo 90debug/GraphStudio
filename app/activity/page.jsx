@@ -31,30 +31,6 @@ function useDb(fn, delay) {
   }, []) // eslint-disable-line
 }
 
-function StepHeader({ step, activeStep }) {
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 18px',
-      background:`linear-gradient(135deg, ${step.bg}, #fff)`,
-      borderBottom:`2px solid ${step.bd}`,
-      flexShrink:0, position:'relative', overflow:'hidden' }}>
-      <div style={{ position:'absolute', right:-10, top:-10, width:50, height:50,
-        borderRadius:'50%', background:`${step.c}12`, pointerEvents:'none' }}/>
-      <div style={{ width:32, height:32, borderRadius:'50%',
-        background:`linear-gradient(135deg, ${step.c}, ${step.dk})`,
-        display:'flex', alignItems:'center', justifyContent:'center',
-        color:'#fff', fontSize:14, fontWeight:800, flexShrink:0,
-        boxShadow:`0 4px 10px ${step.c}45` }}>{step.n}</div>
-      <div style={{ fontWeight:800, fontSize:15, color:step.dk, letterSpacing:'-0.2px' }}>{step.label}</div>
-      <div style={{ marginLeft:'auto', display:'flex', gap:4 }}>
-        {[1,2,3,4].map(n=>(
-          <div key={n} style={{ width:n<=activeStep?20:8, height:7, borderRadius:999,
-            background:n<=activeStep?step.c:'#E6D8C8', transition:'all .3s',
-            boxShadow:n<=activeStep?`0 2px 6px ${step.c}40`:'none' }}/>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 export default function ActivityPage() {
   const router   = useRouter()
@@ -191,10 +167,10 @@ export default function ActivityPage() {
     const code = userRef.current?.code
     try {
       await Promise.all([
-        updateRoomMeta(code, { selectedPost:null, dataTable:[], chartConfig:{type:'bar',title:''}, step4State:{}, drawMode:'auto', surveyActive:false, selectionVote:null, currentDrawer:null, livePreview:null }),
+        updateRoomMeta(code, { selectedPost:null, dataTable:[], chartConfig:{type:'bar',title:''}, step4State:{}, drawMode:'draw', surveyActive:false, selectionVote:null, currentDrawer:null, livePreview:null }),
         clearStrokes(code), resetSurvey(code),
       ])
-      setRoom(r => ({ ...r, selectedPost:null, dataTable:[], chartConfig:{type:'bar',title:''}, step4State:{}, drawMode:'auto', surveyActive:false }))
+      setRoom(r => ({ ...r, selectedPost:null, dataTable:[], chartConfig:{type:'bar',title:''}, step4State:{}, drawMode:'draw', surveyActive:false }))
       setToast('🔄 모든 데이터가 초기화되었어요!')
     } catch (e) { console.error(e); setToast('⚠️ 초기화에 실패했어요.'); return }
     await doSelectVote(post)
@@ -202,7 +178,14 @@ export default function ActivityPage() {
 
   async function handleVote() { await agreeSelectionVote(userRef.current?.code, user.name) }
   async function handleCancelVote() {
-    await setSelectionVote(userRef.current?.code, null); setVoteModal(false); setToast('🔄 투표가 취소되었어요.')
+    await setSelectionVote(userRef.current?.code, null)
+    setVoteModal(false)
+    setToast('투표가 취소되었습니다.')
+  }
+  async function handleDeclineVote() {
+    await setSelectionVote(userRef.current?.code, null)
+    setVoteModal(false)
+    setToast('투표가 취소되었습니다.')
   }
 
   useEffect(() => {
@@ -251,7 +234,7 @@ export default function ActivityPage() {
   const items       = room.selectedPost?.items || []
   const dataTable   = room.dataTable   || []
   const chartConfig = room.chartConfig || { type:'bar', title:'' }
-  const drawMode    = room.drawMode    || 'auto'
+  const drawMode    = room.drawMode    || 'draw'
   const step4State  = room.step4State  || {}
   const iAmLeader   = room.syncLeader === user.name
   const hasSyncLead = !!room.syncLeader
@@ -356,14 +339,14 @@ export default function ActivityPage() {
 
           {(activeStep === 2 || activeStep === 3) && (
             <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-              <StepHeader step={step} activeStep={activeStep}/>
-              <main ref={mainRef} style={{ flex:1, overflowY:'auto', padding: device==='mobile' ? 0 : 16, minWidth:0,
+              <main ref={mainRef} style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0,
                 backgroundImage:"url('/bg-activity.png')", backgroundSize:'cover',
                 backgroundPosition:'center', backgroundAttachment:'local' }}>
                 {activeStep === 2 && (
                   <Step2 user={user} code={user.code} selectedPost={room.selectedPost}
                     dataTable={dataTable} onChange={handleDataTable}
-                    surveyActive={room.surveyActive || false} survey={survey} surveyResponses={surveyResp}/>
+                    surveyActive={room.surveyActive || false} survey={survey} surveyResponses={surveyResp}
+                    activeStep={activeStep}/>
                 )}
                 {activeStep === 3 && (
                   <Step3 user={user} code={user.code}
@@ -374,7 +357,8 @@ export default function ActivityPage() {
                     livePreview={room.livePreview || null}
                     selectedPost={room.selectedPost}
                     step3SnapshotImg={step3SnapshotImg}
-                    onStep3SnapshotImg={setStep3SnapshotImg}/>
+                    onStep3SnapshotImg={setStep3SnapshotImg}
+                    activeStep={activeStep}/>
                 )}
               </main>
             </div>
@@ -398,14 +382,15 @@ export default function ActivityPage() {
                 minHeight: 44 }}>
                 {isActive && <div style={{ position:'absolute', top:0, left:'15%', right:'15%',
                   height:3, borderRadius:'0 0 3px 3px', background:clr, boxShadow:`0 2px 8px ${clr}60` }}/>}
-                <div style={{ width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:12, background:isActive?clr:isDone?'#DCFCE7':'#F1F5F9',
-                  color:isActive?'#fff':isDone?'#16A34A':'#64748B', fontWeight:800,
-                  transition:'all .2s', boxShadow:isActive?`0 3px 10px ${clr}50`:'none', flexShrink:0 }}>
-                  {isDone ? '✓' : s.n}
+                <div style={{ width:30, height:30, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
+                  opacity: isActive ? 1 : isDone ? 0.75 : 0.45,
+                  transition:'all .2s',
+                  filter: isActive ? `drop-shadow(0 2px 6px ${clr}80)` : 'none' }}>
+                  <img src={`/step${s.n}_icon.png`} alt={`Step ${s.n}`}
+                    style={{ width:30, height:30, objectFit:'contain' }}/>
                 </div>
-                <div style={{ fontSize: device==='mobile' ? 9 : 10, fontWeight:isActive?800:600,
-                  color:isActive?clr:isDone?'#16A34A':'#94A3B8',
+                <div style={{ fontSize: device==='mobile' ? 9 : 10, fontWeight:isActive?800:isDone?700:600,
+                  color:isActive?clr:isDone?clr:'#94A3B8',
                   lineHeight:1.3, textAlign:'center', letterSpacing:'-0.3px', whiteSpace:'nowrap' }}>
                   {device==='mobile' ? mobileLabel : STEP_FULL_LABELS[idx]}
                 </div>
@@ -420,7 +405,7 @@ export default function ActivityPage() {
       )}
       {voteModal && room.selectionVote && (
         <VoteModal vote={room.selectionVote} myName={user.name} onAgree={handleVote}
-          onClose={()=>{ const sv=room.selectionVote; if(sv) lastDismissedVoteRef.current=`${sv.postId}_${sv.requestedBy}_${sv.voters?.length}`; setVoteModal(false) }}
+          onClose={handleDeclineVote}
           onCancel={handleCancelVote} isRequester={room.selectionVote?.requestedBy===user.name}/>
       )}
       {toast && <Toast msg={toast} onDone={()=>setToast(null)}/>}

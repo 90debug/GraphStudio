@@ -47,7 +47,7 @@ function SurveyModal({ survey, userName, surveyCode, onClose }) {
   )
 }
 
-export default function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, survey, surveyResponses }) {
+export default function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, survey, surveyResponses, activeStep = 2 }) {
   const device   = useDevice()
   const isMobile = device === 'mobile'
 
@@ -101,6 +101,23 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
 
   return (
     <div style={{display:'flex',flexDirection:'column',flex:1,overflow:'hidden'}}>
+      {/* 자체 스텝 헤더 */}
+      <div style={{display:'flex',alignItems:'center',gap:10,padding:'8px 14px',
+        background:'linear-gradient(135deg,#EBF7FF,#fff)',
+        borderBottom:'2px solid #93D1F5',flexShrink:0,position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',right:-10,top:-10,width:50,height:50,
+          borderRadius:'50%',background:'rgba(78,172,217,.10)',pointerEvents:'none'}}/>
+        <img src="/step2_icon.png" alt="Step 2"
+          style={{width:34,height:34,flexShrink:0,objectFit:'contain'}}/>
+        <div style={{fontWeight:800,fontSize:15,color:'#2785B5',letterSpacing:'-0.2px'}}>자료 수집하기</div>
+        <div style={{marginLeft:'auto',display:'flex',gap:4}}>
+          {[1,2,3,4].map(n=>(
+            <div key={n} style={{width:n<=activeStep?20:8,height:7,borderRadius:999,
+              background:n<=activeStep?'#4EACD9':'#E6D8C8',transition:'all .3s',
+              boxShadow:n<=activeStep?'0 2px 6px rgba(78,172,217,.40)':'none'}}/>
+          ))}
+        </div>
+      </div>
       {/* 탭바 */}
       <div style={{display:'flex',gap:0,borderBottom:'1px solid #dbdbdb',overflowX:'auto',flexShrink:0,background:'#fff'}}>
         {TABS.map(t=>(
@@ -255,12 +272,10 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
             <div style={{fontSize:14,color:'#8C7B6E',marginBottom:14,lineHeight:1.75}}>
               다른 모둠에서 공유한 <b style={{color:'#3D2B1F'}}>6자리 코드</b>를 입력하면 해당 설문에 참여할 수 있어요.
             </div>
-            <div style={{display:'flex',gap:8}}>
-              <input value={lookupCode} onChange={e=>setLookupCode(e.target.value.toUpperCase())} onKeyDown={e=>e.key==='Enter'&&doLookupSurvey()}
-                maxLength={6} placeholder="ABC123"
-                style={{flex:1,padding:'12px 14px',borderRadius:10,border:'1.5px solid #dbdbdb',fontSize:20,fontWeight:700,letterSpacing:5,textTransform:'uppercase',fontFamily:'inherit',textAlign:'center',outline:'none',background:'#fafafa',minHeight:50}}/>
-              <Btn onClick={doLookupSurvey} color="blue" style={{padding:'12px 22px',flexShrink:0}}>참여하기</Btn>
-            </div>
+            <input value={lookupCode} onChange={e=>setLookupCode(e.target.value.toUpperCase())} onKeyDown={e=>e.key==='Enter'&&doLookupSurvey()}
+              maxLength={6} placeholder="ABC123"
+              style={{width:'100%',boxSizing:'border-box',padding:'12px 14px',borderRadius:10,border:'1.5px solid #dbdbdb',fontSize:20,fontWeight:700,letterSpacing:5,textTransform:'uppercase',fontFamily:'inherit',textAlign:'center',outline:'none',background:'#fafafa',minHeight:50,display:'block',marginBottom:10}}/>
+            <Btn onClick={doLookupSurvey} color="blue" full={isMobile} style={{width: isMobile ? '100%' : undefined, padding:'12px 22px'}}>✉️ 참여하기</Btn>
             <div style={{fontSize:13,color:'#8C7B6E',marginTop:10}}>💡 설문 코드는 다른 모둠의 참여 코드와 동일해요</div>
           </Sec>
         )}

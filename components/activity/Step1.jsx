@@ -193,7 +193,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
       {/* 헤더 */}
       <div style={{display:'flex',alignItems:'center',gap:12,padding:'10px 18px',background:'linear-gradient(135deg,#FFF3E8,#fff)',borderBottom:'2px solid #FFCB96',flexShrink:0,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',right:-10,top:-10,width:50,height:50,borderRadius:'50%',background:'rgba(255,140,66,.10)',pointerEvents:'none'}}/>
-        <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#FF8C42,#D4601A)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:14,fontWeight:800,flexShrink:0,boxShadow:'0 4px 10px rgba(255,140,66,.45)'}}>1</div>
+        <img src='/step1_icon.png' alt='Step 1' style={{width:36,height:36,flexShrink:0,objectFit:'contain'}}/>
         <div style={{fontWeight:800,fontSize:15,color:'#D4601A',letterSpacing:'-0.2px'}}>탐구 문제 정하기</div>
         <div style={{marginLeft:'auto',display:'flex',gap:4}}>
           {[1,2,3,4].map(n=><div key={n} style={{width:n<=1?20:8,height:7,borderRadius:999,background:n<=1?'#FF8C42':'#E6D8C8',boxShadow:n<=1?'0 2px 6px rgba(255,140,66,.40)':'none'}}/>)}
