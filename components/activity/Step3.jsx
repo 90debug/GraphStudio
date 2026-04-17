@@ -28,7 +28,7 @@ export default function Step3({ user, code, items, dataTable, chartConfig, onCha
         <div style={{position:'absolute',right:-10,top:-10,width:50,height:50,
           borderRadius:'50%',background:'rgba(91,191,122,.10)',pointerEvents:'none'}}/>
         <img src="/step3_icon.png" alt="Step 3"
-          style={{width:34,height:34,flexShrink:0,objectFit:'contain'}}/>
+          style={{width:34,height:34,display:'block',flexShrink:0}}/>
         <div style={{fontWeight:800,fontSize:15,color:'#2D9950',letterSpacing:'-0.2px'}}>그래프로 나타내기</div>
         <div style={{marginLeft:'auto',display:'flex',gap:4}}>
           {[1,2,3,4].map(n=>(

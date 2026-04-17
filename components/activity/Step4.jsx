@@ -256,7 +256,7 @@ export default function Step4({ user, code, items, dataTable, chartConfig, step4
       {/* 헤더 */}
       <div style={{display:'flex',alignItems:'center',gap:12,padding:'10px 18px',background:`linear-gradient(135deg,${step4Info.bg},#fff)`,borderBottom:`2px solid ${step4Info.bd}`,flexShrink:0,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',right:-10,top:-10,width:50,height:50,borderRadius:'50%',background:`${step4Info.c}12`,pointerEvents:'none'}}/>
-        <img src='/step4_icon.png' alt='Step 4' style={{width:36,height:36,flexShrink:0,objectFit:'contain'}}/>
+        <img src='/step4_icon.png' alt='Step 4' style={{width:36,height:36,display:'block',flexShrink:0}}/>
         <div style={{fontWeight:800,fontSize:15,color:step4Info.dk,letterSpacing:'-0.2px'}}>그래프 해석하기</div>
         <div style={{marginLeft:'auto',display:'flex',gap:4}}>
           {[1,2,3,4].map(n=><div key={n} style={{width:20,height:7,borderRadius:999,background:step4Info.c,boxShadow:`0 2px 6px ${step4Info.c}40`}}/>)}

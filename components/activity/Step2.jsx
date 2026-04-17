@@ -108,7 +108,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
         <div style={{position:'absolute',right:-10,top:-10,width:50,height:50,
           borderRadius:'50%',background:'rgba(78,172,217,.10)',pointerEvents:'none'}}/>
         <img src="/step2_icon.png" alt="Step 2"
-          style={{width:34,height:34,flexShrink:0,objectFit:'contain'}}/>
+          style={{width:34,height:34,display:'block',flexShrink:0}}/>
         <div style={{fontWeight:800,fontSize:15,color:'#2785B5',letterSpacing:'-0.2px'}}>자료 수집하기</div>
         <div style={{marginLeft:'auto',display:'flex',gap:4}}>
           {[1,2,3,4].map(n=>(
