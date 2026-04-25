@@ -3,10 +3,10 @@ import Image from 'next/image'
 import { useDevice } from '../../lib/DeviceContext'
 
 const TABS = [
-  { id: 1, label: '탐구 문제 정하기', short: '1단계', icon: '/icon_01.png' },
-  { id: 2, label: '자료 수집하기',    short: '2단계', icon: '/icon_02.png' },
-  { id: 3, label: '그래프 나타내기', short: '3단계', icon: '/icon_03.png' },
-  { id: 4, label: '그래프 해석하기', short: '4단계', icon: '/icon_04.png' },
+  { id: 1, label: '탐구 문제 정하기', icon: '/icon_01.png' },
+  { id: 2, label: '자료 수집하기',    icon: '/icon_02.png' },
+  { id: 3, label: '그래프 나타내기',  icon: '/icon_03.png' },
+  { id: 4, label: '그래프 해석하기',  icon: '/icon_04.png' },
 ]
 
 export default function BottomNav({ currentStep, onStepChange }) {
@@ -71,7 +71,7 @@ export default function BottomNav({ currentStep, onStepChange }) {
               textOverflow: 'ellipsis',
               maxWidth: '100%',
             }}>
-              {isMobile ? tab.short : tab.label}
+              {tab.label}
             </p>
           </button>
         )

@@ -31,7 +31,8 @@ function PadletStep4Card({ post, myName, onLike, onComment, onDeleteComment, onD
   async function submitCmt() {
     if (!cmtText.trim()) return
     await onComment(post.id, cmtText.trim())
-    setCmtText(''); setShowCmt(false)
+    setCmtText('')
+    // 댓글 등록 후에도 슬라이드는 열린 상태 유지
   }
 
   return (

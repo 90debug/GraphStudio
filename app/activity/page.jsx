@@ -214,7 +214,7 @@ export default function ActivityPage() {
             <div className={`w-1.5 h-1.5 rounded-full ${hasSyncLead ? 'bg-current animate-pulse' : 'bg-slate-300'}`} />
             {hasSyncLead ? (iAmLeader ? '화면 공유 중' : room.syncLeader + '님 화면 보는 중') : '개별 활동 중'}
             {!hasSyncLead ? (
-              <button onClick={function() { setSyncLeader(user.code, user.name, activeStep) }} className="ml-1 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-sm hover:border-gsp-500 transition-colors">공유 시작</button>
+              <button onClick={function() { setSyncLeader(user.code, user.name, activeStep) }} className="ml-1 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-sm hover:border-gsp-500 transition-colors">화면 공유</button>
             ) : iAmLeader && (
               <button onClick={function() { clearSyncLeader(user.code) }} className="ml-1 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-sm">해제</button>
             )}
@@ -222,7 +222,7 @@ export default function ActivityPage() {
         </div>
         <div className="flex items-center gap-3">
           <OnlineUsers users={onlineUsers} />
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-[8px] shadow-lg shadow-slate-200">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-[8px] shadow-lg shadow-slate-200">
             <Key size={12} className="text-gsp-400" />
             <span className="text-xs font-black tracking-widest">{user.code}</span>
             <button onClick={function() { navigator.clipboard.writeText(user.code); setToast('복사 완료') }} className="ml-1 hover:text-gsp-400 transition-colors"><Copy size={12}/></button>
