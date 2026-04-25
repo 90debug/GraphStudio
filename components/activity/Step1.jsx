@@ -293,7 +293,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
           {posts.map(post => (
             <PadletStep1Card key={post.id} post={post} myName={user.name} selectedPost={selectedPost}
               onLike={onLike} onComment={onComment} onDeleteComment={onDeleteComment} onSelectRequest={onSelectRequest} onDelete={onDelete}/>
