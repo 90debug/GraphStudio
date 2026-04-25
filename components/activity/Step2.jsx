@@ -218,16 +218,11 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                 <div style={{marginBottom:12,padding:'9px 14px',background:'#F8FAFC',borderRadius:8,border:'1px solid #E2E8F0',fontSize:13,color:'#1E293B',fontWeight:600,lineHeight:1.6}}>
                   {selectedPost?.topic} — {selectedPost?.question}
                 </div>
-                {surveyActive && surveyResponses.length > 0 && (
-                  <div style={{marginBottom:10,padding:'8px 12px',background:'#EEEEF3',borderRadius:8,border:'1px solid #9395ff',fontSize:12,color:'#5B41EB',fontWeight:700,display:'flex',alignItems:'center',gap:6}}>
-                    <span>📡</span>
-                    <span>실시간 {surveyResponses.length}명 참여 — 결과가 자동으로 반영되고 있어요.</span>
-                  </div>
-                )}
+
                 {/* 좌우 패널 */}
                 <div style={{display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:12, alignItems:'flex-start'}}>
                   {/* 좌측: 항목별 조사 결과 (입력) */}
-                  <Sec style={{flex:1, marginBottom:0}}>
+                  <Sec style={{flex:1, marginBottom:0, minWidth:0, overflow:'hidden'}}>
                     <div style={{fontWeight:700,fontSize:15,marginBottom:12}}>항목별 조사 결과</div>
                     <div style={{display:'grid',gridTemplateColumns:'repeat(2, 1fr)',gap:8}}>
                       {items.map((item,i)=>{
@@ -242,7 +237,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                               <span style={{fontSize:12,color:'#8C7B6E'}}>명</span>
                             </div>
                             {surveyCount > 0 && (
-                              <div style={{fontSize:10,color:'#9395ff',fontWeight:700}}>설문 {surveyCount}명</div>
+                              <div style={{fontSize:10,color:'#9395ff',fontWeight:700}}>실시간 {surveyCount}명</div>
                             )}
                           </div>
                         )
@@ -292,7 +287,6 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
               maxLength={6} placeholder="ABC123"
               style={{width:'100%',boxSizing:'border-box',padding:'12px 14px',borderRadius:10,border:'1px solid #e2e3e5',fontSize:20,fontWeight:700,letterSpacing:5,textTransform:'uppercase',fontFamily:'inherit',textAlign:'center',outline:'none',background:'#F3F4F8',minHeight:50,display:'block',marginBottom:10}}/>
             <Btn onClick={doLookupSurvey} color="orange" full={isMobile} pill sm style={{width: isMobile ? '100%' : undefined}}>참여하기</Btn>
-            <div style={{fontSize:13,color:'#94A3B8',marginTop:10}}>설문 코드는 다른 모둠의 참여 코드와 동일해요.</div>
           </Sec>
         )}
       </div>

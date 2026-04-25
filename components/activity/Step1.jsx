@@ -13,7 +13,7 @@ function nameColor(name) {
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
 }
 
-function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSelectRequest, onDelete }) {
+function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDeleteComment, onSelectRequest, onDelete }) {
   const [showCmt, setShowCmt] = useState(false)
   const [cmtText, setCmtText] = useState('')
   const isMyPost   = post.name === myName
@@ -154,14 +154,30 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
             }}
           >
             <div className="space-y-2">
-              {post.comments?.map((c, i) => (
-                <div key={i} className="bg-slate-50 px-3 py-2 rounded-xl text-[11px] text-slate-600 border border-slate-100">{c}</div>
-              ))}
+              {post.comments?.map((c, i) => {
+                const isObj = typeof c === 'object' && c !== null
+                const text = isObj ? c.text : c
+                const author = isObj ? c.author : null
+                const isMyComment = isObj && c.author === myName
+                return (
+                  <div key={i} className="bg-slate-50 px-3 py-2 rounded-xl text-[11px] text-slate-600 border border-slate-100 flex items-start justify-between gap-1">
+                    <span>
+                      {author && <span className="font-black text-gsp-500 mr-1">{author}</span>}
+                      {text}
+                    </span>
+                    {isMyComment && onDeleteComment && (
+                      <button onClick={() => onDeleteComment(post.id, c)} className="text-slate-300 hover:text-red-500 transition-colors p-0.5 flex-shrink-0 mt-0.5">
+                        <X size={11} strokeWidth={2.5}/>
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
               <div className="flex gap-2 pt-1">
                 <input value={cmtText}
                   onChange={e => setCmtText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && submitCmt()}
-                  placeholder="의견을 남겨 주세요" className="flex-1 px-3 py-2 bg-white border border-[#E2E3E5] rounded-[8px] text-[11px] outline-none focus:border-gsp-400 placeholder:text-[#8A949E]" />
+                  placeholder="의견을 남겨 주세요." className="flex-1 px-3 py-2 bg-white border border-[#E2E3E5] rounded-[8px] text-[11px] outline-none focus:border-gsp-400 placeholder:text-[#8A949E]" />
                 <button onClick={submitCmt} className="bg-gsp-600 text-white px-3 py-2 rounded-full text-[11px] font-bold">등록</button>
               </div>
             </div>
@@ -172,7 +188,7 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
   )
 }
 
-export default function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, onSelectRequest, onDelete, showModal: showModalProp, onShowModal }) {
+export default function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, onDeleteComment, onSelectRequest, onDelete, showModal: showModalProp, onShowModal }) {
   const device = useDevice()
   const [showModalLocal, setShowModalLocal] = useState(false)
   const showModal = showModalProp !== undefined ? showModalProp : showModalLocal
@@ -283,7 +299,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {posts.map(post => (
             <PadletStep1Card key={post.id} post={post} myName={user.name} selectedPost={selectedPost}
-              onLike={onLike} onComment={onComment} onSelectRequest={onSelectRequest} onDelete={onDelete}/>
+              onLike={onLike} onComment={onComment} onDeleteComment={onDeleteComment} onSelectRequest={onSelectRequest} onDelete={onDelete}/>
           ))}
           {posts.length === 0 && (
             <div className="col-span-full py-20 text-center space-y-3">

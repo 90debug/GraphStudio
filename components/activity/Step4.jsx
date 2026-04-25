@@ -6,16 +6,26 @@ import { useDevice } from '../../lib/DeviceContext'
 import { CHART_CMPS } from './charts'
 import { addStep4Post, loadCanvasSnapshot } from '../../lib/firestore'
 import { tsNow } from '../../lib/constants'
+import { Heart, MessageCircle, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
-function PadletStep4Card({ post, myName, onLike, onComment, onDelete }) {
+// ── 아바타 색상 헬퍼 (Step1과 동일) ──────────────────────────────────────
+const AVATAR_COLORS = ['#5B41EB','#4EACD9','#5BBF7A','#C97DE8','#FF6B7A','#FFB432','#22D3EE','#F97316']
+function nameColor(name) {
+  let h = 0
+  for (let i = 0; i < (name || '').length; i++) h = name.charCodeAt(i) + ((h << 5) - h)
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
+}
+
+// ── Step4 포스트 카드 (Step1 디자인 통일) ────────────────────────────────
+function PadletStep4Card({ post, myName, onLike, onComment, onDeleteComment, onDelete }) {
   const [showCmt, setShowCmt] = useState(false)
   const [cmtText, setCmtText] = useState('')
   const isMyPost = post.name === myName
   const isLiked  = post.likedBy?.includes(myName)
-  const pal = isMyPost
-    ? { bg:'#FDFAFF', border:'#C4B5FD', hdr:'#F5F3FF', avBg:'#EDE9FE', avFg:'#5B21B6' }
-    : padletPalette(post.name)
-  const doneCount4 = post.doneCount ?? (post.checks ? Object.values(post.checks).filter(Boolean).length : 0)
+  const doneCount = post.doneCount ?? (post.checks ? Object.values(post.checks).filter(Boolean).length : 0)
+
+  const accentColor = nameColor(post.name)
 
   async function toggleLike() { if (onLike) await onLike(post.id, !isLiked) }
   async function submitCmt() {
@@ -25,75 +35,144 @@ function PadletStep4Card({ post, myName, onLike, onComment, onDelete }) {
   }
 
   return (
-    <div className="padlet-card-item postcard-wrap" style={{background:'#fff',border:'1px solid #F1F5F9',borderRadius:14,overflow:'visible',position:'relative',boxShadow:'0 1px 2px rgba(0,0,0,.05)'}}>
-      {isMyPost&&(
-        <>
-          <div style={{position:'absolute',top:-8,left:12,zIndex:10,padding:'2px 8px',borderRadius:999,background:'#5B41EB',color:'#fff',fontSize:10,fontWeight:800}}>내 글</div>
-          <button onClick={()=>onDelete&&onDelete(post.id)} className="postcard-close" style={{position:'absolute',top:-9,right:-9,zIndex:10,width:22,height:22,borderRadius:'50%',background:'#EF4444',color:'#fff',border:'2px solid #fff',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(239,68,68,.45)'}}>✕</button>
-        </>
-      )}
-      <div style={{padding:'9px 12px 7px',display:'flex',alignItems:'center',gap:8,background:pal.hdr,borderRadius:'12px 12px 0 0'}}>
-        <div style={{width:28,height:28,borderRadius:'50%',flexShrink:0,background:pal.avBg,color:pal.avFg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700}}>{(post.name||'?')[0]}</div>
-        <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:700,color:'#1E293B'}}>{post.name}{isMyPost&&<span style={{fontSize:10,color:'#94A3B8',fontWeight:400}}> (나)</span>}</div>
-          <div style={{fontSize:10,color:'#94A3B8'}}>{post.time}</div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative group transition-all duration-300 rounded-[20px] border bg-white shadow-sm border-slate-100 hover:shadow-md hover:border-slate-200"
+    >
+      {/* 왼쪽 버티컬 바 (Step1과 동일) */}
+      <div style={{ position:'absolute', top:20, left:0, width:4, height:40, borderRadius:'0 4px 4px 0', background: accentColor }} />
+
+      {/* 삭제 버튼 (본인 글, Step1과 동일한 X 아이콘) */}
+      {isMyPost && (
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <button onClick={() => onDelete?.(post.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1">
+            <X size={14} />
+          </button>
         </div>
-      </div>
-      <div style={{padding:'10px 12px 8px'}}>
-        {post.noteTexts?.length>0&&(
-          <div style={{marginBottom:8}}>
-            <div style={{fontSize:11,fontWeight:700,color:'#5B41EB',marginBottom:5}}>알 수 있는 사실</div>
-            <div style={{display:'flex',flexDirection:'column',gap:3}}>
-              {post.noteTexts.map((t,i)=>(
-                <div key={i} style={{display:'flex',alignItems:'flex-start',gap:5,fontSize:12,color:'#334155',lineHeight:1.5}}>
-                  <div style={{width:5,height:5,borderRadius:'50%',marginTop:5,flexShrink:0,background:CHART_COLORS[i%CHART_COLORS.length]}}/>{t}
+      )}
+
+      {/* 카드 내용 */}
+      <div className="p-5">
+        {/* 작성자 헤더 */}
+        <div className="flex items-center gap-2.5 mb-3">
+          <div style={{
+            width:28, height:28, borderRadius:'100px',
+            background: accentColor,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            fontSize:12, fontWeight:700, color:'#fff', flexShrink:0,
+          }}>
+            {(post.name?.[0] ?? '?')}
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-800 leading-none">
+              {post.name} {isMyPost && <span className="text-gsp-500 text-[9px] font-black ml-0.5">MY</span>}
+            </p>
+            <p className="text-[9px] text-slate-400 mt-1 font-medium">{post.time}</p>
+          </div>
+        </div>
+
+        {/* 알 수 있는 사실 */}
+        {post.noteTexts?.length > 0 && (
+          <div className="mb-3">
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">알 수 있는 사실</div>
+            <div className="flex flex-col gap-1.5">
+              {post.noteTexts.map((t, i) => (
+                <div key={i} className="flex items-start gap-2 text-[12px] text-slate-600 leading-relaxed">
+                  <div style={{ width:6, height:6, borderRadius:'50%', marginTop:5, flexShrink:0, background: CHART_COLORS[i % CHART_COLORS.length] }}/>
+                  {t}
                 </div>
               ))}
             </div>
           </div>
         )}
-        {post.ps&&(
-          <div style={{marginBottom:8}}>
-            <div style={{fontSize:11,fontWeight:700,color:'#5B41EB',marginBottom:4}}>문제 해결 과정</div>
-            <div style={{fontSize:12,color:'#475569',lineHeight:1.6,padding:'7px 10px',background:'rgba(91,65,235,.06)',borderRadius:8,whiteSpace:'pre-line'}}>{post.ps}</div>
+
+        {/* 문제 해결 과정 */}
+        {post.ps && (
+          <div className="mb-3">
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">문제 해결 과정</div>
+            <div className="text-[12px] text-slate-600 leading-relaxed px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 whitespace-pre-line">{post.ps}</div>
           </div>
         )}
-        {!post.noteTexts?.length&&!post.ps&&<div style={{fontSize:13,color:'#334155',lineHeight:1.65,whiteSpace:'pre-line'}}>{post.content}</div>}
-        <div style={{display:'flex',alignItems:'center',gap:7,marginTop:6}}>
-          <div style={{flex:1,height:6,borderRadius:999,background:'#E2E8F2',overflow:'hidden'}}>
-            <div style={{height:'100%',borderRadius:999,background:'#5B41EB',width:`${Math.round(doneCount4/CHECKLIST.length*100)}%`,transition:'width .4s'}}/>
+
+        {/* 성찰 진행도 */}
+        <div className="flex items-center gap-2 mt-2">
+          <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div style={{ width:`${Math.round(doneCount/CHECKLIST.length*100)}%`, height:'100%', background: accentColor, borderRadius:999, transition:'width .4s' }}/>
           </div>
-          <span style={{fontSize:10,fontWeight:700,color:'#5B41EB',whiteSpace:'nowrap'}}>{doneCount4}/{CHECKLIST.length}</span>
+          <span className="text-[10px] font-bold text-slate-400">{doneCount}/{CHECKLIST.length}</span>
         </div>
       </div>
-      {post.comments?.map((c,i)=>(
-        <div key={i} style={{fontSize:12,color:'#64748B',padding:'2px 12px 2px 16px',borderLeft:`2px solid ${pal.border}`,margin:'0 12px 3px',lineHeight:1.6}}>{c}</div>
-      ))}
-      {showCmt&&(
-        <div style={{padding:'0 12px 10px',display:'flex',gap:6}}>
-          <input value={cmtText} onChange={e=>setCmtText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submitCmt()}
-            placeholder="댓글 달기..." style={{flex:1,padding:'7px 11px',borderRadius:999,border:`1px solid ${pal.border}`,fontSize:12,background:'#fff',outline:'none',fontFamily:'inherit'}}/>
-          <button onClick={submitCmt} style={{fontSize:12,fontWeight:700,color:'#fff',background:'#5B41EB',border:'none',borderRadius:8,cursor:'pointer',padding:'7px 12px',fontFamily:'inherit',minHeight:36}}>게시</button>
+
+      {/* 댓글 목록 */}
+      {post.comments?.length > 0 && (
+        <div className="px-5 pb-2 space-y-1.5">
+          {post.comments.map((c, i) => {
+            const isObj = typeof c === 'object' && c !== null
+            const text = isObj ? c.text : c
+            const author = isObj ? c.author : null
+            const isMyComment = isObj && c.author === myName
+            return (
+              <div key={i} className="bg-slate-50 px-3 py-1.5 rounded-xl text-[11px] text-slate-600 border border-slate-100 flex items-start justify-between gap-1">
+                <span>
+                  {author && <span className="font-black mr-1" style={{color: accentColor}}>{author}</span>}
+                  {text}
+                </span>
+                {isMyComment && onDeleteComment && (
+                  <button onClick={() => onDeleteComment(post.id, c)} className="text-slate-300 hover:text-red-500 transition-colors p-0.5 flex-shrink-0 mt-0.5">
+                    <X size={11} strokeWidth={2.5}/>
+                  </button>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
-      <div style={{padding:'7px 10px 9px',display:'flex',alignItems:'center',gap:5,borderTop:`1px solid ${pal.border}50`}}>
-        <button onClick={toggleLike} style={{background:'none',border:'none',cursor:'pointer',fontSize:17,lineHeight:1,transition:'transform .15s',padding:'4px',minWidth:36,minHeight:36}}
-          onMouseEnter={e=>e.currentTarget.style.transform='scale(1.25)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
-          {isLiked?'♥':'♡'}
-        </button>
-        <button onClick={()=>setShowCmt(s=>!s)} style={{background:'none',border:'none',cursor:'pointer',fontSize:15,lineHeight:1,color:'#94A3B8',padding:'4px',minWidth:36,minHeight:36}}>댓글</button>
-        {(post.likes>0||post.comments?.length>0)&&(
-          <span style={{fontSize:11,color:'#94A3B8'}}>
-            {post.likes>0&&<b style={{color:'#475569'}}>♥ {post.likes}</b>}
-            {post.likes>0&&post.comments?.length>0&&' · '}
-            {post.comments?.length>0&&`댓글 ${post.comments.length}`}
-          </span>
+
+      {/* 댓글 입력 */}
+      <AnimatePresence>
+        {showCmt && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+              marginTop: 6, background: '#fff', borderRadius: 16,
+              border: '1px solid #e2e3e5', boxShadow: '0 8px 24px rgba(0,0,0,.10)', padding: 14,
+            }}
+          >
+            <div className="flex gap-2">
+              <input
+                value={cmtText}
+                onChange={e => setCmtText(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && submitCmt()}
+                placeholder="의견을 남겨 주세요."
+                className="flex-1 px-3 py-2 bg-white border border-[#E2E3E5] rounded-[8px] text-[11px] outline-none focus:border-gsp-400 placeholder:text-[#8A949E]"
+              />
+              <button onClick={submitCmt} className="bg-gsp-600 text-white px-3 py-2 rounded-full text-[11px] font-bold">등록</button>
+            </div>
+          </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* 액션 바 (Step1과 동일) */}
+      <div className="px-5 py-3 border-t border-slate-50 flex items-center gap-4">
+        <button onClick={toggleLike} className="flex items-center gap-1.5 group">
+          <Heart className={`w-4 h-4 transition-all ${isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-300 group-hover:text-slate-400'}`} />
+          <span className="text-[11px] font-extrabold text-slate-400">{post.likes || 0}</span>
+        </button>
+        <button onClick={() => setShowCmt(s => !s)} className="flex items-center gap-1.5 group">
+          <MessageCircle className={`w-4 h-4 transition-colors ${showCmt ? 'text-gsp-500' : 'text-slate-300 group-hover:text-slate-400'}`} />
+          <span className="text-[11px] font-extrabold text-slate-400">{post.comments?.length || 0}</span>
+        </button>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
+// ── WorkPanel (작업 패널) ─────────────────────────────────────────────────
 function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onStep4State }) {
   const [loadingImg, setLoadingImg] = useState(false)
   const [noteInput,  setNoteInput]  = useState('')
@@ -136,14 +215,19 @@ function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onSt
   return (
     <div style={{display:'flex',flexDirection:'column',overflow:'hidden',flex:1}}>
       <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch',padding:14}}>
-        {/* 그래프 썸네일 */}
+
+        {/* 완성된 그래프 */}
         <div style={{background:'#EEEEF3',border:'1px solid #e2e3e5',borderRadius:12,padding:12,marginBottom:12}}>
           <div style={{fontSize:12,fontWeight:700,color:'#5B41EB',marginBottom:6}}>{chartConfig.title||'완성된 그래프'}</div>
-          {hasData?(
-            <div style={{transform:'scale(0.82)',transformOrigin:'top left',width:'122%',pointerEvents:'none'}}>
-              <ChartComp data={chartData}/>
+          {hasData ? (
+            <div style={{transform:'scale(0.82)',transformOrigin:'top left',width:'122%',pointerEvents:'none',overflow:'hidden'}}>
+              {/* Step4 전용: PieChart는 compact 모드(하단 범례), 나머지는 기본 */}
+              {chartConfig.type === 'pie'
+                ? <ChartComp data={chartData} compact={true}/>
+                : <ChartComp data={chartData}/>
+              }
             </div>
-          ):(
+          ) : (
             <div style={{fontSize:12,color:'#94A3B8',textAlign:'center',padding:'8px 0'}}>설문 조사 결과를 그래프로 나타내 주세요.</div>
           )}
           <button onClick={doLoadCanvas} disabled={loadingImg} style={{marginTop:8,width:'100%',padding:'6px',borderRadius:7,border:'1px solid #e2e3e5',background:'#fff',color:'#5B41EB',fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'inherit',minHeight:36}}>
@@ -157,18 +241,18 @@ function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onSt
           <div style={{fontSize:12,fontWeight:700,color:'#64748B',marginBottom:7}}>알 수 있는 사실</div>
           <div style={{display:'flex',gap:6,marginBottom:8}}>
             <input value={noteInput} onChange={e=>setNoteInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addNote()}
-              placeholder="예: 과자를 좋아하는 학생이 가장 많다"
+              placeholder="예: 과자를 좋아하는 학생이 가장 많다."
               style={{flex:1,padding:'8px 10px',borderRadius:8,border:'1px solid #F1F5F9',fontSize:12,background:'#F8FAFC',outline:'none',fontFamily:'inherit',minHeight:40}}
               onFocus={e=>e.target.style.borderColor='#5B41EB'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
             <button onClick={addNote} style={{padding:'8px 12px',borderRadius:8,background:'#1E293B',color:'#fff',border:'none',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit',flexShrink:0,minHeight:40}}>추가</button>
           </div>
-          {notes.length>0?(
+          {notes.length>0 ? (
             <div style={{display:'flex',flexDirection:'column',gap:5}}>
               {notes.map((n,i)=>(
-                <div key={n.id} className="note-chip-wrap" style={{display:'flex',alignItems:'flex-start',gap:5,padding:'6px 10px',borderRadius:8,fontSize:12,fontWeight:500,lineHeight:1.5,background:CHART_COLORS[i%CHART_COLORS.length]+'12',border:`1px solid ${CHART_COLORS[i%CHART_COLORS.length]}25`,position:'relative'}}>
+                <div key={n.id} style={{display:'flex',alignItems:'flex-start',gap:5,padding:'6px 10px',borderRadius:8,fontSize:12,fontWeight:500,lineHeight:1.5,background:CHART_COLORS[i%CHART_COLORS.length]+'12',border:`1px solid ${CHART_COLORS[i%CHART_COLORS.length]}25`,position:'relative'}}>
                   <div style={{width:5,height:5,borderRadius:'50%',marginTop:6,flexShrink:0,background:CHART_COLORS[i%CHART_COLORS.length]}}/>
                   <span style={{flex:1}}>{n.text}</span>
-                  <button onClick={()=>removeNote(n.id)} className="note-chip-delete" style={{position:'absolute',top:-7,right:-7,width:18,height:18,borderRadius:'50%',background:'#EF4444',color:'#fff',border:'1px solid #fff',fontSize:9,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 4px rgba(239,68,68,.4)',fontFamily:'inherit',lineHeight:1}}>✕</button>
+                  <button onClick={()=>removeNote(n.id)} style={{position:'absolute',top:-7,right:-7,width:18,height:18,borderRadius:'50%',background:'#EF4444',color:'#fff',border:'1px solid #fff',fontSize:9,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 4px rgba(239,68,68,.4)',fontFamily:'inherit',lineHeight:1}}>✕</button>
                 </div>
               ))}
             </div>
@@ -186,7 +270,7 @@ function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onSt
             onFocus={e=>e.target.style.borderColor='#5B41EB'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
         </div>
 
-        {/* 체크리스트 */}
+        {/* 성찰 체크리스트 */}
         <div style={{marginBottom:12}}>
           <div style={{fontSize:12,fontWeight:700,color:'#64748B',marginBottom:7}}>성찰 체크리스트</div>
           {CHECKLIST.map((item,i)=>(
@@ -221,19 +305,25 @@ function WorkPanel({ code, user, items, dataTable, chartConfig, step4State, onSt
   )
 }
 
-function BoardPanel({ posts4, user, onLike4, onComment4, onDelete4, isMobile }) {
+// ── BoardPanel (공유 보드) ─────────────────────────────────────────────────
+function BoardPanel({ posts4, user, onLike4, onComment4, onDeleteComment4, onDelete4, isMobile }) {
   return (
     <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch',padding: isMobile ? '12px 12px 16px' : '14px 16px 20px',background:'#F3F4F8',position:'relative'}}>
-      {posts4&&posts4.length>0?(
+      {posts4&&posts4.length>0 ? (
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)',gap:12,alignItems:'start'}}>
           {posts4.map(post=>(
-            <PadletStep4Card key={post.id} post={post} myName={user.name} onLike={onLike4} onComment={onComment4} onDelete={onDelete4}/>
+            <PadletStep4Card
+              key={post.id} post={post} myName={user.name}
+              onLike={onLike4} onComment={onComment4}
+              onDeleteComment={onDeleteComment4}
+              onDelete={onDelete4}
+            />
           ))}
         </div>
       ):(
         <div style={{textAlign:'center',padding:'40px 20px',color:'#94A3B8'}}>
-          <div style={{fontSize:44,marginBottom:10}}></div>
-          <div style={{fontSize:15,fontWeight:700,color:'#64748B',marginBottom:6}}>아직 공유된 해석이 없어요</div>
+          <div style={{fontSize:44,marginBottom:10}}>📋</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#64748B',marginBottom:6}}>아직 공유된 해석이 없어요.</div>
           <div style={{fontSize:13}}>해석을 작성하고<br/><b>보드에 공유하기</b>를 눌러 보세요!</div>
         </div>
       )}
@@ -241,15 +331,15 @@ function BoardPanel({ posts4, user, onLike4, onComment4, onDelete4, isMobile }) 
   )
 }
 
-export default function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4State, posts4, onLike4, onComment4, onDelete4 }) {
+// ── Step4 메인 ────────────────────────────────────────────────────────────
+export default function Step4({ user, code, items, dataTable, chartConfig, step4State, onStep4State, posts4, onLike4, onComment4, onDelete4, onDeleteComment4 }) {
   const device   = useDevice()
   const isMobile = device === 'mobile'
 
-  // 모바일: 탭으로 작업패널/보드 전환
   const [mobileTab, setMobileTab] = useState('work')
   const [collapsed, setCollapsed] = useState(false)
 
-  const step4Info = { bg:'#EEEEF3', bd:'#e2e3e5', c:'#5B41EB', dk:'#4833c9' }
+  const step4Info = { c:'#5B41EB', dk:'#4833c9' }
 
   return (
     <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',background:'#F3F4F8'}}>
@@ -269,17 +359,15 @@ export default function Step4({ user, code, items, dataTable, chartConfig, step4
         </div>
       </header>
 
-      {/* 모바일: 탭 전환 / PC·태블릿: 좌우 분할 */}
       {isMobile ? (
         <>
-          {/* 모바일 탭 바 */}
           <div style={{display:'flex',borderBottom:'1px solid #e2e3e5',flexShrink:0,background:'#fff'}}>
             {[['work','내 해석 작성'],['board','공유 보드']].map(([id,label])=>(
               <button key={id} onClick={()=>setMobileTab(id)} style={{
                 flex:1,padding:'10px 0',fontSize:13,fontWeight:mobileTab===id?800:600,
                 color:mobileTab===id?step4Info.dk:'#8C7B6E',
                 borderBottom:`2px solid ${mobileTab===id?step4Info.c:'transparent'}`,
-                marginBottom:-1,background:'none',border:'none',
+                background:'none',border:'none',
                 borderBottom:`2px solid ${mobileTab===id?step4Info.c:'transparent'}`,
                 cursor:'pointer',fontFamily:'inherit',minHeight:44,
               }}>{label}</button>
@@ -288,11 +376,10 @@ export default function Step4({ user, code, items, dataTable, chartConfig, step4
           {mobileTab==='work' ? (
             <WorkPanel code={code} user={user} items={items} dataTable={dataTable} chartConfig={chartConfig} step4State={step4State} onStep4State={onStep4State}/>
           ) : (
-            <BoardPanel posts4={posts4} user={user} onLike4={onLike4} onComment4={onComment4} onDelete4={onDelete4} isMobile={true}/>
+            <BoardPanel posts4={posts4} user={user} onLike4={onLike4} onComment4={onComment4} onDeleteComment4={onDeleteComment4} onDelete4={onDelete4} isMobile={true}/>
           )}
         </>
       ) : (
-        /* PC · 태블릿: 기존 좌우 분할 */
         <div style={{flex:1,display:'flex',overflow:'hidden'}}>
           <div style={{
             width: collapsed ? 48 : 'clamp(260px, 32%, 340px)',
@@ -308,7 +395,7 @@ export default function Step4({ user, code, items, dataTable, chartConfig, step4
               <WorkPanel code={code} user={user} items={items} dataTable={dataTable} chartConfig={chartConfig} step4State={step4State} onStep4State={onStep4State}/>
             )}
           </div>
-          <BoardPanel posts4={posts4} user={user} onLike4={onLike4} onComment4={onComment4} onDelete4={onDelete4} isMobile={false}/>
+          <BoardPanel posts4={posts4} user={user} onLike4={onLike4} onComment4={onComment4} onDeleteComment4={onDeleteComment4} onDelete4={onDelete4} isMobile={false}/>
         </div>
       )}
     </div>

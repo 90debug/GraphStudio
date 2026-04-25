@@ -6,7 +6,7 @@ import {
   getOrCreateRoom, subscribeRoom, subscribeStep1Posts, subscribeStep4Posts,
   updateRoomStep, setSyncLeader, clearSyncLeader, updateDataTable, updateChartConfig,
   setSelectedPost, toggleLike1, addComment1, deleteStep1Post,
-  toggleLike4, addComment4, deleteStep4Post,
+  toggleLike4, addComment4, deleteComment4, deleteStep4Post,
   updatePresence, subscribePresence, removePresence,
   subscribeSurvey, subscribeSurveyResponses,
   subscribeStrokes, clearStrokes,
@@ -106,7 +106,8 @@ export default function ActivityPage() {
   }
 
   async function handleLike1(postId, nowLiking) { await toggleLike1(userRef.current?.code, postId, user?.name, nowLiking) }
-  async function handleComment1(postId, text) { await addComment1(userRef.current?.code, postId, text) }
+  async function handleComment1(postId, text) { await addComment1(userRef.current?.code, postId, { author: user.name, text }) }
+  async function handleDeleteComment1(postId, comment) { try { await deleteComment1(userRef.current?.code, postId, comment) } catch {} }
   async function handleDelete1(postId) { try { await deleteStep1Post(userRef.current?.code, postId); setToast('삭제 완료') } catch (e) { setToast('실패') } }
   
   // 다른 사용자의 주제 선정 투표 요청을 실시간으로 감지하여 VoteModal 표시
@@ -160,7 +161,8 @@ export default function ActivityPage() {
     setVoteModal(false)
   }
   async function handleLike4(postId, nowLiking) { await toggleLike4(userRef.current?.code, postId, user?.name, nowLiking) }
-  async function handleComment4(postId, text) { await addComment4(userRef.current?.code, postId, text) }
+  async function handleComment4(postId, text) { await addComment4(userRef.current?.code, postId, { author: user.name, text }) }
+  async function handleDeleteComment4(postId, comment) { try { await deleteComment4(userRef.current?.code, postId, comment) } catch {} }
   async function handleDelete4(postId) { try { await deleteStep4Post(userRef.current?.code, postId); setToast('삭제 완료') } catch { setToast('삭제 실패') } }
 
   if (loading || !user) return (
@@ -202,10 +204,10 @@ export default function ActivityPage() {
       <main className="flex-1 relative overflow-hidden flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div key={activeStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1 flex flex-col overflow-hidden">
-            {activeStep === 1 && <Step1 user={user} code={user.code} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
+            {activeStep === 1 && <Step1 user={user} code={user.code} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} onDeleteComment={handleDeleteComment1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
             {activeStep === 2 && <Step2 user={user} code={user.code} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
             {activeStep === 3 && <Step3 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={handleChartConfig} strokes={strokes} currentDrawer={room.currentDrawer} drawMode={room.drawMode} onDrawMode={handleDrawMode}/>}
-            {activeStep === 4 && <Step4 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4}/>}
+            {activeStep === 4 && <Step4 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4} onDeleteComment4={handleDeleteComment4}/>}
           </motion.div>
         </AnimatePresence>
 

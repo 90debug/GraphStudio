@@ -26,6 +26,7 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
   const [color,  setColorUI] = useState('#1C1917')
   const [width,  setWidthUI] = useState(4)
   const [saving, setSaving]  = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   function setTool(v)  { toolRef.current  = v; setToolUI(v)  }
   function setColor(v) { colorRef.current = v; setColorUI(v) }
@@ -369,6 +370,18 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
 
       {/* Canvas */}
       <div style={{position:'relative',width:'100%',flex: isMobile ? '1' : undefined}}>
+        {/* 전체 화면 버튼 */}
+        <button
+          onClick={()=>setIsFullscreen(true)}
+          title="전체 화면"
+          style={{position:'absolute',top:8,right:8,zIndex:10,width:32,height:32,borderRadius:8,
+            background:'rgba(255,255,255,0.9)',border:'1px solid #e2e3e5',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            cursor:'pointer',fontSize:14,color:'#64748B',fontFamily:'inherit',
+            boxShadow:'0 2px 8px rgba(0,0,0,0.08)',transition:'all .15s'}}
+          onMouseEnter={e=>e.currentTarget.style.background='#5B41EB'}
+          onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.9)'}
+        >⛶</button>
         <canvas ref={canvasRef} width={800} height={480}
           style={{width:'100%',borderRadius:10,border:'1.5px solid #dbdbdb',background:'#fff',
             cursor:tool==='eraser'?'cell':'crosshair',
@@ -390,8 +403,74 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
       {isMobile && (
         <div style={{marginTop:12,paddingBottom:4}}>
           <Btn onClick={doSave} color="green" full disabled={saving} style={{width:'100%'}}>
-            {saving?'저장 중...':'저장하기 💾'}
+            {saving?'저장 중...':'저장하기'}
           </Btn>
+        </div>
+      )}
+
+      {/* 전체화면 오버레이 */}
+      {isFullscreen && (
+        <div style={{
+          position:'fixed',inset:0,zIndex:9998,
+          background:'#fff',
+          display:'flex',flexDirection:'column',
+          padding:12,
+        }}>
+          {/* 전체화면 헤더 */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10,flexShrink:0}}>
+            <span style={{fontSize:15,fontWeight:800,color:'#1E293B'}}>직접 그리기 — 전체 화면</span>
+            <button
+              onClick={()=>setIsFullscreen(false)}
+              style={{padding:'6px 16px',borderRadius:999,background:'#5B41EB',color:'#fff',
+                border:'none',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}
+            >닫기</button>
+          </div>
+          {/* 도구 영역 */}
+          <div style={{flexShrink:0,marginBottom:8}}>
+            <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
+              {toolBtns.map(tb=>(
+                <button key={tb.id} onClick={()=>setTool(tb.id)} style={{
+                  padding:'5px 13px',borderRadius:8,fontSize:12,fontWeight:700,fontFamily:'inherit',
+                  background:tool===tb.id?tb.clr+'18':'transparent',
+                  border:`1.5px solid ${tool===tb.id?tb.clr:'#E6D8C8'}`,
+                  color:tool===tb.id?tb.clr:'#8C7B6E',cursor:'pointer',
+                }}>{tb.label}</button>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap',marginBottom:6}}>
+              <div style={{display:'flex',gap:4}}>
+                {DRAW_COLORS.map(clr=>(
+                  <button key={clr} onClick={()=>{setColor(clr);if(tool==='eraser')setTool('pen')}} style={{
+                    width:24,height:24,borderRadius:'50%',
+                    background:clr==='#FFFFFF'?'#f5f5f5':clr,
+                    border:`3px solid ${color===clr&&tool!=='eraser'?'#3D2B1F':'transparent'}`,
+                    cursor:'pointer',boxShadow:clr==='#FFFFFF'?'inset 0 0 0 1px #dbdbdb':'none',
+                  }}/>
+                ))}
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:6,fontSize:13,color:'#8C7B6E'}}>
+                굵기
+                <input type="range" min="2" max="18" value={width} step="1"
+                  onChange={e=>setWidth(+e.target.value)} style={{width:64,accentColor:'#FF8C42'}}/>
+              </div>
+              <div style={{display:'flex',gap:6}}>
+                <Btn onClick={()=>{if(!confirm('내 그림만 지울까요?'))return;deleteMyStrokes(code,userName)}} color="gray" sm>내 그림만 지우기</Btn>
+                <Btn onClick={()=>{if(!confirm('모든 그림을 지울까요?'))return;clearStrokes(code);onSnapshotImg&&onSnapshotImg(null)}} color="gray" sm>전체 지우기</Btn>
+                <Btn onClick={doSave} color="green" sm disabled={saving}>{saving?'저장 중...':'저장하기'}</Btn>
+              </div>
+            </div>
+          </div>
+          {/* 전체화면 캔버스 (기존 캔버스 참조 재사용) */}
+          <div style={{position:'relative',flex:1,minHeight:0}}>
+            <canvas ref={canvasRef} width={800} height={480}
+              style={{width:'100%',height:'100%',borderRadius:10,border:'1.5px solid #dbdbdb',
+                background:'#fff',cursor:tool==='eraser'?'cell':'crosshair',
+                touchAction:'none',display:'block',objectFit:'contain'}}
+              onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
+            />
+            <canvas ref={overlayRef} width={800} height={480}
+              style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',borderRadius:10,pointerEvents:'none'}}/>
+          </div>
         </div>
       )}
     </div>
