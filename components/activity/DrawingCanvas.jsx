@@ -263,17 +263,18 @@ export default function DrawingCanvas({
   // ── 캔버스 CSS: 전체화면 여부에 따라 size 조정 ──
   const canvasStyle = isFullscreen
     ? {
-        // 전체화면: 종횡비 유지하며 최대한 크게
-        maxWidth: '100%',
+        // 전체화면: width 100%로 가로를 꽉 채우고, aspect-ratio로 비율 유지
+        // → 스크롤 없이 화면에 최대한 맞게 표시
+        width: '100%',
+        aspectRatio: '800 / 480',
         maxHeight: '100%',
-        width: 'auto',
-        height: 'auto',
         display: 'block',
         borderRadius: 8,
         border: '1px solid #dbdbdb',
         background: '#fff',
         cursor: tool==='eraser'?'cell':'crosshair',
         touchAction: 'none',
+        objectFit: 'contain',
       }
     : {
         width: '100%',
@@ -359,8 +360,10 @@ export default function DrawingCanvas({
         flex: 1,
         minHeight: isFullscreen ? 0 : undefined,
         display: 'flex',
-        alignItems: isFullscreen ? 'center' : undefined,
-        justifyContent: isFullscreen ? 'center' : undefined,
+        // 전체화면: 위에서 아래로 캔버스를 꽉 채움 (가로 100%, 세로 aspect-ratio)
+        alignItems: isFullscreen ? 'flex-start' : undefined,
+        justifyContent: isFullscreen ? 'stretch' : undefined,
+        overflow: 'hidden',
       }}>
         <canvas ref={canvasRef} width={800} height={480}
           style={canvasStyle}
@@ -370,10 +373,8 @@ export default function DrawingCanvas({
           style={{
             position:'absolute',
             top:0, left:0,
-            width: isFullscreen ? canvasStyle.width : '100%',
-            height: isFullscreen ? canvasStyle.height : '100%',
-            maxWidth: isFullscreen ? '100%' : undefined,
-            maxHeight: isFullscreen ? '100%' : undefined,
+            width: '100%',
+            height: '100%',
             borderRadius:isFullscreen?8:10,
             pointerEvents:'none',
           }}

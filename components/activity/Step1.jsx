@@ -131,54 +131,50 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
         )}
       </div>
 
-      {/* 댓글 영역 — absolute로 띄워서 다른 카드에 영향 없음 */}
+      {/* 댓글 영역 — 카드 내 인라인 배치 (absolute 제거로 팝업 영역 밖 노출 문제 해소) */}
       <AnimatePresence>
         {showCmt && (
           <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.18 }}
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              zIndex: 50,
-              marginTop: 6,
-              background: '#fff',
-              borderRadius: 16,
-              border: '1px solid #e2e3e5',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
-              padding: 14,
-            }}
+            style={{ overflow: 'hidden' }}
           >
-            <div className="space-y-2">
-              {post.comments?.map((c, i) => {
-                const isObj = typeof c === 'object' && c !== null
-                const text = isObj ? c.text : c
-                const author = isObj ? c.author : null
-                const isMyComment = isObj && c.author === myName
-                return (
-                  <div key={i} className="bg-slate-50 px-3 py-2 rounded-xl text-[11px] text-slate-600 border border-slate-100 flex items-start justify-between gap-1">
-                    <span>
-                      {author && <span className="font-black text-gsp-500 mr-1">{author}</span>}
-                      {text}
-                    </span>
-                    {isMyComment && onDeleteComment && (
-                      <button onClick={() => onDeleteComment(post.id, c)} className="text-slate-300 hover:text-red-500 transition-colors p-0.5 flex-shrink-0 mt-0.5">
-                        <X size={11} strokeWidth={2.5}/>
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-              <div className="flex gap-2 pt-1">
-                <input value={cmtText}
-                  onChange={e => setCmtText(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && submitCmt()}
-                  placeholder="의견을 남겨 주세요." className="flex-1 px-3 py-2 bg-white border border-[#E2E3E5] rounded-[8px] text-[11px] outline-none focus:border-gsp-400 placeholder:text-[#8A949E]" />
-                <button onClick={submitCmt} className="bg-gsp-600 text-white px-3 py-2 rounded-full text-[11px] font-bold" style={{whiteSpace:'nowrap',flexShrink:0}}>등록</button>
+            <div style={{borderTop:'1px solid #f1f5f9', padding:'10px 14px 12px', background:'#fafafa', borderRadius:'0 0 20px 20px'}}>
+              <div className="space-y-2">
+                {post.comments?.map((cmt, i) => {
+                  const isObj = typeof cmt === 'object' && cmt !== null
+                  const text = isObj ? cmt.text : cmt
+                  const author = isObj ? cmt.author : null
+                  const isMyComment = isObj && cmt.author === myName
+                  return (
+                    <div key={i} className="bg-white px-3 py-2 rounded-xl text-[11px] text-slate-600 border border-slate-100 flex items-start justify-between gap-1">
+                      <span>
+                        {author && <span className="font-black text-gsp-500 mr-1">{author}</span>}
+                        {text}
+                      </span>
+                      {isMyComment && onDeleteComment && (
+                        <button onClick={() => onDeleteComment(post.id, cmt)} className="text-slate-300 hover:text-red-500 transition-colors p-0.5 flex-shrink-0 mt-0.5">
+                          <X size={11} strokeWidth={2.5}/>
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+                <div style={{display:'flex', gap:8, paddingTop:4}}>
+                  <input
+                    value={cmtText}
+                    onChange={e => setCmtText(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && submitCmt()}
+                    placeholder="의견을 남겨 주세요."
+                    style={{flex:1, padding:'8px 12px', borderRadius:999, border:'1px solid #E2E3E5', fontSize:11, outline:'none', fontFamily:'inherit', minWidth:0, background:'#fff'}}
+                  />
+                  <button
+                    onClick={submitCmt}
+                    style={{padding:'8px 14px', borderRadius:999, background:'#5B41EB', color:'#fff', border:'none', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', flexShrink:0, minHeight:36}}
+                  >등록</button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -322,7 +318,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
               initial={{ opacity: 0, scale: 0.95, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
-              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4"
+              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4" style={{maxHeight:'calc(100dvh - 80px)',overflowY:'auto'}}
             >
               {/* 모달 헤더 */}
               <div className="flex items-start justify-between">
