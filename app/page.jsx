@@ -335,6 +335,8 @@ export default function JoinPage() {
             width: '100%',
             maxWidth: '320px',
             marginTop: 'auto',
+            position: 'relative',
+            zIndex: 2,
           }}>
             <div style={{
               background: 'var(--color-cool-gray-100)',
