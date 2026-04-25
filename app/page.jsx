@@ -339,20 +339,21 @@ export default function JoinPage() {
             zIndex: 2,
           }}>
             <div style={{
-              background: 'var(--color-cool-gray-100)',
-              borderRadius: '8px',
+              background: 'var(--color-purple-400)',
+              borderRadius: '12px',
               padding: 'var(--spacing-16) var(--spacing-20)',
               display: 'flex',
               alignItems: 'center',
               gap: 'var(--spacing-16)',
+              boxShadow: '0 4px 16px rgba(91,65,235,0.25)',
             }}>
               {/* 아바타 */}
               <div style={{
-                width: '48px',
-                height: '48px',
+                width: '44px',
+                height: '44px',
                 borderRadius: '100px',
-                background: 'var(--color-purple-300)',
-                border: '1px solid var(--color-cool-gray-200)',
+                background: 'rgba(255,255,255,0.25)',
+                border: '1.5px solid rgba(255,255,255,0.5)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -366,22 +367,25 @@ export default function JoinPage() {
               </div>
 
               {/* 이름 + 코드 */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
                 <p style={{
                   fontFamily: 'var(--font-body)',
                   fontSize: 'var(--text-body-medium-17-size)',
-                  fontWeight: 600,
-                  color: 'var(--color-black)',
+                  fontWeight: 700,
+                  color: 'var(--color-white)',
                   lineHeight: 1.5,
                   letterSpacing: '-0.36px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}>
                   {lastGroup.name}
                 </p>
                 <p style={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: '15px',
-                  fontWeight: 400,
-                  color: 'var(--color-cool-gray-500)',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: 'rgba(255,255,255,0.75)',
                   lineHeight: 1.4,
                   letterSpacing: '-0.32px',
                 }}>
@@ -399,17 +403,18 @@ export default function JoinPage() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 'var(--spacing-6)',
-                  padding: 'var(--spacing-8) var(--spacing-16)',
-                  background: 'var(--color-white)',
-                  border: '1px solid var(--color-purple-500)',
+                  padding: '10px 18px',
+                  background: 'var(--color-purple-500)',
+                  border: 'none',
                   borderRadius: '999px',
                   fontFamily: 'var(--font-body)',
-                  fontSize: '16px',
-                  fontWeight: 600,
-                  color: 'var(--color-purple-500)',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: 'var(--color-white)',
                   cursor: 'pointer',
                   flexShrink: 0,
                   whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 8px rgba(72,51,201,0.4)',
                 }}
               >
                 다시 참여

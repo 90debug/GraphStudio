@@ -107,7 +107,11 @@ export default function ActivityPage() {
 
   async function handleLike1(postId, nowLiking) { await toggleLike1(userRef.current?.code, postId, user?.name, nowLiking) }
   async function handleComment1(postId, text) { await addComment1(userRef.current?.code, postId, { author: user.name, text }) }
-  async function handleDeleteComment1(postId, comment) { await deleteComment1(userRef.current?.code, postId, comment) }
+  async function handleDeleteComment1(postId, comment) {
+    const code = user?.code || userRef.current?.code
+    if (!code) { setToast('오류: 방 코드를 찾을 수 없어요.'); return }
+    try { await deleteComment1(code, postId, comment); setToast('댓글이 삭제되었어요.') } catch(e) { setToast('댓글 삭제 중 오류가 발생했어요.') }
+  }
   async function handleDelete1(postId) { try { await deleteStep1Post(userRef.current?.code, postId); setToast('삭제 완료') } catch (e) { setToast('실패') } }
   
   // 다른 사용자의 주제 선정 투표 요청을 실시간으로 감지하여 VoteModal 표시
@@ -162,7 +166,11 @@ export default function ActivityPage() {
   }
   async function handleLike4(postId, nowLiking) { await toggleLike4(userRef.current?.code, postId, user?.name, nowLiking) }
   async function handleComment4(postId, text) { await addComment4(userRef.current?.code, postId, { author: user.name, text }) }
-  async function handleDeleteComment4(postId, comment) { await deleteComment4(userRef.current?.code, postId, comment) }
+  async function handleDeleteComment4(postId, comment) {
+    const code = user?.code || userRef.current?.code
+    if (!code) { setToast('오류: 방 코드를 찾을 수 없어요.'); return }
+    try { await deleteComment4(code, postId, comment); setToast('댓글이 삭제되었어요.') } catch(e) { setToast('댓글 삭제 중 오류가 발생했어요.') }
+  }
   async function handleDelete4(postId) { try { await deleteStep4Post(userRef.current?.code, postId); setToast('삭제 완료') } catch { setToast('삭제 실패') } }
 
   if (loading || !user) return (
