@@ -104,59 +104,6 @@ function PadletStep4Card({ post, myName, onLike, onComment, onDeleteComment, onD
         </div>
       </div>
 
-      {/* 댓글 목록 */}
-      {post.comments?.length > 0 && (
-        <div className="px-5 pb-2 space-y-1.5">
-          {post.comments.map((c, i) => {
-            const isObj = typeof c === 'object' && c !== null
-            const text = isObj ? c.text : c
-            const author = isObj ? c.author : null
-            const isMyComment = isObj && c.author === myName
-            return (
-              <div key={i} className="bg-slate-50 px-3 py-1.5 rounded-xl text-[11px] text-slate-600 border border-slate-100 flex items-start justify-between gap-1">
-                <span>
-                  {author && <span className="font-black mr-1" style={{color: accentColor}}>{author}</span>}
-                  {text}
-                </span>
-                {isMyComment && onDeleteComment && (
-                  <button onClick={() => onDeleteComment(post.id, c)} className="text-slate-300 hover:text-red-500 transition-colors p-0.5 flex-shrink-0 mt-0.5">
-                    <X size={11} strokeWidth={2.5}/>
-                  </button>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* 댓글 입력 */}
-      <AnimatePresence>
-        {showCmt && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.18 }}
-            style={{
-              position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
-              marginTop: 6, background: '#fff', borderRadius: 16,
-              border: '1px solid #e2e3e5', boxShadow: '0 8px 24px rgba(0,0,0,.10)', padding: 14,
-            }}
-          >
-            <div className="flex gap-2">
-              <input
-                value={cmtText}
-                onChange={e => setCmtText(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && submitCmt()}
-                placeholder="의견을 남겨 주세요."
-                className="flex-1 px-3 py-2 bg-white border border-[#E2E3E5] rounded-[8px] text-[11px] outline-none focus:border-gsp-400 placeholder:text-[#8A949E]"
-              />
-              <button onClick={submitCmt} className="bg-gsp-600 text-white px-3 py-2 rounded-full text-[11px] font-bold">등록</button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* 액션 바 (Step1과 동일) */}
       <div className="px-5 py-3 border-t border-slate-50 flex items-center gap-4">
         <button onClick={toggleLike} className="flex items-center gap-1.5 group">
@@ -168,6 +115,56 @@ function PadletStep4Card({ post, myName, onLike, onComment, onDeleteComment, onD
           <span className="text-[11px] font-extrabold text-slate-400">{post.comments?.length || 0}</span>
         </button>
       </div>
+
+      {/* 댓글 영역 — Step1과 동일한 인라인 슬라이드 */}
+      <AnimatePresence>
+        {showCmt && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.18 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{borderTop:'1px solid #f1f5f9', padding:'10px 14px 12px', background:'#fafafa', borderRadius:'0 0 20px 20px'}}>
+              <div className="space-y-2">
+                {post.comments?.map((c, i) => {
+                  const isObj = typeof c === 'object' && c !== null
+                  const text = isObj ? c.text : c
+                  const author = isObj ? c.author : null
+                  const isMyComment = isObj && c.author === myName
+                  return (
+                    <div key={i} className="bg-white px-3 py-2 rounded-xl text-[11px] text-slate-600 border border-slate-100 flex items-start justify-between gap-1">
+                      <span>
+                        {author && <span className="font-black text-gsp-500 mr-1">{author}</span>}
+                        {text}
+                      </span>
+                      {isMyComment && onDeleteComment && (
+                        <button onClick={() => onDeleteComment(post.id, c)} className="text-slate-300 hover:text-red-500 transition-colors p-0.5 flex-shrink-0 mt-0.5">
+                          <X size={11} strokeWidth={2.5}/>
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+                <div style={{display:'flex', gap:8, paddingTop:4}}>
+                  <input
+                    value={cmtText}
+                    onChange={e => setCmtText(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && submitCmt()}
+                    placeholder="의견을 남겨 주세요."
+                    style={{flex:1, padding:'8px 12px', borderRadius:999, border:'1px solid #E2E3E5', fontSize:11, outline:'none', fontFamily:'inherit', minWidth:0, background:'#fff'}}
+                  />
+                  <button
+                    onClick={submitCmt}
+                    style={{padding:'8px 14px', borderRadius:999, background:'#5B41EB', color:'#fff', border:'none', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', flexShrink:0, minHeight:36}}
+                  >등록</button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }

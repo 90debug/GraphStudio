@@ -5,7 +5,7 @@ import { useDevice } from '../../lib/DeviceContext'
 import {
   getOrCreateRoom, subscribeRoom, subscribeStep1Posts, subscribeStep4Posts,
   updateRoomStep, setSyncLeader, clearSyncLeader, updateDataTable, updateChartConfig,
-  setSelectedPost, toggleLike1, addComment1, deleteStep1Post,
+  setSelectedPost, toggleLike1, addComment1, deleteComment1, deleteStep1Post,
   toggleLike4, addComment4, deleteComment4, deleteStep4Post,
   updatePresence, subscribePresence, removePresence,
   subscribeSurvey, subscribeSurveyResponses,

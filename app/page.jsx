@@ -334,7 +334,7 @@ export default function JoinPage() {
           <div style={{
             width: '100%',
             maxWidth: '320px',
-            marginTop: 'auto',
+            marginTop: isMobile ? 'var(--spacing-32)' : 'auto',
             position: 'relative',
             zIndex: 2,
           }}>
