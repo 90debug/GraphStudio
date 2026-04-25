@@ -1,0 +1,484 @@
+/* ── Tailwind 디렉티브 (반드시 최상단) ── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './design-system.css';
+@import './tokens.css';
+
+:root {
+  /* ── 교과서 파스텔 팔레트 ── */
+  --cream:       #FFF9F2;
+  --cream-deep:  #FFEFD8;
+
+  /* Step 색상 — 교과서 단계별 색 */
+  --s1:    #5B41EB;  --s1-bg: #EEEEF3;  --s1-bd: #e2e3e5;  --s1-dk: #4833c9;  --s1-lt: #EEEEF3;
+  --s2:    #4EACD9;  --s2-bg: #EBF7FF;  --s2-bd: #93D1F5;  --s2-dk: #2785B5;  --s2-lt: #C8E9F8;
+  --s3:    #5BBF7A;  --s3-bg: #EDFAF2;  --s3-bd: #90DDB0;  --s3-dk: #2D9950;  --s3-lt: #C0F0D4;
+  --s4:    #C97DE8;  --s4-bg: #F8EFFE;  --s4-bd: #D9A4F5;  --s4-dk: #9A45C2;  --s4-lt: #EAD0F8;
+
+  /* 일반 UI 색 */
+  --blue:        #4EACD9;
+  --blue-bg:     #EBF7FF;
+  --blue-bd:     #93D1F5;
+  --green:       #5BBF7A;
+  --green-bg:    #EDFAF2;
+  --green-bd:    #90DDB0;
+  --purple:      #C97DE8;
+  --purple-bg:   #F8EFFE;
+  --red:         #FF6B7A;
+  --red-bg:      #FFF0F1;
+  --amber:       #5B41EB;
+  --amber-bg:    #EEEEF3;
+
+  --border:      #E6D8C8;
+  --border-soft: #F0E8DC;
+  --text:        #3D2B1F;
+  --text-2:      #8C7B6E;
+  --text-3:      #C4B4A8;
+  --bg:          #FFF9F2;
+  --white:       #FFFFFF;
+
+  /* ── Slate UI ── */
+  --slate-dark:     #0F172A;
+  --slate-dk:       #1E293B;
+  --slate-5:        #334155;
+  --slate-4:        #475569;
+  --slate-2:        #64748B;
+  --slate-3:        #94A3B8;
+  --slate-bd:       #CBD5E1;
+  --slate-bg:       #F1F5F9;
+  --slate-bg-soft:  #F8FAFC;
+
+  /* ── 상태 색상 ── */
+  --state-selected:       #10B981;
+  --state-selected-bg:    #F0FDF4;
+  --state-selected-bd:    #34D399;
+  --state-selected-hdr:   #DCFCE7;
+  --state-selected-av-bg: #D1FAE5;
+  --state-selected-av-fg: #059669;
+
+  --state-mine-badge:  #F59E0B;
+  --state-mine-bg:     #FFFBEB;
+  --state-mine-bd:     #FCD34D;
+  --state-mine-hdr:    #FEF3C7;
+  --state-mine-av-bg:  #FDE68A;
+  --state-mine-av-fg:  #92400E;
+
+  --state-delete:    #EF4444;
+  --state-error:     #DC2626;
+  --state-error-bg:  #FEF2F2;
+  --state-error-bd:  #FECACA;
+
+  --neon-cyan: #22D3EE;
+
+  /* ── 그림자 ── */
+  --shadow-xs: 0 2px 6px rgba(140,90,50,.06);
+  --shadow-sm: 0 3px 12px rgba(140,90,50,.09);
+  --shadow:    0 5px 18px rgba(140,90,50,.11);
+  --shadow-md: 0 8px 28px rgba(140,90,50,.14);
+  --shadow-lg: 0 12px 40px rgba(140,90,50,.16);
+
+  /* ── 모서리 ── */
+  --r-xs:   6px;
+  --r-sm:   12px;
+  --r:      18px;
+  --r-lg:   24px;
+  --r-xl:   32px;
+  --r-pill: 999px;
+
+  /* ── 레이아웃 ── */
+  --header-h:  62px;
+  --strip-h:   30px;
+  --touch:     44px;
+  --pad:       18px;
+  --pad-sm:    12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, textarea, select { font-family: inherit; font-size: 14px; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+::placeholder { color: var(--text-3); }
+
+/* ── 키프레임 ── */
+@keyframes fadeUp    { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+@keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+@keyframes slideIn   { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+@keyframes pulse     { 0%,100%{opacity:1} 50%{opacity:.25} }
+@keyframes pop       { 0%{transform:scale(1)} 40%{transform:scale(1.35)} 100%{transform:scale(1)} }
+@keyframes bounce    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes spin      { to{transform:rotate(360deg)} }
+@keyframes wobble    { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
+@keyframes floatUp   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes heartPop  { 0%{transform:scale(1)} 30%{transform:scale(1.5)} 60%{transform:scale(.9)} 100%{transform:scale(1)} }
+@keyframes starSpin  { 0%{transform:rotate(0) scale(1)} 50%{transform:rotate(180deg) scale(1.2)} 100%{transform:rotate(360deg) scale(1)} }
+@keyframes ripple    { from{transform:scale(0.8);opacity:1} to{transform:scale(2.2);opacity:0} }
+@keyframes shimmer   { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+
+/* ── 유틸 클래스 ── */
+.fade-up  { animation: fadeUp  .28s cubic-bezier(.34,1.3,.64,1) both; }
+.slide-in { animation: slideIn .22s cubic-bezier(.34,1.3,.64,1) both; }
+.bounce   { animation: bounce 2s ease-in-out infinite; }
+.float    { animation: floatUp 3s ease-in-out infinite; }
+
+/* ── 툴바 버튼 ── */
+.toolbar-btn {
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease;
+}
+.toolbar-btn:hover {
+  transform: translateY(-5px) scale(1.14);
+  box-shadow: 0 9px 24px rgba(140,90,50,.22) !important;
+}
+.toolbar-btn:active { transform: translateY(-1px) scale(1.05); }
+
+/* ── PostCard (포스트잇 스타일) ── */
+.postcard-close {
+  opacity: 0;
+  transition: opacity .15s ease;
+  pointer-events: none;
+}
+.postcard-wrap:hover .postcard-close {
+  opacity: 1;
+  pointer-events: auto;
+}
+.postcard-wrap {
+  transition: transform .2s cubic-bezier(.34,1.3,.64,1), box-shadow .2s ease;
+}
+.postcard-wrap:hover {
+  transform: translateY(-4px) rotate(0.5deg);
+  box-shadow: 0 10px 26px rgba(140,90,50,.20) !important;
+}
+
+/* ── 교과서 카드 ── */
+.edu-card {
+  background: var(--white);
+  border: 2.5px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--pad);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── 단계 뱃지 ── */
+.step-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--white);
+  flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(0,0,0,.15);
+}
+
+/* ── 입력창 포커스 링 ── */
+.edu-input:focus {
+  outline: none;
+  border-color: var(--s2) !important;
+  box-shadow: 0 0 0 4px rgba(78,172,217,.18) !important;
+}
+
+/* ── 점선 구분선 ── */
+.dotted-sep {
+  border: none;
+  border-top: 2.5px dashed var(--border);
+  margin: 14px 0;
+}
+
+/* ── 말풍선 ── */
+.speech-bubble {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  padding: 9px 15px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: var(--shadow-xs);
+  border: 2px solid var(--border);
+}
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 18px;
+  border-width: 10px 8px 0;
+  border-style: solid;
+  border-color: #fff transparent transparent;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.05));
+}
+
+/* ── 물결 배경 장식 ── */
+.wave-bg {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255,140,66,.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 15%, rgba(78,172,217,.10) 0%, transparent 40%),
+    radial-gradient(circle at 50% 82%, rgba(91,191,122,.09) 0%, transparent 40%),
+    radial-gradient(circle at 88% 78%, rgba(201,125,232,.08) 0%, transparent 35%);
+}
+
+/* ── 교과서 배경 패턴 ── */
+.textbook-bg {
+  background-color: #EFF6FF;
+}
+
+/* ── 체크박스 커스텀 ── */
+input[type="checkbox"] { accent-color: var(--s3); }
+input[type="radio"]    { accent-color: var(--s2); }
+input[type="range"]    { accent-color: var(--s2); }
+
+/* ── 섹션 라벨 ── */
+.sec-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-2);
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ── 교과서 스타일 버튼 ── */
+.edu-btn {
+  transition: transform .18s cubic-bezier(.34,1.4,.64,1), box-shadow .18s ease, filter .18s;
+}
+.edu-btn:not(:disabled):hover {
+  transform: translateY(-3px);
+  filter: brightness(1.06);
+  box-shadow: 0 6px 18px rgba(140,90,50,.20) !important;
+}
+.edu-btn:not(:disabled):active {
+  transform: translateY(0);
+  filter: brightness(.97);
+}
+
+/* ── 수업 스텝 카드 ── */
+.step-card {
+  border-radius: var(--r-lg);
+  background: #fff;
+  border: 2.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.step-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── 교과서 섹션 ── */
+.edu-sec {
+  background: #fff;
+  border-radius: var(--r-lg);
+  border: 2.5px solid var(--border);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── 단계별 색상 클래스 ── */
+.s1-pill { background: var(--s1-bg); color: var(--s1-dk); border: 2px solid var(--s1-bd); border-radius: var(--r-pill); padding: 4px 12px; font-size: 12px; font-weight: 800; }
+.s2-pill { background: var(--s2-bg); color: var(--s2-dk); border: 2px solid var(--s2-bd); border-radius: var(--r-pill); padding: 4px 12px; font-size: 12px; font-weight: 800; }
+.s3-pill { background: var(--s3-bg); color: var(--s3-dk); border: 2px solid var(--s3-bd); border-radius: var(--r-pill); padding: 4px 12px; font-size: 12px; font-weight: 800; }
+.s4-pill { background: var(--s4-bg); color: var(--s4-dk); border: 2px solid var(--s4-bd); border-radius: var(--r-pill); padding: 4px 12px; font-size: 12px; font-weight: 800; }
+
+/* ── 빛나는 선정 카드 ── */
+.selected-glow {
+  box-shadow: 0 0 0 3px rgba(91,191,122,.25), 0 6px 24px rgba(91,191,122,.20);
+  animation: fadeUp .3s ease;
+}
+
+/* ── 왕관 게이미피케이션 애니메이션 ── */
+@keyframes crownDrop {
+  0%   { transform: translateY(-18px) scale(.7) rotate(-15deg); opacity: 0; }
+  50%  { transform: translateY(4px) scale(1.1) rotate(5deg); opacity: 1; }
+  75%  { transform: translateY(-3px) scale(1.02) rotate(-2deg); }
+  100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes crownGlow {
+  0%,100% { filter: drop-shadow(0 0 4px rgba(247,201,72,.7)); }
+  50%      { filter: drop-shadow(0 0 12px rgba(247,201,72,1)); }
+}
+@keyframes selectedBorderPulse {
+  0%,100% {
+    box-shadow: 0 0 0 2px rgba(91,191,122,.4), 0 8px 28px rgba(91,191,122,.25);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(91,191,122,.6), 0 12px 36px rgba(91,191,122,.40);
+  }
+}
+@keyframes confettiPop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.crown-icon {
+  animation: crownDrop .55s cubic-bezier(.34,1.5,.64,1) both, crownGlow 2s ease-in-out 0.6s infinite;
+}
+.card-selected-pulse {
+  animation: selectedBorderPulse 2s ease-in-out infinite;
+}
+.card-confetti {
+  animation: confettiPop .4s cubic-bezier(.34,1.5,.64,1) both;
+}
+
+/* ── 패들릿 보드 카드 ── */
+.padlet-card-item {
+  border-radius: 14px;
+  overflow: visible;
+  position: relative;
+  transition: transform .18s cubic-bezier(.34,1.3,.64,1), box-shadow .18s ease;
+  align-self: start; /* grid에서 각 카드 높이 독립 */
+}
+.padlet-card-item:hover {
+  transform: translateY(-4px);
+}
+
+/* ── H-스타일 사이드 드로어 ── */
+.h-step-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0 9px 10px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  position: relative;
+  transition: background .15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.h-step-item:hover { background: rgba(255,255,255,.07); }
+.h-step-item.active { background: rgba(255,255,255,.13); }
+.h-step-item.done   { opacity: .85; }
+
+/* FAB 추가 버튼 */
+.padlet-fab {
+  position: absolute;
+  bottom: 22px;
+  right: 22px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--s1), var(--state-delete));
+  color: #fff;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(249,115,22,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .2s cubic-bezier(.34,1.5,.64,1), box-shadow .2s ease;
+  z-index: 40;
+  font-family: inherit;
+}
+.padlet-fab:hover {
+  transform: scale(1.12) rotate(90deg);
+  box-shadow: 0 10px 28px rgba(249,115,22,.55);
+}
+
+/* ── 네온 포인트 ── */
+.neon-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+/* ── 모눈종이 그리드 배경 ── */
+.grid-paper {
+  background-color: #fff;
+  background-image:
+    linear-gradient(rgba(78,172,217,.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(78,172,217,.12) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* ── Step4 알 수 있는 사실 chip hover delete ── */
+.note-chip-delete {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
+.note-chip-wrap:hover .note-chip-delete {
+  opacity: 1;
+  pointer-events: auto;
+}
+.note-chip-wrap {
+  transition: box-shadow .15s ease;
+}
+.note-chip-wrap:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,.10);
+}
+
+/* ── 모바일 대응 ─────────────────────────────────────────────────────────── */
+
+/* 터치 디바이스: hover 효과 제거 & 클릭 요소 항상 표시 */
+@media (hover: none) {
+  .postcard-close {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .note-chip-delete {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .postcard-wrap:hover {
+    transform: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,.13) !important;
+  }
+  .padlet-card-item:hover {
+    transform: none;
+  }
+  .edu-btn:not(:disabled):hover {
+    transform: none;
+    filter: none;
+    box-shadow: inherit !important;
+  }
+}
+
+/* 모바일: FAB 하단 네비와 겹치지 않도록 */
+@media (max-width: 767px) {
+  .padlet-fab {
+    bottom: 72px !important;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+}
+
+/* 안전 영역 지원 (노치, 홈 바) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+}
