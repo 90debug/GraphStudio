@@ -178,7 +178,7 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
                   onChange={e => setCmtText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && submitCmt()}
                   placeholder="의견을 남겨 주세요." className="flex-1 px-3 py-2 bg-white border border-[#E2E3E5] rounded-[8px] text-[11px] outline-none focus:border-gsp-400 placeholder:text-[#8A949E]" />
-                <button onClick={submitCmt} className="bg-gsp-600 text-white px-3 py-2 rounded-full text-[11px] font-bold">등록</button>
+                <button onClick={submitCmt} className="bg-gsp-600 text-white px-3 py-2 rounded-full text-[11px] font-bold" style={{whiteSpace:'nowrap',flexShrink:0}}>등록</button>
               </div>
             </div>
           </motion.div>

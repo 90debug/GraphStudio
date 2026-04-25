@@ -220,9 +220,9 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                 </div>
 
                 {/* 좌우 패널 */}
-                <div style={{display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:12, alignItems:'flex-start'}}>
+                <div style={{display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:12, alignItems: isMobile ? 'stretch' : 'flex-start'}}>
                   {/* 좌측: 항목별 조사 결과 (입력) */}
-                  <Sec style={{flex:1, marginBottom:0, minWidth:0, overflow:'hidden'}}>
+                  <Sec style={{flex:1, marginBottom:0, width: isMobile ? '100%' : undefined, boxSizing:'border-box'}}>
                     <div style={{fontWeight:700,fontSize:15,marginBottom:12}}>항목별 조사 결과</div>
                     <div style={{display:'grid',gridTemplateColumns:'repeat(2, 1fr)',gap:8}}>
                       {items.map((item,i)=>{

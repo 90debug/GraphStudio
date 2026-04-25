@@ -7,7 +7,13 @@ import {
   saveCanvasSnapshot, loadCanvasSnapshot, setLivePreview,
 } from '../../lib/firestore'
 
-export default function DrawingCanvas({ code, userName, strokes, currentDrawer, livePreview, snapshotImg, onSnapshotImg, isMobile }) {
+export default function DrawingCanvas({
+  code, userName, strokes, currentDrawer, livePreview,
+  snapshotImg, onSnapshotImg,
+  isMobile,
+  // 전체화면 모드: true면 캔버스가 최대 크기로 꽉 차게 동작
+  isFullscreen = false,
+}) {
   const canvasRef        = useRef(null)
   const overlayRef       = useRef(null)
   const drawing          = useRef(false)
@@ -15,22 +21,20 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
   const curStroke        = useRef([])
   const previewThrottle  = useRef(null)
 
-  // ── 도구·색상·굵기: React state (UI 렌더링) + ref (이벤트 핸들러 참조) ──
-  // useEffect 안 이벤트 핸들러는 클로저 캡처 문제로 stale값을 읽으므로
-  // ref를 통해 항상 최신 값을 참조함
+  // ── 도구/색상/굵기: state(UI) + ref(이벤트 핸들러) ──
   const toolRef  = useRef('pen')
   const colorRef = useRef('#1C1917')
   const widthRef = useRef(4)
-
   const [tool,   setToolUI]  = useState('pen')
   const [color,  setColorUI] = useState('#1C1917')
   const [width,  setWidthUI] = useState(4)
   const [saving, setSaving]  = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
 
-  function setTool(v)  { toolRef.current  = v; setToolUI(v)  }
+  function setTool(v)  { toolRef.current = v;  setToolUI(v)  }
   function setColor(v) { colorRef.current = v; setColorUI(v) }
   function setWidth(v) { widthRef.current = v; setWidthUI(v) }
+
+  const isEraser = tool === 'eraser'
 
   // ── 좌표 계산 ──
   function getPos(e, canvas) {
@@ -55,7 +59,6 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
     ctx.restore()
   }
 
-  // ── 스트로크 렌더링 ──
   function drawStrokes(ctx, stks) {
     stks.forEach(sk => {
       if (!sk.points?.length) return
@@ -101,7 +104,7 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
     ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); ctx.setLineDash([])
     const dist=Math.hypot(p2.x-p1.x,p2.y-p1.y), cells=(dist/25).toFixed(1)
     const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2
-    ctx.font='bold 14px sans-serif'; ctx.fillStyle=clr; ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.setLineDash([])
+    ctx.font='bold 14px sans-serif'; ctx.fillStyle=clr; ctx.strokeStyle='#fff'; ctx.lineWidth=3
     ctx.strokeText(`${cells}칸`,mx+6,my-8); ctx.fillText(`${cells}칸`,mx+6,my-8)
   }
 
@@ -118,7 +121,7 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
     ctx.strokeText(`반지름 ${cells}칸`,labelX,labelY); ctx.fillStyle=clr; ctx.fillText(`반지름 ${cells}칸`,labelX,labelY)
   }
 
-  // ── livePreview (다른 사람 오버레이) ──
+  // ── livePreview ──
   useEffect(() => {
     if (drawing.current) return
     const ov = overlayRef.current; if (!ov) return
@@ -135,7 +138,7 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
     if (!drawing.current) redrawStrokes(strokes)
   }, [strokes, snapshotImg]) // eslint-disable-line
 
-  // ── 컴포넌트 언마운트 시 currentDrawer 클리어 ──
+  // ── 언마운트 시 currentDrawer 클리어 ──
   useEffect(() => {
     return () => {
       if (drawing.current) {
@@ -145,22 +148,20 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
     }
   }, [code]) // eslint-disable-line
 
-  // ── 마우스 이벤트 핸들러 (ref 사용으로 stale closure 방지) ──
+  // ── 마우스 이벤트 ──
   function handleStart(e) {
-    if (e.type.startsWith('touch')) return  // touch는 별도 처리
+    if (e.type.startsWith('touch')) return
     e.preventDefault()
     const p = getPos(e, canvasRef.current)
     drawing.current=true; startPt.current=p; curStroke.current=[p]
     setCurrentDrawer(code, userName)
   }
-
   function handleMove(e) {
     if (e.type.startsWith('touch')) return
     e.preventDefault()
     if (!drawing.current) return
     processMove(e)
   }
-
   function handleEnd(e) {
     if (e.type.startsWith('touch')) return
     e.preventDefault()
@@ -168,14 +169,10 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
     processEnd(e)
   }
 
-  // ── 공통 이동/종료 로직 (ref 값 사용) ──
   function processMove(e) {
     if (!drawing.current) return
-    const t = toolRef.current
-    const c = colorRef.current
-    const w = widthRef.current
+    const t=toolRef.current, c=colorRef.current, w=widthRef.current
     const p = getPos(e, canvasRef.current)
-
     if (t==='ruler') {
       curStroke.current=[p]; const ov=overlayRef.current; if(ov) _renderRulerOnCtx(ov.getContext('2d'),startPt.current,p,c,w)
       if (!previewThrottle.current) {
@@ -196,16 +193,13 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
       }
       return
     }
-
-    const isEraser = t === 'eraser'
+    const er=t==='eraser'
     curStroke.current.push(p)
     const ctx=canvasRef.current.getContext('2d'), pts=curStroke.current
     if (pts.length<2) return
-    ctx.beginPath()
-    ctx.strokeStyle = isEraser ? '#fff' : c
-    ctx.lineWidth   = isEraser ? w*3 : w
+    ctx.beginPath(); ctx.strokeStyle=er?'#fff':c; ctx.lineWidth=er?w*3:w
     ctx.lineCap='round'; ctx.lineJoin='round'
-    ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over'
+    ctx.globalCompositeOperation=er?'destination-out':'source-over'
     ctx.moveTo(pts[pts.length-2].x,pts[pts.length-2].y); ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y); ctx.stroke()
     ctx.globalCompositeOperation='source-over'
   }
@@ -213,23 +207,19 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
   async function processEnd(e) {
     if (!drawing.current) return
     drawing.current=false; clearOverlay()
-    const t = toolRef.current
-    const c = colorRef.current
-    const w = widthRef.current
-    const isEraser = t === 'eraser'
+    const t=toolRef.current, c=colorRef.current, w=widthRef.current, er=t==='eraser'
     const canvas=canvasRef.current
-
     try {
       if (t==='ruler'&&startPt.current&&curStroke.current.length>=1) {
-        const finalPt = e.changedTouches ? getPos(e, canvas) : (e.type==='mouseleave' ? curStroke.current[curStroke.current.length-1]||startPt.current : getPos(e,canvas))
-        if (Math.hypot(finalPt.x-startPt.current.x,finalPt.y-startPt.current.y)>3)
-          await addStroke(code,{drawer:userName,color:c,width:w,eraser:false,type:'ruler',points:[startPt.current,finalPt]})
+        const fp=e.changedTouches?getPos(e,canvas):(e.type==='mouseleave'?curStroke.current[curStroke.current.length-1]||startPt.current:getPos(e,canvas))
+        if (Math.hypot(fp.x-startPt.current.x,fp.y-startPt.current.y)>3)
+          await addStroke(code,{drawer:userName,color:c,width:w,eraser:false,type:'ruler',points:[startPt.current,fp]})
       } else if (t==='compass'&&startPt.current&&curStroke.current.length>=1) {
-        const finalPt = e.changedTouches ? getPos(e,canvas) : (e.type==='mouseleave' ? curStroke.current[curStroke.current.length-1] : getPos(e,canvas))
-        const r=Math.hypot(finalPt.x-startPt.current.x,finalPt.y-startPt.current.y)
-        if (r>5) await addStroke(code,{drawer:userName,color:c,width:w,eraser:false,type:'compass',points:[startPt.current,finalPt]})
+        const fp=e.changedTouches?getPos(e,canvas):(e.type==='mouseleave'?curStroke.current[curStroke.current.length-1]:getPos(e,canvas))
+        const r=Math.hypot(fp.x-startPt.current.x,fp.y-startPt.current.y)
+        if (r>5) await addStroke(code,{drawer:userName,color:c,width:w,eraser:false,type:'compass',points:[startPt.current,fp]})
       } else if (curStroke.current.length>1) {
-        await addStroke(code,{drawer:userName,color:isEraser?'#fff':c,width:isEraser?w*3:w,eraser:!!isEraser,type:'pen',points:curStroke.current})
+        await addStroke(code,{drawer:userName,color:er?'#fff':c,width:er?w*3:w,eraser:!!er,type:'pen',points:curStroke.current})
       }
     } finally {
       curStroke.current=[]; startPt.current=null
@@ -239,39 +229,19 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
     }
   }
 
-  // ── 터치 이벤트: useEffect로 non-passive 등록 (스크롤 방지) ──
+  // ── 터치 이벤트: non-passive 등록 ──
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    function onTouchStart(e) {
-      e.preventDefault()
-      if (!e.touches?.length) return
-      const p = getPos(e, canvas)
-      drawing.current=true; startPt.current=p; curStroke.current=[p]
-      setCurrentDrawer(code, userName)
-    }
-
-    function onTouchMove(e) {
-      e.preventDefault()
-      if (!drawing.current) return
-      processMove(e)
-    }
-
-    function onTouchEnd(e) {
-      e.preventDefault()
-      if (!drawing.current) return
-      processEnd(e)
-    }
-
-    canvas.addEventListener('touchstart', onTouchStart, { passive: false })
-    canvas.addEventListener('touchmove',  onTouchMove,  { passive: false })
-    canvas.addEventListener('touchend',   onTouchEnd,   { passive: false })
-
+    const canvas = canvasRef.current; if (!canvas) return
+    function onTouchStart(e) { e.preventDefault(); if(!e.touches?.length) return; const p=getPos(e,canvas); drawing.current=true; startPt.current=p; curStroke.current=[p]; setCurrentDrawer(code,userName) }
+    function onTouchMove(e) { e.preventDefault(); if(!drawing.current) return; processMove(e) }
+    function onTouchEnd(e) { e.preventDefault(); if(!drawing.current) return; processEnd(e) }
+    canvas.addEventListener('touchstart',onTouchStart,{passive:false})
+    canvas.addEventListener('touchmove', onTouchMove, {passive:false})
+    canvas.addEventListener('touchend',  onTouchEnd,  {passive:false})
     return () => {
-      canvas.removeEventListener('touchstart', onTouchStart)
-      canvas.removeEventListener('touchmove',  onTouchMove)
-      canvas.removeEventListener('touchend',   onTouchEnd)
+      canvas.removeEventListener('touchstart',onTouchStart)
+      canvas.removeEventListener('touchmove', onTouchMove)
+      canvas.removeEventListener('touchend',  onTouchEnd)
     }
   }, [code, userName]) // eslint-disable-line
 
@@ -290,187 +260,139 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
     {id:'eraser', label:'지우개',clr:'#FF6B7A'},
   ]
 
-  const isEraser = tool === 'eraser'
+  // ── 캔버스 CSS: 전체화면 여부에 따라 size 조정 ──
+  const canvasStyle = isFullscreen
+    ? {
+        // 전체화면: 종횡비 유지하며 최대한 크게
+        maxWidth: '100%',
+        maxHeight: '100%',
+        width: 'auto',
+        height: 'auto',
+        display: 'block',
+        borderRadius: 8,
+        border: '1px solid #dbdbdb',
+        background: '#fff',
+        cursor: tool==='eraser'?'cell':'crosshair',
+        touchAction: 'none',
+      }
+    : {
+        width: '100%',
+        borderRadius: 10,
+        border: '1.5px solid #dbdbdb',
+        background: '#fff',
+        cursor: tool==='eraser'?'cell':'crosshair',
+        touchAction: 'none',
+        display: 'block',
+        ...(isMobile && {minHeight: 280}),
+      }
 
   return (
-    <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
-      {/* Row 1: 도구 */}
-      <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
+    <div style={{display:'flex',flexDirection:'column',height:'100%',flex:isFullscreen?1:undefined}}>
+      {/* ── 도구 Row 1 ── */}
+      <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap',marginBottom:8,flexShrink:0}}>
         {toolBtns.map(tb=>(
           <button key={tb.id} onClick={()=>setTool(tb.id)} style={{
-            padding:'5px 13px',borderRadius:8,fontSize:12,fontWeight:700,fontFamily:'inherit',
+            padding: isFullscreen?'4px 10px':'5px 13px',
+            borderRadius:8,fontSize:12,fontWeight:700,fontFamily:'inherit',
             background:tool===tb.id?tb.clr+'18':'transparent',
             border:`1.5px solid ${tool===tb.id?tb.clr:'#E6D8C8'}`,
             color:tool===tb.id?tb.clr:'#8C7B6E',cursor:'pointer',transition:'all .15s',
           }}>{tb.label}</button>
         ))}
-        {tool==='ruler'&&<span style={{fontSize:11,color:'#F97316',fontWeight:600,marginLeft:4}}>클릭 → 드래그해서 선 그리기</span>}
-        {tool==='compass'&&<span style={{fontSize:11,color:'#8B5CF6',fontWeight:600,marginLeft:4}}>클릭 → 드래그해서 반지름 설정</span>}
+        {tool==='ruler'&&<span style={{fontSize:11,color:'#F97316',fontWeight:600}}>클릭→드래그</span>}
+        {tool==='compass'&&<span style={{fontSize:11,color:'#8B5CF6',fontWeight:600}}>클릭→드래그</span>}
       </div>
 
-      {/* Row 2: 색상 + 굵기 */}
-      <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
+      {/* ── 색상 + 굵기 Row 2 ── */}
+      <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap',marginBottom:8,flexShrink:0}}>
         <div style={{display:'flex',gap:4}}>
-          {DRAW_COLORS.map(c=>(
-            <button key={c} onClick={()=>{setColor(c);if(tool==='eraser')setTool('pen')}} style={{
-              width:26,height:26,borderRadius:'50%',
-              background:c==='#FFFFFF'?'#f5f5f5':c,
-              border:`3px solid ${color===c&&tool!=='eraser'?'#3D2B1F':'transparent'}`,
+          {DRAW_COLORS.map(clr=>(
+            <button key={clr} onClick={()=>{setColor(clr);if(tool==='eraser')setTool('pen')}} style={{
+              width:isFullscreen?22:26,height:isFullscreen?22:26,borderRadius:'50%',
+              background:clr==='#FFFFFF'?'#f5f5f5':clr,
+              border:`3px solid ${color===clr&&tool!=='eraser'?'#3D2B1F':'transparent'}`,
               cursor:'pointer',transition:'border .1s',
-              boxShadow:c==='#FFFFFF'?'inset 0 0 0 1px #dbdbdb':'none',
+              boxShadow:clr==='#FFFFFF'?'inset 0 0 0 1px #dbdbdb':'none',
             }}/>
           ))}
         </div>
         <div style={{display:'flex',alignItems:'center',gap:6,fontSize:13,color:'#8C7B6E'}}>
           굵기
           <input type="range" min="2" max="18" value={width} step="1"
-            onChange={e=>setWidth(+e.target.value)}
-            style={{width:64,accentColor:'#FF8C42'}}/>
+            onChange={e=>setWidth(+e.target.value)} style={{width:56,accentColor:'#FF8C42'}}/>
           <div style={{width:Math.max(isEraser?width*3:width,6),height:Math.max(isEraser?width*3:width,6),borderRadius:'50%',background:isEraser?'#E6D8C8':color,flexShrink:0,border:'1px solid #dbdbdb',minWidth:6,transition:'all .1s'}}/>
         </div>
       </div>
 
-      {/* Row 3: 액션 버튼 (PC/태블릿) */}
-      {!isMobile && (
-        <div style={{display:'flex',gap:6,marginBottom:8,flexWrap:'wrap'}}>
-          <Btn onClick={()=>{if(!confirm('내 그림만 지울까요?'))return;deleteMyStrokes(code,userName)}} color="gray" sm>내 그림만 지우기</Btn>
-          <Btn onClick={()=>{if(!confirm('모든 그림을 지울까요?'))return;clearStrokes(code);onSnapshotImg&&onSnapshotImg(null)}} color="gray" sm>전체 지우기</Btn>
+      {/* ── 액션 버튼 Row 3 ── */}
+      <div style={{display:'flex',gap:6,marginBottom:8,flexWrap:'wrap',flexShrink:0}}>
+        <Btn onClick={()=>{if(!confirm('내 그림만 지울까요?'))return;deleteMyStrokes(code,userName)}} color="gray" sm>내 그림만 지우기</Btn>
+        <Btn onClick={()=>{if(!confirm('모든 그림을 지울까요?'))return;clearStrokes(code);onSnapshotImg&&onSnapshotImg(null)}} color="gray" sm>전체 지우기</Btn>
+        {/* 전체화면이 아닐 때만 저장 버튼을 여기에 (모바일은 하단에) */}
+        {!isMobile && !isFullscreen && (
           <Btn onClick={doSave} color="green" sm disabled={saving} style={{marginLeft:'auto'}}>
             {saving?'저장 중...':'저장하기'}
           </Btn>
-        </div>
-      )}
-      {/* 모바일: 지우기 버튼만 상단에 */}
-      {isMobile && (
-        <div style={{display:'flex',gap:6,marginBottom:8}}>
-          <Btn onClick={()=>{if(!confirm('내 그림만 지울까요?'))return;deleteMyStrokes(code,userName)}} color="gray" sm>내 그림만 지우기</Btn>
-          <Btn onClick={()=>{if(!confirm('모든 그림을 지울까요?'))return;clearStrokes(code);onSnapshotImg&&onSnapshotImg(null)}} color="gray" sm>전체 지우기</Btn>
-        </div>
-      )}
-
-      {/* 작성자 표시 */}
-      <div style={{height:28,display:'flex',alignItems:'center',gap:10,marginBottom:4,fontSize:13,color:'#8C7B6E'}}>
-        {currentDrawer && currentDrawer !== userName ? (
-          <span style={{display:'flex',alignItems:'center',gap:5}}>
-            <span style={{width:7,height:7,borderRadius:'50%',background:'#5BBF7A',animation:'pulse 1s infinite',display:'inline-block',flexShrink:0}}/>
-            <b style={{color:'#3D2B1F'}}>{currentDrawer}</b>님이 그리는 중...
-          </span>
-        ):<span style={{opacity:0}}>placeholder</span>}
-        {livePreview&&livePreview.drawer&&livePreview.drawer!==userName&&(
-          <span style={{display:'inline-flex',alignItems:'center',gap:5,padding:'2px 10px',borderRadius:999,
-            background:livePreview.type==='ruler'?'#FFF3E8':'#F8EFFE',
-            border:`1.5px solid ${livePreview.type==='ruler'?'#FFCB96':'#D9A4F5'}`,
-            fontSize:12,fontWeight:700,color:livePreview.type==='ruler'?'#D4601A':'#9A45C2'}}>
-            <span style={{animation:'pulse 1s infinite',display:'inline-block',width:6,height:6,borderRadius:'50%',
-              background:livePreview.type==='ruler'?'#FF8C42':'#C97DE8',flexShrink:0}}/>
-            {livePreview.drawer}님이 {livePreview.type==='ruler'?'자':'컴퍼스'} 사용 중
-          </span>
+        )}
+        {isFullscreen && (
+          <Btn onClick={doSave} color="green" sm disabled={saving} style={{marginLeft:'auto'}}>
+            {saving?'저장 중...':'저장하기'}
+          </Btn>
         )}
       </div>
 
-      {/* Canvas */}
-      <div style={{position:'relative',width:'100%',flex: isMobile ? '1' : undefined}}>
-        {/* 전체 화면 버튼 */}
-        <button
-          onClick={()=>setIsFullscreen(true)}
-          title="전체 화면"
-          style={{position:'absolute',top:8,right:8,zIndex:10,width:32,height:32,borderRadius:8,
-            background:'rgba(255,255,255,0.9)',border:'1px solid #e2e3e5',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            cursor:'pointer',fontSize:14,color:'#64748B',fontFamily:'inherit',
-            boxShadow:'0 2px 8px rgba(0,0,0,0.08)',transition:'all .15s'}}
-          onMouseEnter={e=>e.currentTarget.style.background='#5B41EB'}
-          onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.9)'}
-        >⛶</button>
-        <canvas ref={canvasRef} width={800} height={480}
-          style={{width:'100%',borderRadius:10,border:'1.5px solid #dbdbdb',background:'#fff',
-            cursor:tool==='eraser'?'cell':'crosshair',
-            touchAction:'none',display:'block',
-            height: isMobile ? '100%' : undefined,
-            minHeight: isMobile ? 280 : undefined,
-          }}
-          onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
-        />
-        <canvas ref={overlayRef} width={800} height={480}
-          style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',borderRadius:10,pointerEvents:'none'}}/>
-      </div>
-
-      <div style={{fontSize:13,color:'#8C7B6E',marginTop:7,lineHeight:1.6}}>
-        모눈종이 위에 그래프를 직접 그려 보세요. 친구들의 그림이 실시간으로 반영돼요.
-      </div>
-
-      {/* 모바일: 저장하기 버튼 최하단 고정 */}
-      {isMobile && (
-        <div style={{marginTop:12,paddingBottom:4}}>
-          <Btn onClick={doSave} color="green" full disabled={saving} style={{width:'100%'}}>
-            {saving?'저장 중...':'저장하기'}
-          </Btn>
+      {/* ── 작성자 표시 ── */}
+      {!isFullscreen && (
+        <div style={{height:24,display:'flex',alignItems:'center',gap:8,marginBottom:4,fontSize:12,color:'#8C7B6E',flexShrink:0}}>
+          {currentDrawer && currentDrawer !== userName ? (
+            <span style={{display:'flex',alignItems:'center',gap:5}}>
+              <span style={{width:6,height:6,borderRadius:'50%',background:'#5BBF7A',animation:'pulse 1s infinite',display:'inline-block',flexShrink:0}}/>
+              <b style={{color:'#3D2B1F'}}>{currentDrawer}</b>님이 그리는 중...
+            </span>
+          ):<span style={{opacity:0}}>-</span>}
         </div>
       )}
 
-      {/* 전체화면 오버레이 */}
-      {isFullscreen && (
-        <div style={{
-          position:'fixed',inset:0,zIndex:9998,
-          background:'#fff',
-          display:'flex',flexDirection:'column',
-          padding:12,
-        }}>
-          {/* 전체화면 헤더 */}
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10,flexShrink:0}}>
-            <span style={{fontSize:15,fontWeight:800,color:'#1E293B'}}>직접 그리기 — 전체 화면</span>
-            <button
-              onClick={()=>setIsFullscreen(false)}
-              style={{padding:'6px 16px',borderRadius:999,background:'#5B41EB',color:'#fff',
-                border:'none',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}
-            >닫기</button>
-          </div>
-          {/* 도구 영역 */}
-          <div style={{flexShrink:0,marginBottom:8}}>
-            <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
-              {toolBtns.map(tb=>(
-                <button key={tb.id} onClick={()=>setTool(tb.id)} style={{
-                  padding:'5px 13px',borderRadius:8,fontSize:12,fontWeight:700,fontFamily:'inherit',
-                  background:tool===tb.id?tb.clr+'18':'transparent',
-                  border:`1.5px solid ${tool===tb.id?tb.clr:'#E6D8C8'}`,
-                  color:tool===tb.id?tb.clr:'#8C7B6E',cursor:'pointer',
-                }}>{tb.label}</button>
-              ))}
-            </div>
-            <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap',marginBottom:6}}>
-              <div style={{display:'flex',gap:4}}>
-                {DRAW_COLORS.map(clr=>(
-                  <button key={clr} onClick={()=>{setColor(clr);if(tool==='eraser')setTool('pen')}} style={{
-                    width:24,height:24,borderRadius:'50%',
-                    background:clr==='#FFFFFF'?'#f5f5f5':clr,
-                    border:`3px solid ${color===clr&&tool!=='eraser'?'#3D2B1F':'transparent'}`,
-                    cursor:'pointer',boxShadow:clr==='#FFFFFF'?'inset 0 0 0 1px #dbdbdb':'none',
-                  }}/>
-                ))}
-              </div>
-              <div style={{display:'flex',alignItems:'center',gap:6,fontSize:13,color:'#8C7B6E'}}>
-                굵기
-                <input type="range" min="2" max="18" value={width} step="1"
-                  onChange={e=>setWidth(+e.target.value)} style={{width:64,accentColor:'#FF8C42'}}/>
-              </div>
-              <div style={{display:'flex',gap:6}}>
-                <Btn onClick={()=>{if(!confirm('내 그림만 지울까요?'))return;deleteMyStrokes(code,userName)}} color="gray" sm>내 그림만 지우기</Btn>
-                <Btn onClick={()=>{if(!confirm('모든 그림을 지울까요?'))return;clearStrokes(code);onSnapshotImg&&onSnapshotImg(null)}} color="gray" sm>전체 지우기</Btn>
-                <Btn onClick={doSave} color="green" sm disabled={saving}>{saving?'저장 중...':'저장하기'}</Btn>
-              </div>
-            </div>
-          </div>
-          {/* 전체화면 캔버스 (기존 캔버스 참조 재사용) */}
-          <div style={{position:'relative',flex:1,minHeight:0}}>
-            <canvas ref={canvasRef} width={800} height={480}
-              style={{width:'100%',height:'100%',borderRadius:10,border:'1.5px solid #dbdbdb',
-                background:'#fff',cursor:tool==='eraser'?'cell':'crosshair',
-                touchAction:'none',display:'block',objectFit:'contain'}}
-              onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
-            />
-            <canvas ref={overlayRef} width={800} height={480}
-              style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',borderRadius:10,pointerEvents:'none'}}/>
-          </div>
+      {/* ── 캔버스 ── */}
+      <div style={{
+        position:'relative',
+        flex: 1,
+        minHeight: isFullscreen ? 0 : undefined,
+        display: 'flex',
+        alignItems: isFullscreen ? 'center' : undefined,
+        justifyContent: isFullscreen ? 'center' : undefined,
+      }}>
+        <canvas ref={canvasRef} width={800} height={480}
+          style={canvasStyle}
+          onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd}
+        />
+        <canvas ref={overlayRef} width={800} height={480}
+          style={{
+            position:'absolute',
+            top:0, left:0,
+            width: isFullscreen ? canvasStyle.width : '100%',
+            height: isFullscreen ? canvasStyle.height : '100%',
+            maxWidth: isFullscreen ? '100%' : undefined,
+            maxHeight: isFullscreen ? '100%' : undefined,
+            borderRadius:isFullscreen?8:10,
+            pointerEvents:'none',
+          }}
+        />
+      </div>
+
+      {/* 안내 텍스트 (전체화면 아닐 때만) */}
+      {!isFullscreen && (
+        <div style={{fontSize:12,color:'#8C7B6E',marginTop:6,lineHeight:1.6,flexShrink:0}}>
+          모눈종이 위에 그래프를 직접 그려 보세요. 친구들의 그림이 실시간으로 반영돼요.
+        </div>
+      )}
+
+      {/* 모바일 저장 버튼 (하단 고정, 전체화면 아닐 때) */}
+      {isMobile && !isFullscreen && (
+        <div style={{marginTop:10,paddingBottom:4,flexShrink:0}}>
+          <Btn onClick={doSave} color="green" full disabled={saving} style={{width:'100%'}}>
+            {saving?'저장 중...':'저장하기'}
+          </Btn>
         </div>
       )}
     </div>
