@@ -5,7 +5,8 @@ import { useDevice } from '../../lib/DeviceContext'
 import {
   getOrCreateRoom, subscribeRoom, subscribeStep1Posts, subscribeStep4Posts,
   updateRoomStep, setSyncLeader, clearSyncLeader, updateDataTable, updateChartConfig,
-  setSelectedPost, toggleLike1, addComment1, deleteStep1Post,
+  setSelectedPost, toggleLike1, addComment1, deleteComment1,
+  deleteStep1Post, subscribeStep1Comments,
   toggleLike4, addComment4, deleteComment4, deleteStep4Post,
   updatePresence, subscribePresence, removePresence,
   subscribeSurvey, subscribeSurveyResponses,
@@ -39,6 +40,7 @@ export default function ActivityPage() {
   const [loading, setLoading] = useState(true)
   const [room, setRoom] = useState({})
   const [step1Posts, setStep1Posts] = useState([])
+  const [step1Comments, setStep1Comments] = useState([]) // subcollection 댓글
   const [step4Posts, setStep4Posts] = useState([])
   const [onlineUsers, setOnlineUsers] = useState([])
   const [survey, setSurvey] = useState(null)
@@ -82,6 +84,7 @@ export default function ActivityPage() {
           if (!freeModeRef.current && roomData.syncLeader) setActiveStep(roomData.currentStep || 1)
         }))
         unsubs.push(subscribeStep1Posts(u.code, setStep1Posts))
+        unsubs.push(subscribeStep1Comments(u.code, setStep1Comments))
         unsubs.push(subscribeStep4Posts(u.code, setStep4Posts))
         unsubs.push(subscribePresence(u.code, function(members) {
           setOnlineUsers(members)
@@ -128,11 +131,13 @@ export default function ActivityPage() {
   }
 
   async function handleLike1(postId, nowLiking) { await toggleLike1(userRef.current?.code, postId, user?.name, nowLiking) }
-  async function handleComment1(postId, text) { await addComment1(userRef.current?.code, postId, { author: user.name, text }) }
-  async function handleDeleteComment1(postId, comment) {
+  async function handleComment1(postId, text) { await addComment1(userRef.current?.code, postId, user.name, text) }
+  async function handleDeleteComment1(commentId) {
+    // subcollection 방식: commentId로 직접 deleteDoc (100% 신뢰)
     const code = user?.code || userRef.current?.code
     if (!code) { setToast('오류: 방 코드를 찾을 수 없어요.'); return }
-    try { await deleteComment1(code, postId, comment); setToast('댓글이 삭제되었어요.') } catch(e) { setToast('댓글 삭제 중 오류가 발생했어요.') }
+    try { await deleteComment1(code, commentId); setToast('댓글이 삭제되었어요.') }
+    catch(e) { console.error('deleteComment1 error:', e); setToast('댓글 삭제 중 오류: ' + (e.code || e.message)) }
   }
   async function handleDelete1(postId) { try { await deleteStep1Post(userRef.current?.code, postId); setToast('삭제 완료') } catch (e) { setToast('실패') } }
   
@@ -234,7 +239,7 @@ export default function ActivityPage() {
       <main className="flex-1 relative overflow-hidden flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div key={activeStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1 flex flex-col overflow-hidden">
-            {activeStep === 1 && <Step1 user={user} code={user.code} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} onDeleteComment={handleDeleteComment1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
+            {activeStep === 1 && <Step1 user={user} code={user.code} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} comments1={step1Comments} onComment={handleComment1} onDeleteComment={handleDeleteComment1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
             {activeStep === 2 && <Step2 user={user} code={user.code} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
             {activeStep === 3 && <Step3 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={handleChartConfig} strokes={strokes} currentDrawer={room.currentDrawer} drawMode={room.drawMode||'draw'} onDrawMode={handleDrawMode} livePreview={room.livePreview} selectedPost={room.selectedPost} step3SnapshotImg={room.canvasSnapshot} onStep3SnapshotImg={(img)=>updateRoomMeta(userRef.current?.code,{canvasSnapshot:img})}/>}
             {activeStep === 4 && <Step4 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4} onDeleteComment4={handleDeleteComment4}/>}
