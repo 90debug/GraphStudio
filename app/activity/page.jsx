@@ -161,6 +161,7 @@ export default function ActivityPage() {
   }
   async function handleLike4(postId, nowLiking) { await toggleLike4(userRef.current?.code, postId, user?.name, nowLiking) }
   async function handleComment4(postId, text) { await addComment4(userRef.current?.code, postId, text) }
+  async function handleDelete4(postId) { try { await deleteStep4Post(userRef.current?.code, postId); setToast('삭제 완료') } catch { setToast('삭제 실패') } }
 
   if (loading || !user) return (
     <div className="w-full h-full flex items-center justify-center bg-slate-50 font-black">연결 중...</div>
@@ -204,7 +205,7 @@ export default function ActivityPage() {
             {activeStep === 1 && <Step1 user={user} code={user.code} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
             {activeStep === 2 && <Step2 user={user} code={user.code} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
             {activeStep === 3 && <Step3 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={handleChartConfig} strokes={strokes} currentDrawer={room.currentDrawer} drawMode={room.drawMode} onDrawMode={handleDrawMode}/>}
-            {activeStep === 4 && <Step4 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4}/>}
+            {activeStep === 4 && <Step4 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4}/>}
           </motion.div>
         </AnimatePresence>
 

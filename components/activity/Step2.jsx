@@ -254,8 +254,9 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                   {total > 0 ? (
                     <Sec style={{flex:1, marginBottom:0}}>
                       <div style={{fontWeight:700,fontSize:15,marginBottom:10}}>집계 표</div>
-                      <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
-                        <thead><tr style={{borderBottom:'1px solid #e2e3e5'}}>{['항목','명수','%'].map(h=><th key={h} style={{padding:'5px 6px',textAlign:h==='항목'?'left':'right',color:'#5B41EB',fontWeight:700}}>{h}</th>)}</tr></thead>
+                      <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
+                      <table style={{width:'100%',minWidth:200,borderCollapse:'collapse',fontSize:12}}>
+                        <thead><tr style={{borderBottom:'1px solid #e2e3e5'}}>{['항목','수','%'].map(h=><th key={h} style={{padding:'5px 6px',textAlign:h==='항목'?'left':'right',color:'#5B41EB',fontWeight:700}}>{h}</th>)}</tr></thead>
                         <tbody>
                           {items.map((item,i)=>{const v=Number(dataTable[i]?.value)||0;const pct=total?Math.round(v/total*100):0;return(
                             <tr key={i} style={{borderBottom:'1px solid #e2e3e5'}}>
@@ -267,6 +268,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                           <tr><td style={{padding:'6px 6px',fontWeight:700}}>합계</td><td style={{padding:'6px 6px',textAlign:'right',fontWeight:700}}>{total}</td><td style={{padding:'6px 6px',textAlign:'right',fontWeight:700,color:'#5B41EB'}}>100%</td></tr>
                         </tbody>
                       </table>
+                      </div>
                     </Sec>
                   ) : (
                     <Sec style={{flex:1, marginBottom:0}}>

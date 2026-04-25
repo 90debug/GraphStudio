@@ -5,6 +5,12 @@ import { useDevice } from '../../lib/DeviceContext'
 import DrawingCanvas from './DrawingCanvas'
 import { CHART_CMPS } from './charts'
 
+const CHART_TYPES = [
+  { type:'bar',   label:'막대그래프' },
+  { type:'pie',   label:'원그래프'   },
+  { type:'strip', label:'띠그래프'   },
+]
+
 export default function Step3({ user, code, items, dataTable, chartConfig, onChartConfig, strokes, currentDrawer, drawMode, onDrawMode, livePreview, selectedPost, step3SnapshotImg, onStep3SnapshotImg, activeStep = 3 }) {
   const device   = useDevice()
   const isMobile = device === 'mobile'
@@ -14,94 +20,23 @@ export default function Step3({ user, code, items, dataTable, chartConfig, onCha
   const total = dataTable.reduce((s, d) => s + (Number(d.value) || 0), 0)
   const hasData = total > 0
 
-  const CHART_TYPES = [
-    { type:'bar',   label:'막대그래프' },
-    { type:'pie',   label:'원그래프'   },
-    { type:'strip', label:'띠그래프'   },
-  ]
-
-  // 데이터 요약 테이블 (좌측 패널 또는 상단에 표시)
-  const DataTable = () => (
-    <div style={{background:'#EEEEF3',border:'1px solid #e2e3e5',borderRadius:12,padding:'12px 16px'}}>
-      <div style={{fontWeight:700,fontSize:13,color:'#5B41EB',marginBottom:9}}>
-        {selectedPost?.question ? <span>{selectedPost.question}</span> : '항목별 조사 결과'}
-      </div>
-      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-        <thead>
-          <tr style={{borderBottom:'1px solid #e2e3e5'}}>
-            {['항목','명수','백분율(%)'].map(h=>(
-              <th key={h} style={{padding:'5px 8px',textAlign:h==='항목'?'left':'right',color:'#5B41EB',fontWeight:700}}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item,i)=>{
-            const v=Number(dataTable[i]?.value)||0; const pct=total?Math.round(v/total*100):0
-            return(
-              <tr key={i} style={{borderBottom:'1px solid #D1FAE5'}}>
-                <td style={{padding:'5px 8px',display:'flex',alignItems:'center',gap:7}}>
-                  <div style={{width:9,height:9,borderRadius:'50%',background:CHART_COLORS[i%CHART_COLORS.length],flexShrink:0}}/>{item}
-                </td>
-                <td style={{padding:'5px 8px',textAlign:'right',fontWeight:700}}>{v}</td>
-                <td style={{padding:'5px 8px',textAlign:'right',color:'#5B41EB',fontWeight:700}}>{pct}%</td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
-  )
-
-  // 그리기 영역 (버튼 포함)
-  const DrawingArea = () => (
-    <div style={{display:'flex',flexDirection:'column',gap: isMobile ? 10 : 12,flex:1}}>
-      {/* 모드 토글 */}
-      <div style={{display:'flex',gap:7,flexShrink:0}}>
-        {[['draw','직접 그리기','#5B41EB'],['auto','자동 그래프','#5B41EB']].map(([mode,label,clr])=>(
-          <button key={mode} type="button" onClick={()=>onDrawMode(mode)} style={{
-            flex:1,
-            padding: isMobile ? '10px 8px' : '9px 20px',
-            minHeight:44,borderRadius:999,
-            fontSize: isMobile ? 13 : 14,
-            fontWeight:700,cursor:'pointer',border:'1px solid',
-            fontFamily:'inherit',transition:'all .15s',
-            background:drawMode===mode?clr:'#ffffff',
-            color:drawMode===mode?'#fff':'#8C7B6E',
-            borderColor:drawMode===mode?clr:'#E6D8C8',
-            whiteSpace:'nowrap',
-          }}>{label}</button>
-        ))}
-      </div>
-
-      {/* 내용 영역 */}
-      {drawMode==='auto'?(
-        <Sec style={{flex:1}}>
-          <Lbl mt={0}>그래프 종류</Lbl>
-          <div style={{display:'flex',gap:7,marginBottom:14,overflowX:'auto',paddingBottom:4}}>
-            {CHART_TYPES.map(c=>(
-              <button type="button" key={c.type} onClick={()=>onChartConfig({type:c.type})} style={{
-                padding: isMobile ? '8px 14px' : '8px 18px',
-                minHeight:44,borderRadius:999,fontSize:14,fontWeight:700,
-                cursor:'pointer',border:'1px solid',fontFamily:'inherit',transition:'all .15s',
-                background:chartConfig.type===c.type?'#5B41EB':'#fff',
-                color:chartConfig.type===c.type?'#fff':'#8C7B6E',
-                borderColor:chartConfig.type===c.type?'#5B41EB':'#E6D8C8',
-                whiteSpace:'nowrap', flexShrink:0,
-              }}>{c.label}</button>
-            ))}
-          </div>
-          <Lbl>그래프 제목</Lbl>
-          <Inp value={chartConfig.title} onChange={v=>onChartConfig({title:v})} placeholder="예: 우리 반 좋아하는 간식 조사 결과" style={{marginBottom:14}}/>
-          {chartConfig.title&&(
-            <div style={{fontWeight:700,fontSize:16,textAlign:'center',marginBottom:12,color:'#3D2B1F'}}>{chartConfig.title}</div>
-          )}
-          <ChartComp data={chartData}/>
-        </Sec>
-      ):(
-        <Sec style={{display:'flex',flexDirection:'column',minHeight: isMobile ? 360 : 'auto',flex:1}}>
-          <DrawingCanvas code={code} userName={user.name} strokes={strokes} currentDrawer={currentDrawer} livePreview={livePreview} snapshotImg={step3SnapshotImg} onSnapshotImg={onStep3SnapshotImg}/>
-        </Sec>
-      )}
+  // 모드 토글 버튼들 (인라인 JSX, 별도 컴포넌트 정의 금지 → 애니메이션 안정)
+  const modeButtons = (
+    <div style={{display:'flex',gap:7,flexShrink:0}}>
+      {[['draw','직접 그리기','#5B41EB'],['auto','자동 그래프','#5B41EB']].map(([mode,label,clr])=>(
+        <button key={mode} type="button" onClick={()=>onDrawMode(mode)} style={{
+          flex:1,
+          padding: isMobile ? '10px 8px' : '9px 20px',
+          minHeight:44,borderRadius:999,
+          fontSize: isMobile ? 13 : 14,
+          fontWeight:700,cursor:'pointer',border:'1px solid',
+          fontFamily:'inherit',transition:'all .15s',
+          background:drawMode===mode?clr:'#ffffff',
+          color:drawMode===mode?'#fff':'#8C7B6E',
+          borderColor:drawMode===mode?clr:'#E6D8C8',
+          whiteSpace:'nowrap',
+        }}>{label}</button>
+      ))}
     </div>
   )
 
@@ -123,13 +58,12 @@ export default function Step3({ user, code, items, dataTable, chartConfig, onCha
         </div>
       </header>
 
-      {/* 데이터가 있을 때: 좌우 분할 / 없을 때: 기존 레이아웃 */}
+      {/* ── 데이터 있고 PC/태블릿: 좌우 분할 ── */}
       {hasData && !isMobile ? (
-        /* 데스크탑/태블릿: 좌우 분할 */
-        <div style={{flex:1,display:'flex',overflow:'hidden',gap:0}}>
+        <div style={{flex:1,display:'flex',overflow:'hidden'}}>
           {/* 좌측: 항목별 조사 결과 */}
           <div style={{
-            width: 'clamp(220px, 30%, 300px)',
+            width:'clamp(200px,28%,280px)',
             flexShrink:0,
             borderRight:'1px solid #E2E8F2',
             background:'#fff',
@@ -137,24 +71,137 @@ export default function Step3({ user, code, items, dataTable, chartConfig, onCha
             WebkitOverflowScrolling:'touch',
             padding:'14px',
           }}>
-            <div style={{fontWeight:700,fontSize:13,color:'#5B41EB',marginBottom:10}}>항목별 조사 결과</div>
-            <DataTable />
+            <div style={{fontWeight:700,fontSize:13,color:'#5B41EB',marginBottom:9}}>
+              {selectedPost?.question || '항목별 조사 결과'}
+            </div>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+              <thead>
+                <tr style={{borderBottom:'1px solid #e2e3e5'}}>
+                  {['항목','명수','%'].map(h=>(
+                    <th key={h} style={{padding:'5px 8px',textAlign:h==='항목'?'left':'right',color:'#5B41EB',fontWeight:700}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item,i)=>{
+                  const v=Number(dataTable[i]?.value)||0
+                  const pct=total?Math.round(v/total*100):0
+                  return (
+                    <tr key={i} style={{borderBottom:'1px solid #D1FAE5'}}>
+                      <td style={{padding:'5px 8px',display:'flex',alignItems:'center',gap:7}}>
+                        <div style={{width:9,height:9,borderRadius:'50%',background:CHART_COLORS[i%CHART_COLORS.length],flexShrink:0}}/>{item}
+                      </td>
+                      <td style={{padding:'5px 8px',textAlign:'right',fontWeight:700}}>{v}</td>
+                      <td style={{padding:'5px 8px',textAlign:'right',color:'#5B41EB',fontWeight:700}}>{pct}%</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-          {/* 우측: 그리기 영역 */}
-          <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch',padding:'12px 14px 20px',display:'flex',flexDirection:'column'}}>
-            <DrawingArea />
+
+          {/* 우측: 모드버튼 + 그리기/그래프 영역 */}
+          <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch',padding:'12px 14px 20px',display:'flex',flexDirection:'column',gap:12}}>
+            {modeButtons}
+            {drawMode==='auto' ? (
+              <Sec style={{flex:1}}>
+                <Lbl mt={0}>그래프 종류</Lbl>
+                <div style={{display:'flex',gap:7,marginBottom:14,overflowX:'auto',paddingBottom:4}}>
+                  {CHART_TYPES.map(c=>(
+                    <button type="button" key={c.type} onClick={()=>onChartConfig({type:c.type})} style={{
+                      padding:'8px 18px',minHeight:44,borderRadius:999,fontSize:14,fontWeight:700,
+                      cursor:'pointer',border:'1px solid',fontFamily:'inherit',transition:'all .15s',
+                      background:chartConfig.type===c.type?'#5B41EB':'#fff',
+                      color:chartConfig.type===c.type?'#fff':'#8C7B6E',
+                      borderColor:chartConfig.type===c.type?'#5B41EB':'#E6D8C8',
+                      whiteSpace:'nowrap',flexShrink:0,
+                    }}>{c.label}</button>
+                  ))}
+                </div>
+                <Lbl>그래프 제목</Lbl>
+                <Inp value={chartConfig.title} onChange={v=>onChartConfig({title:v})} placeholder="예: 우리 반 좋아하는 간식 조사 결과" style={{marginBottom:14}}/>
+                {chartConfig.title&&(
+                  <div style={{fontWeight:700,fontSize:16,textAlign:'center',marginBottom:12,color:'#3D2B1F'}}>{chartConfig.title}</div>
+                )}
+                <ChartComp data={chartData}/>
+              </Sec>
+            ) : (
+              <Sec style={{display:'flex',flexDirection:'column',flex:1}}>
+                <DrawingCanvas code={code} userName={user.name} strokes={strokes} currentDrawer={currentDrawer} livePreview={livePreview} snapshotImg={step3SnapshotImg} onSnapshotImg={onStep3SnapshotImg}/>
+              </Sec>
+            )}
           </div>
         </div>
+
       ) : (
-        /* 모바일 또는 데이터 없음: 기존 세로 레이아웃 */
+        /* ── 모바일 또는 데이터 없음: 세로 레이아웃 ── */
         <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
+          {/* 데이터 요약 (모바일에서 항상 상단에) */}
           {hasData && (
             <div style={{padding: isMobile ? '10px 12px 0' : '12px 14px 0'}}>
-              <DataTable />
+              <div style={{background:'#EEEEF3',border:'1px solid #e2e3e5',borderRadius:12,padding:'12px 16px'}}>
+                <div style={{fontWeight:700,fontSize:13,color:'#5B41EB',marginBottom:9}}>
+                  {selectedPost?.question || '항목별 조사 결과'}
+                </div>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+                  <thead>
+                    <tr style={{borderBottom:'1px solid #e2e3e5'}}>
+                      {['항목','명수','%'].map(h=>(
+                        <th key={h} style={{padding:'5px 8px',textAlign:h==='항목'?'left':'right',color:'#5B41EB',fontWeight:700}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((item,i)=>{
+                      const v=Number(dataTable[i]?.value)||0
+                      const pct=total?Math.round(v/total*100):0
+                      return (
+                        <tr key={i} style={{borderBottom:'1px solid #D1FAE5'}}>
+                          <td style={{padding:'5px 8px',display:'flex',alignItems:'center',gap:7}}>
+                            <div style={{width:9,height:9,borderRadius:'50%',background:CHART_COLORS[i%CHART_COLORS.length],flexShrink:0}}/>{item}
+                          </td>
+                          <td style={{padding:'5px 8px',textAlign:'right',fontWeight:700}}>{v}</td>
+                          <td style={{padding:'5px 8px',textAlign:'right',color:'#5B41EB',fontWeight:700}}>{pct}%</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
-          <div style={{padding: isMobile ? '10px 12px 20px' : '12px 14px 20px'}}>
-            <DrawingArea />
+
+          {/* 모드 버튼 + 내용 */}
+          <div style={{padding: isMobile ? '10px 12px 20px' : '12px 14px 20px', display:'flex', flexDirection:'column', gap:12}}>
+            {modeButtons}
+            {drawMode==='auto' ? (
+              <Sec>
+                <Lbl mt={0}>그래프 종류</Lbl>
+                <div style={{display:'flex',gap:7,marginBottom:14,overflowX:'auto',paddingBottom:4}}>
+                  {CHART_TYPES.map(c=>(
+                    <button type="button" key={c.type} onClick={()=>onChartConfig({type:c.type})} style={{
+                      padding: isMobile ? '8px 14px' : '8px 18px',
+                      minHeight:44,borderRadius:999,fontSize:14,fontWeight:700,
+                      cursor:'pointer',border:'1px solid',fontFamily:'inherit',transition:'all .15s',
+                      background:chartConfig.type===c.type?'#5B41EB':'#fff',
+                      color:chartConfig.type===c.type?'#fff':'#8C7B6E',
+                      borderColor:chartConfig.type===c.type?'#5B41EB':'#E6D8C8',
+                      whiteSpace:'nowrap',flexShrink:0,
+                    }}>{c.label}</button>
+                  ))}
+                </div>
+                <Lbl>그래프 제목</Lbl>
+                <Inp value={chartConfig.title} onChange={v=>onChartConfig({title:v})} placeholder="예: 우리 반 좋아하는 간식 조사 결과" style={{marginBottom:14}}/>
+                {chartConfig.title&&(
+                  <div style={{fontWeight:700,fontSize:16,textAlign:'center',marginBottom:12,color:'#3D2B1F'}}>{chartConfig.title}</div>
+                )}
+                <ChartComp data={chartData}/>
+              </Sec>
+            ) : (
+              <Sec style={{display:'flex',flexDirection:'column',minHeight: isMobile ? 360 : 'auto'}}>
+                <DrawingCanvas code={code} userName={user.name} strokes={strokes} currentDrawer={currentDrawer} livePreview={livePreview} snapshotImg={step3SnapshotImg} onSnapshotImg={onStep3SnapshotImg} isMobile={isMobile}/>
+              </Sec>
+            )}
           </div>
         </div>
       )}
