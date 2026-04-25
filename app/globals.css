@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Nanum+Round+Gothic:wght@400;700;800&display=swap');
+/* ── Tailwind 디렉티브 (반드시 최상단) ── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './design-system.css';
+@import './tokens.css';
 
 :root {
   /* ── 교과서 파스텔 팔레트 ── */
@@ -6,7 +12,7 @@
   --cream-deep:  #FFEFD8;
 
   /* Step 색상 — 교과서 단계별 색 */
-  --s1:    #FF8C42;  --s1-bg: #FFF3E8;  --s1-bd: #FFCB96;  --s1-dk: #D4601A;  --s1-lt: #FFE4C4;
+  --s1:    #5B41EB;  --s1-bg: #EEEEF3;  --s1-bd: #e2e3e5;  --s1-dk: #4833c9;  --s1-lt: #EEEEF3;
   --s2:    #4EACD9;  --s2-bg: #EBF7FF;  --s2-bd: #93D1F5;  --s2-dk: #2785B5;  --s2-lt: #C8E9F8;
   --s3:    #5BBF7A;  --s3-bg: #EDFAF2;  --s3-bd: #90DDB0;  --s3-dk: #2D9950;  --s3-lt: #C0F0D4;
   --s4:    #C97DE8;  --s4-bg: #F8EFFE;  --s4-bd: #D9A4F5;  --s4-dk: #9A45C2;  --s4-lt: #EAD0F8;
@@ -22,8 +28,8 @@
   --purple-bg:   #F8EFFE;
   --red:         #FF6B7A;
   --red-bg:      #FFF0F1;
-  --amber:       #FF8C42;
-  --amber-bg:    #FFF3E8;
+  --amber:       #5B41EB;
+  --amber-bg:    #EEEEF3;
 
   --border:      #E6D8C8;
   --border-soft: #F0E8DC;
@@ -32,6 +38,39 @@
   --text-3:      #C4B4A8;
   --bg:          #FFF9F2;
   --white:       #FFFFFF;
+
+  /* ── Slate UI ── */
+  --slate-dark:     #0F172A;
+  --slate-dk:       #1E293B;
+  --slate-5:        #334155;
+  --slate-4:        #475569;
+  --slate-2:        #64748B;
+  --slate-3:        #94A3B8;
+  --slate-bd:       #CBD5E1;
+  --slate-bg:       #F1F5F9;
+  --slate-bg-soft:  #F8FAFC;
+
+  /* ── 상태 색상 ── */
+  --state-selected:       #10B981;
+  --state-selected-bg:    #F0FDF4;
+  --state-selected-bd:    #34D399;
+  --state-selected-hdr:   #DCFCE7;
+  --state-selected-av-bg: #D1FAE5;
+  --state-selected-av-fg: #059669;
+
+  --state-mine-badge:  #F59E0B;
+  --state-mine-bg:     #FFFBEB;
+  --state-mine-bd:     #FCD34D;
+  --state-mine-hdr:    #FEF3C7;
+  --state-mine-av-bg:  #FDE68A;
+  --state-mine-av-fg:  #92400E;
+
+  --state-delete:    #EF4444;
+  --state-error:     #DC2626;
+  --state-error-bg:  #FEF2F2;
+  --state-error-bd:  #FECACA;
+
+  --neon-cyan: #22D3EE;
 
   /* ── 그림자 ── */
   --shadow-xs: 0 2px 6px rgba(140,90,50,.06);
@@ -58,17 +97,14 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html {
+html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
 body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: 'Nanum Round Gothic', 'Nanum Gothic', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   background: var(--cream);
   color: var(--text);
   font-size: 14px;
@@ -81,10 +117,10 @@ body {
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
 input, textarea, select { font-family: inherit; font-size: 14px; }
 
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: #FFF3E8; border-radius: 99px; }
-::-webkit-scrollbar-thumb { background: #FFCB96; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #FF8C42; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
 ::placeholder { color: var(--text-3); }
 
 /* ── 키프레임 ── */
@@ -155,7 +191,7 @@ input, textarea, select { font-family: inherit; font-size: 14px; }
   justify-content: center;
   font-size: 14px;
   font-weight: 800;
-  color: #fff;
+  color: var(--white);
   flex-shrink: 0;
   box-shadow: 0 3px 8px rgba(0,0,0,.15);
 }
@@ -351,7 +387,7 @@ input[type="range"]    { accent-color: var(--s2); }
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #F97316, #EF4444);
+  background: linear-gradient(135deg, var(--s1), var(--state-delete));
   color: #fff;
   border: none;
   font-size: 26px;

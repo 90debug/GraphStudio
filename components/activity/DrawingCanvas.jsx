@@ -188,10 +188,10 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
   }
 
   const toolBtns=[
-    {id:'pen',label:'✏️ 펜',clr:'#4EACD9'},
-    {id:'ruler',label:'📏 자',clr:'#F97316'},
-    {id:'compass',label:'🔵 컴퍼스',clr:'#8B5CF6'},
-    {id:'eraser',label:'🧹 지우개',clr:'#FF6B7A'},
+    {id:'pen',label:'펜',clr:'#FF8C42'},
+    {id:'ruler',label:'자',clr:'#F97316'},
+    {id:'compass',label:'컴퍼스',clr:'#8B5CF6'},
+    {id:'eraser',label:'지우개',clr:'#FF6B7A'},
   ]
 
   return (
@@ -225,17 +225,17 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
         </div>
         <div style={{display:'flex',alignItems:'center',gap:6,fontSize:13,color:'#8C7B6E'}}>
           굵기
-          <input type="range" min="2" max="18" value={width} step="1" onChange={e=>setWidth(+e.target.value)} style={{width:64,accentColor:'#4EACD9'}}/>
+          <input type="range" min="2" max="18" value={width} step="1" onChange={e=>setWidth(+e.target.value)} style={{width:64,accentColor:'#FF8C42'}}/>
           <div style={{width:Math.max(eraser?width*3:width,6),height:Math.max(eraser?width*3:width,6),borderRadius:'50%',background:eraser?'#E6D8C8':color,flexShrink:0,border:'1px solid #dbdbdb',minWidth:6,transition:'all .1s'}}/>
         </div>
       </div>
 
       {/* Row 3: actions */}
       <div style={{display:'flex',gap:6,marginBottom:8,flexWrap:'wrap'}}>
-        <Btn onClick={()=>{if(!confirm('내 그림만 지울까요?'))return;deleteMyStrokes(code,userName)}} color="gray" sm>🙋 내 그림만 지우기</Btn>
-        <Btn onClick={()=>{if(!confirm('모든 그림을 지울까요?'))return;clearStrokes(code);onSnapshotImg&&onSnapshotImg(null)}} color="gray" sm>🗑️ 전체 지우기</Btn>
+        <Btn onClick={()=>{if(!confirm('내 그림만 지울까요?'))return;deleteMyStrokes(code,userName)}} color="gray" sm>내 그림만 지우기</Btn>
+        <Btn onClick={()=>{if(!confirm('모든 그림을 지울까요?'))return;clearStrokes(code);onSnapshotImg&&onSnapshotImg(null)}} color="gray" sm>전체 지우기</Btn>
         <Btn onClick={doSave} color="green" sm disabled={saving} style={{marginLeft:'auto'}}>
-          {saving?'저장 중...':'💾 저장하기'}
+          {saving?'저장 중...':'저장하기'}
         </Btn>
       </div>
 
@@ -254,7 +254,7 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
             fontSize:12,fontWeight:700,color:livePreview.type==='ruler'?'#D4601A':'#9A45C2'}}>
             <span style={{animation:'pulse 1s infinite',display:'inline-block',width:6,height:6,borderRadius:'50%',
               background:livePreview.type==='ruler'?'#FF8C42':'#C97DE8',flexShrink:0}}/>
-            {livePreview.drawer}님이 {livePreview.type==='ruler'?'📏 자':'🔵 컴퍼스'} 사용 중
+            {livePreview.drawer}님이 {livePreview.type==='ruler'?'자':'컴퍼스'} 사용 중
           </span>
         )}
       </div>
@@ -269,7 +269,7 @@ export default function DrawingCanvas({ code, userName, strokes, currentDrawer, 
           style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',borderRadius:10,pointerEvents:'none'}}/>
       </div>
       <div style={{fontSize:13,color:'#8C7B6E',marginTop:7,lineHeight:1.6}}>
-        💡 모눈종이 위에 그래프를 직접 그려보세요. 친구들의 그림이 실시간으로 반영돼요.
+        모눈종이 위에 그래프를 직접 그려 보세요. 친구들의 그림이 실시간으로 반영돼요.
       </div>
     </div>
   )

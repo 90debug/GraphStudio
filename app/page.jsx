@@ -3,26 +3,72 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDevice } from '../lib/DeviceContext'
 
+
 function randCode() {
   return Array.from({ length: 6 }, () =>
     'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]
   ).join('')
 }
 
-export default function JoinPage() {
-  const router   = useRouter()
-  const device   = useDevice()
-  const isMobile = device === 'mobile'
+function TextInput({ label, placeholder, value, onChange, type = 'text', maxLength, center }) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-8)', width: '100%' }}>
+      <label style={{
+        fontFamily: 'var(--font-body)',
+        fontSize: 'var(--text-body-medium-17-size)',
+        fontWeight: 400,
+        color: 'var(--color-cool-gray-400)',
+        lineHeight: 1.5,
+      }}>
+        {label}
+      </label>
+      <input
+        type={type}
+        maxLength={maxLength}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: '100%',
+          height: '48px',
+          padding: '0 var(--spacing-16)',
+          border: `1px solid ${focused ? 'var(--color-purple-500)' : 'var(--color-cool-gray-200)'}`,
+          borderRadius: '8px',
+          fontFamily: 'var(--font-body)',
+          fontSize: '16px',
+          fontWeight: 400,
+          color: 'var(--color-black)',
+          outline: 'none',
+          background: 'var(--color-white)',
+          transition: 'border-color 0.18s',
+          textAlign: center ? 'center' : 'left',
+          letterSpacing: center ? '8px' : 'normal',
+          textTransform: center ? 'uppercase' : 'none',
+        }}
+      />
+    </div>
+  )
+}
 
-  const [mode,      setMode]      = useState('new')
-  const [name,      setName]      = useState('')
+export default function JoinPage() {
+  const router = useRouter()
+  const device = useDevice()
+  const isMobile = device === 'mobile'
+  const [mode, setMode] = useState('new')
+  const [name, setName] = useState('')
   const [groupName, setGroupName] = useState('')
-  const [joinCode,  setJoinCode]  = useState('')
-  const [error,     setError]     = useState('')
+  const [joinCode, setJoinCode] = useState('')
+  const [error, setError] = useState('')
   const [lastGroup, setLastGroup] = useState(null)
 
   useEffect(() => {
-    try { const s = localStorage.getItem('gts_last'); if (s) setLastGroup(JSON.parse(s)) } catch {}
+    try {
+      const s = localStorage.getItem('gts_last')
+      if (s) setLastGroup(JSON.parse(s))
+    } catch {}
   }, [])
 
   function save(user) {
@@ -31,191 +77,321 @@ export default function JoinPage() {
     router.push('/activity')
   }
 
-  function handleNew(e) {
+  const handleNew = (e) => {
     e.preventDefault()
-    if (!name.trim()) return setError('이름을 입력해 주세요 😊')
-    if (!groupName.trim()) return setError('모둠 이름을 입력해 주세요 😊')
+    if (!name.trim()) return setError('이름을 입력해 주세요')
+    if (!groupName.trim()) return setError('모둠 이름을 입력해 주세요')
     save({ name: name.trim(), groupName: groupName.trim(), code: randCode(), role: 'leader' })
   }
 
-  function handleJoin(e) {
+  const handleJoin = (e) => {
     e.preventDefault()
-    if (!name.trim()) return setError('이름을 입력해 주세요 😊')
-    if (!joinCode.trim()) return setError('참여 코드를 입력해 주세요 😊')
+    if (!name.trim()) return setError('이름을 입력해 주세요')
+    if (!joinCode.trim()) return setError('참여 코드를 입력해 주세요')
     save({ name: name.trim(), groupName: joinCode.toUpperCase().trim(), code: joinCode.toUpperCase().trim(), role: 'member' })
   }
 
-  const inputBase = {
-    width: '100%', padding: '13px 16px', borderRadius: 14,
-    border: '2.5px solid #E8DFD4', fontSize: 15, color: '#3D2B1F',
-    background: '#FFFCF8', outline: 'none', marginTop: 8,
-    transition: 'border-color .15s, box-shadow .15s',
-    boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 600,
-  }
-  const labelBase = { fontSize: 13, fontWeight: 800, color: '#8C7B6E', display: 'block', letterSpacing: '0.3px' }
-
-  // ── 모바일 레이아웃 ───────────────────────────────────────────────────────
-  if (isMobile) {
-    return (
-      <div style={{
-        flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
-        backgroundImage: "url('/bg-main.png')",
-        backgroundSize: 'cover', backgroundPosition: 'center',
-        padding: '24px 16px 32px',
-        display: 'flex', flexDirection: 'column', gap: 20,
-      }}>
-        {/* 타이틀 */}
-        <div>
-          <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:999, background:'#FF8C42', color:'#fff', fontSize:11, fontWeight:800, letterSpacing:1.2, marginBottom:10 }}>6. 여러 가지 그래프</div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color:'#3D2B1F', lineHeight: 1.3, letterSpacing:'-0.5px', marginBottom:8 }}>
-            자료를 수집하여<br/>
-            <span style={{ color:'#4EACD9' }}>알맞은 그래프로</span><br/>
-            나타내고 해석해요!
-          </h1>
-          <p style={{ fontSize:13, color:'#8C7B6E', lineHeight:1.7, fontWeight:600 }}>
-            모둠원과 함께 탐구 주제를 정하고,<br/>
-            자료를 모아 그래프로 표현해 보세요 📊
-          </p>
-        </div>
-
-        {/* 이전 모둠 재참여 */}
-        {lastGroup && (
-          <div onClick={()=>{ sessionStorage.setItem('gts_user', JSON.stringify({...lastGroup, role:'member'})); router.push('/activity') }}
-            style={{ padding:'12px 16px', background:'#fff', borderRadius:16, border:'2.5px solid #E8DFD4',
-              display:'flex', alignItems:'center', gap:12, cursor:'pointer',
-              boxShadow:'0 3px 10px rgba(150,100,60,.08)' }}>
-            <div style={{ width:38, height:38, borderRadius:'50%', flexShrink:0, background:'linear-gradient(135deg,#5BBF7A,#4EACD9)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>🔁</div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:13, fontWeight:700, color:'#3D2B1F', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{lastGroup.name} · {lastGroup.groupName}</div>
-              <div style={{ fontSize:11, color:'#8C7B6E', letterSpacing:1.5, fontWeight:700 }}>{lastGroup.code}</div>
-            </div>
-            <div style={{ fontSize:12, fontWeight:800, color:'#4EACD9', background:'#EBF7FF', padding:'4px 10px', borderRadius:999, border:'1.5px solid #B3DFFB', whiteSpace:'nowrap', flexShrink:0 }}>다시 참여 →</div>
-          </div>
-        )}
-
-        {/* 입장 카드 */}
-        <div style={{ background:'#fff', borderRadius:24, padding:'24px 20px 20px',
-          boxShadow:'0 6px 28px rgba(150,100,60,.12),0 2px 6px rgba(150,100,60,.06)',
-          border:'2.5px solid #E8DFD4' }}>
-
-          {/* 탭 토글 */}
-          <div style={{ display:'flex', gap:4, marginBottom:20, background:'#FFF3E8', borderRadius:14, padding:4 }}>
-            {[['new','🏠 새 모둠 만들기'],['join','🔑 코드로 참여']].map(([m,label])=>(
-              <button key={m} onClick={()=>{ setMode(m); setError('') }} style={{
-                flex:1, padding:'10px 0', fontSize:12, fontWeight:mode===m?800:600,
-                color:mode===m?'#fff':'#8C7B6E', background:mode===m?'#FF8C42':'transparent',
-                border:'none', borderRadius:11, cursor:'pointer', transition:'all .18s ease',
-                boxShadow:mode===m?'0 3px 10px rgba(255,140,66,.35)':'none', fontFamily:'inherit',
-              }}>{label}</button>
-            ))}
-          </div>
-
-          {error && <div style={{ fontSize:13, color:'#D4601A', padding:'10px 14px', background:'#FFF3E8', borderRadius:12, marginBottom:16, border:'2px solid #FFDAB9', fontWeight:700 }}>⚠️ {error}</div>}
-
-          {mode === 'new' ? (
-            <form onSubmit={handleNew}>
-              <div style={{ marginBottom:16 }}><label style={labelBase}>✏️ 이름</label><input className="edu-input" style={inputBase} placeholder="예: 김민준" value={name} onChange={e=>{ setName(e.target.value); setError('') }}/></div>
-              <div style={{ marginBottom:20 }}><label style={labelBase}>🏷️ 모둠 이름</label><input className="edu-input" style={inputBase} placeholder="예: 2모둠" value={groupName} onChange={e=>{ setGroupName(e.target.value); setError('') }}/></div>
-              <button type="submit" className="edu-btn" style={{ width:'100%', padding:'15px', borderRadius:16, fontSize:16, fontWeight:800, fontFamily:'inherit', background:'linear-gradient(135deg,#FF8C42,#FF6520)', color:'#fff', border:'none', cursor:'pointer', boxShadow:'0 5px 16px rgba(255,140,66,.40)' }}>🚀 모둠 활동 시작하기!</button>
-              <div style={{ marginTop:10, textAlign:'center', fontSize:12, color:'#8C7B6E', lineHeight:1.6, fontWeight:600 }}>💡 모둠을 만들면 <span style={{ fontWeight:800, color:'#FF8C42' }}>참여 코드</span>가 생성돼요</div>
-            </form>
-          ) : (
-            <form onSubmit={handleJoin}>
-              <div style={{ marginBottom:16 }}><label style={labelBase}>✏️ 이름</label><input className="edu-input" style={inputBase} placeholder="예: 이서연" value={name} onChange={e=>{ setName(e.target.value); setError('') }}/></div>
-              <div style={{ marginBottom:20 }}>
-                <label style={labelBase}>🔑 참여 코드 (6자리)</label>
-                <input className="edu-input" style={{ ...inputBase, textTransform:'uppercase', letterSpacing:10, fontWeight:800, fontSize:22, textAlign:'center', padding:'14px 16px' }} placeholder="ABC123" maxLength={6} value={joinCode} onChange={e=>{ setJoinCode(e.target.value.toUpperCase()); setError('') }}/>
-              </div>
-              <button type="submit" className="edu-btn" style={{ width:'100%', padding:'15px', borderRadius:16, fontSize:16, fontWeight:800, fontFamily:'inherit', background:'linear-gradient(135deg,#4EACD9,#2785B5)', color:'#fff', border:'none', cursor:'pointer', boxShadow:'0 5px 16px rgba(78,172,217,.40)' }}>🙋 모둠 활동 참여하기!</button>
-              <div style={{ marginTop:10, textAlign:'center', fontSize:12, color:'#8C7B6E', lineHeight:1.6, fontWeight:600 }}>💡 모둠장에게 받은 <span style={{ fontWeight:800, color:'#4EACD9' }}>6자리 코드</span>를 입력하세요</div>
-            </form>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // ── PC / 태블릿 레이아웃 (기존 유지) ─────────────────────────────────────
   return (
-    <div style={{
-      width: '100%', height: '100%',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      backgroundImage: "url('/bg-main.png')",
-      backgroundSize: 'cover', backgroundPosition: 'center',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      <div style={{ width: 420, padding: '0 40px', flexShrink: 0 }}>
-        <div style={{ marginBottom: 18, marginTop: 20 }}>
-          <div style={{ display:'inline-block', padding:'5px 16px', borderRadius:999, background:'#FF8C42', color:'#fff', fontSize:12, fontWeight:800, letterSpacing:1.5, marginBottom:10 }}>6. 여러 가지 그래프</div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color:'#3D2B1F', lineHeight: 1.25, letterSpacing:'-0.5px' }}>
-            자료를 수집하여<br/>
-            <span style={{ color:'#4EACD9' }}>알맞은 그래프로</span><br/>
-            나타내고 해석해요!
-          </h1>
-          <p style={{ fontSize:14, color:'#8C7B6E', marginTop:10, lineHeight:1.7, fontWeight:600 }}>
-            모둠원과 함께 탐구 주제를 정하고,<br/>
-            자료를 모아 그래프로 표현해 보세요 📊
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', background: 'var(--color-white)', overflow: isMobile ? 'auto' : 'hidden' }}>
+
+      {/* ── 좌측 히어로 패널 ── */}
+      {!isMobile && (
+      <div style={{
+        flex: '0 0 calc(70% - var(--spacing-36))',
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'var(--color-purple-400)',
+        borderRadius: '30px',
+        margin: 'var(--spacing-36) 0 var(--spacing-36) var(--spacing-36)',
+      }}>
+        {/* 배경 영상 */}
+        <video
+          src="/hero.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'left bottom',
+            transform: 'scale(1.05)',
+            transformOrigin: 'center center',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* 텍스트 영역 */}
+        <div style={{
+          position: 'absolute',
+          left: 'var(--spacing-48)',
+          right: '38%',
+          top: 'calc(15% - 20px)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {/* 부제목 */}
+          <p style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 'calc(var(--text-section-semibold-size) * 0.75)',
+            fontWeight: 'var(--text-section-semibold-weight)',
+            lineHeight: 1.3,
+            color: 'var(--color-white)',
+            letterSpacing: '-0.54px',
+            marginBottom: 'var(--spacing-8)',
+          }}>
+            탐구 주제를 정하고<br />
+            그래프로 표현해 보세요!
           </p>
+
+          {/* 메인 타이틀 */}
+          <h1 style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 'calc(var(--text-hero-size) * 0.75)',
+            fontWeight: 'var(--text-hero-weight)',
+            lineHeight: 'var(--text-hero-lh)',
+            color: 'var(--color-white)',
+            letterSpacing: '-0.93px',
+            marginBottom: 'var(--spacing-16)',
+          }}>
+            여러가지 그래프
+          </h1>
+
         </div>
       </div>
+      )}
 
-      <div style={{ width: 400, padding: '0 16px', position: 'relative' }}>
-        <img src="/char-spurout.png" alt="" style={{ position:'absolute', left:-118, top:-10, width:168, zIndex:6, pointerEvents:'none', filter:'drop-shadow(0 8px 16px rgba(0,0,0,.15))' }}/>
-        <img src="/char-sun.png" alt="" style={{ position:'absolute', right:-42, top:lastGroup?-105:-95, width:138, pointerEvents:'none', filter:'drop-shadow(0 6px 14px rgba(0,0,0,.18))' }}/>
+      {/* ── 우측 폼 패널 ── */}
+      <div style={{
+        flex: isMobile ? '1' : '0 0 30%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: isMobile ? 'flex-start' : 'flex-start',
+        padding: isMobile ? '40px 24px' : '60px 20px',
+        position: 'relative',
+        minHeight: isMobile ? '100vh' : undefined,
+      }}>
 
-        {lastGroup && (
-          <div onClick={()=>{ sessionStorage.setItem('gts_user', JSON.stringify({...lastGroup, role:'member'})); router.push('/activity') }}
-            style={{ marginBottom:14, padding:'12px 16px', background:'#fff', borderRadius:16, border:'2.5px solid #E8DFD4',
-              display:'flex', alignItems:'center', gap:12, cursor:'pointer', boxShadow:'0 3px 10px rgba(150,100,60,.08)',
-              transition:'transform .15s, box-shadow .15s', position:'relative', zIndex:2 }}
-            onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(150,100,60,.14)' }}
-            onMouseLeave={e=>{ e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 3px 10px rgba(150,100,60,.08)' }}>
-            <div style={{ width:38, height:38, borderRadius:'50%', flexShrink:0, background:'linear-gradient(135deg,#5BBF7A,#4EACD9)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>🔁</div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:13, fontWeight:700, color:'#3D2B1F', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{lastGroup.name} · {lastGroup.groupName}</div>
-              <div style={{ fontSize:11, color:'#8C7B6E', letterSpacing:1.5, fontWeight:700 }}>{lastGroup.code}</div>
-            </div>
-            <div style={{ fontSize:12, fontWeight:800, color:'#4EACD9', background:'#EBF7FF', padding:'4px 10px', borderRadius:999, border:'1.5px solid #B3DFFB', whiteSpace:'nowrap' }}>다시 참여 →</div>
-          </div>
-        )}
-
-        <div style={{ background:'#fff', borderRadius:24, padding:'28px 28px 24px',
-          boxShadow:'0 6px 28px rgba(150,100,60,.12),0 2px 6px rgba(150,100,60,.06)',
-          border:'2.5px solid #E8DFD4', position:'relative', zIndex:2 }}>
-          <div style={{ display:'flex', gap:4, marginBottom:24, background:'#FFF3E8', borderRadius:14, padding:4 }}>
-            {[['new','🏠 새 모둠 만들기'],['join','🔑 코드로 참여']].map(([m,label])=>(
-              <button key={m} onClick={()=>{ setMode(m); setError('') }} style={{
-                flex:1, padding:'10px 0', fontSize:13, fontWeight:mode===m?800:600,
-                color:mode===m?'#fff':'#8C7B6E', background:mode===m?'#FF8C42':'transparent',
-                border:'none', borderRadius:11, cursor:'pointer', transition:'all .18s ease',
-                boxShadow:mode===m?'0 3px 10px rgba(255,140,66,.35)':'none', fontFamily:'inherit',
-              }}>{label}</button>
+        {/* 폼 컨텐츠 */}
+        <div style={{
+          width: '100%',
+          maxWidth: '320px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-24)',
+        }}>
+          {/* 탭 바 */}
+          <div style={{
+            display: 'flex',
+            background: 'var(--color-cool-gray-100)',
+            borderRadius: '8px',
+            height: '48px',
+            overflow: 'hidden',
+          }}>
+            {[
+              { key: 'new',  label: '새 모둠 만들기' },
+              { key: 'join', label: '코드로 참여' },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => { setMode(key); setError('') }}
+                style={{
+                  flex: 1,
+                  height: '48px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '15px',
+                  fontWeight: mode === key ? 600 : 400,
+                  color: mode === key ? 'var(--color-white)' : 'var(--color-cool-gray-500)',
+                  background: mode === key ? 'var(--color-purple-300)' : 'transparent',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background 0.18s, color 0.18s',
+                }}
+              >
+                {label}
+              </button>
             ))}
           </div>
 
-          {error && <div style={{ fontSize:13, color:'#D4601A', padding:'10px 14px', background:'#FFF3E8', borderRadius:12, marginBottom:16, border:'2px solid #FFDAB9', fontWeight:700 }}>⚠️ {error}</div>}
+          {/* 입력 폼 */}
+          <form
+            onSubmit={mode === 'new' ? handleNew : handleJoin}
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-24)' }}
+          >
+            <TextInput
+              label="이름"
+              placeholder="예: 김민준"
+              value={name}
+              onChange={e => { setName(e.target.value); setError('') }}
+            />
 
-          {mode === 'new' ? (
-            <form onSubmit={handleNew}>
-              <div style={{ marginBottom:18 }}><label style={labelBase}>✏️ 이름</label><input className="edu-input" style={inputBase} placeholder="예: 김민준" value={name} onChange={e=>{ setName(e.target.value); setError('') }}/></div>
-              <div style={{ marginBottom:20 }}><label style={labelBase}>🏷️ 모둠 이름</label><input className="edu-input" style={inputBase} placeholder="예: 2모둠" value={groupName} onChange={e=>{ setGroupName(e.target.value); setError('') }}/></div>
-              <button type="submit" className="edu-btn" style={{ width:'100%', padding:'15px', borderRadius:16, fontSize:16, fontWeight:800, fontFamily:'inherit', background:'linear-gradient(135deg,#FF8C42,#FF6520)', color:'#fff', border:'none', cursor:'pointer', boxShadow:'0 5px 16px rgba(255,140,66,.40)' }}>🚀 모둠 활동 시작하기!</button>
-              <div style={{ marginTop:12, textAlign:'center', fontSize:12, color:'#8C7B6E', lineHeight:1.6, fontWeight:600 }}>💡 모둠을 만들면 <span style={{ fontWeight:800, color:'#FF8C42' }}>참여 코드</span>가 생성돼요</div>
-            </form>
-          ) : (
-            <form onSubmit={handleJoin}>
-              <div style={{ marginBottom:18 }}><label style={labelBase}>✏️ 이름</label><input className="edu-input" style={inputBase} placeholder="예: 이서연" value={name} onChange={e=>{ setName(e.target.value); setError('') }}/></div>
-              <div style={{ marginBottom:20 }}>
-                <label style={labelBase}>🔑 참여 코드 (6자리)</label>
-                <input className="edu-input" style={{ ...inputBase, textTransform:'uppercase', letterSpacing:10, fontWeight:800, fontSize:22, textAlign:'center', padding:'14px 16px' }} placeholder="ABC123" maxLength={6} value={joinCode} onChange={e=>{ setJoinCode(e.target.value.toUpperCase()); setError('') }}/>
-              </div>
-              <button type="submit" className="edu-btn" style={{ width:'100%', padding:'15px', borderRadius:16, fontSize:16, fontWeight:800, fontFamily:'inherit', background:'linear-gradient(135deg,#4EACD9,#2785B5)', color:'#fff', border:'none', cursor:'pointer', boxShadow:'0 5px 16px rgba(78,172,217,.40)' }}>🙋 모둠 활동 참여하기!</button>
-              <div style={{ marginTop:12, textAlign:'center', fontSize:12, color:'#8C7B6E', lineHeight:1.6, fontWeight:600 }}>💡 모둠장에게 받은 <span style={{ fontWeight:800, color:'#4EACD9' }}>6자리 코드</span>를 입력하세요</div>
-            </form>
-          )}
+            {mode === 'new' ? (
+              <TextInput
+                label="모둠 이름"
+                placeholder="예: 2모둠"
+                value={groupName}
+                onChange={e => { setGroupName(e.target.value); setError('') }}
+              />
+            ) : (
+              <TextInput
+                label="참여 코드"
+                placeholder="ABC123"
+                value={joinCode}
+                maxLength={6}
+                center
+                onChange={e => { setJoinCode(e.target.value.toUpperCase()); setError('') }}
+              />
+            )}
+
+            {error && (
+              <p style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 'var(--text-body-medium-17-size)',
+                fontWeight: 500,
+                color: 'var(--state-error)',
+                textAlign: 'center',
+              }}>
+                {error}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-16)' }}>
+              {/* CTA 버튼 */}
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  height: '56px',
+                  background: 'var(--color-purple-500)',
+                  color: 'var(--color-white)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  border: '1px solid var(--color-black-overlay-10)',
+                  borderRadius: '100px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  letterSpacing: '-0.4px',
+                }}
+              >
+                {mode === 'new' ? '모둠 활동 시작하기' : '모둠 활동 참여하기'}
+              </button>
+
+              {/* 안내 텍스트 */}
+              <p style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '15px',
+                fontWeight: 400,
+                color: 'var(--color-cool-gray-500)',
+                textAlign: 'center',
+                lineHeight: 1.5,
+              }}>
+                {mode === 'new' ? (
+                  <>모둠을 만들면 <strong style={{ fontWeight: 600, color: 'var(--color-purple-500)' }}>참여 코드</strong>가 생성돼요.</>
+                ) : (
+                  <>모둠장에게 받은 <strong style={{ fontWeight: 600, color: 'var(--color-purple-500)' }}>6자리 코드</strong>를 입력하세요.</>
+                )}
+              </p>
+            </div>
+          </form>
         </div>
 
-        <img src="/char-water.png" alt="" style={{ position:'absolute', right:-48, bottom:-72, width:155, zIndex:10, pointerEvents:'none', filter:'drop-shadow(0 8px 18px rgba(0,0,0,.18))' }}/>
+        {/* 최근 참여 카드 */}
+        {lastGroup && (
+          <div style={{
+            width: '100%',
+            maxWidth: '320px',
+            marginTop: 'auto',
+          }}>
+            <div style={{
+              background: 'var(--color-cool-gray-100)',
+              borderRadius: '8px',
+              padding: 'var(--spacing-16) var(--spacing-20)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-16)',
+            }}>
+              {/* 아바타 */}
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '100px',
+                background: 'var(--color-purple-300)',
+                border: '1px solid var(--color-cool-gray-200)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: 'var(--font-body)',
+                fontSize: 'var(--text-body-medium-20-size)',
+                fontWeight: 700,
+                color: 'var(--color-white)',
+                flexShrink: 0,
+              }}>
+                {lastGroup.name?.[0] ?? '?'}
+              </div>
+
+              {/* 이름 + 코드 */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <p style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 'var(--text-body-medium-17-size)',
+                  fontWeight: 600,
+                  color: 'var(--color-black)',
+                  lineHeight: 1.5,
+                  letterSpacing: '-0.36px',
+                }}>
+                  {lastGroup.name}
+                </p>
+                <p style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '15px',
+                  fontWeight: 400,
+                  color: 'var(--color-cool-gray-500)',
+                  lineHeight: 1.4,
+                  letterSpacing: '-0.32px',
+                }}>
+                  {lastGroup.code}
+                </p>
+              </div>
+
+              {/* 다시 참여 버튼 */}
+              <button
+                onClick={() => {
+                  sessionStorage.setItem('gts_user', JSON.stringify({ ...lastGroup, role: 'member' }))
+                  router.push('/activity')
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--spacing-6)',
+                  padding: 'var(--spacing-8) var(--spacing-16)',
+                  background: 'var(--color-white)',
+                  border: '1px solid var(--color-purple-500)',
+                  borderRadius: '999px',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: 'var(--color-purple-500)',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                다시 참여
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

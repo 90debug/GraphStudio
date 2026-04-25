@@ -106,7 +106,7 @@ export default function ActivityPage() {
         setLoading(false)
       } catch (err) {
         console.error(err); setLoading(false)
-        setToast('⚠️ Firebase 연결 실패 — .env.local 파일을 확인해 주세요')
+        setToast(' Firebase 연결 실패 — .env.local 파일을 확인해 주세요')
       }
     }
     init()
@@ -140,8 +140,8 @@ export default function ActivityPage() {
   async function handleLike1(postId, nowLiking) { await toggleLike1(userRef.current?.code, postId, user?.name, nowLiking) }
   async function handleComment1(postId, text) { await addComment1(userRef.current?.code, postId, text) }
   async function handleDelete1(postId) {
-    try { await deleteStep1Post(userRef.current?.code, postId); setToast('🗑️ 삭제되었어요') }
-    catch { setToast('⚠️ 삭제에 실패했어요') }
+    try { await deleteStep1Post(userRef.current?.code, postId); setToast(' 삭제되었어요') }
+    catch { setToast(' 삭제에 실패했어요') }
   }
 
   async function doSelectVote(post) {
@@ -152,7 +152,7 @@ export default function ActivityPage() {
       postData: { content: post.content, topic: post.topic, question: post.question, items: post.items },
       requestedBy: user.name, voters, agreed: [user.name],
     })
-    setVoteModal(true); setToast('🗳️ 모둠원에게 투표를 요청했어요!')
+    setVoteModal(true); setToast(' 모둠원에게 투표를 요청했어요!')
   }
 
   async function handleSelectRequest(post) {
@@ -171,8 +171,8 @@ export default function ActivityPage() {
         clearStrokes(code), resetSurvey(code),
       ])
       setRoom(r => ({ ...r, selectedPost:null, dataTable:[], chartConfig:{type:'bar',title:''}, step4State:{}, drawMode:'draw', surveyActive:false }))
-      setToast('🔄 모든 데이터가 초기화되었어요!')
-    } catch (e) { console.error(e); setToast('⚠️ 초기화에 실패했어요.'); return }
+      setToast(' 모든 데이터가 초기화되었어요!')
+    } catch (e) { console.error(e); setToast(' 초기화에 실패했어요.'); return }
     await doSelectVote(post)
   }
 
@@ -202,7 +202,7 @@ export default function ActivityPage() {
         await setSelectedPost(userRef.current?.code, { postId:sv.postId, name:sv.requestedBy, topic:post.topic, question:post.question, items:post.items, content:post.content })
         if (room.surveyActive) await updateSurveyTopic(userRef.current?.code, post.topic, post.question, post.items)
         await setSelectionVote(userRef.current?.code, null)
-        setVoteModal(false); setToast('🎉 탐구 문제가 만장일치로 선정되었어요!')
+        setVoteModal(false); setToast(' 탐구 문제가 만장일치로 선정되었어요!')
       }
       if (sv.requestedBy === user.name) finalize().catch(console.error)
     }
@@ -211,8 +211,8 @@ export default function ActivityPage() {
   async function handleLike4(postId, nowLiking) { await toggleLike4(userRef.current?.code, postId, user?.name, nowLiking) }
   async function handleComment4(postId, text) { await addComment4(userRef.current?.code, postId, text) }
   async function handleDelete4(postId) {
-    try { await deleteStep4Post(userRef.current?.code, postId); setToast('🗑️ 삭제되었어요') }
-    catch { setToast('⚠️ 삭제에 실패했어요') }
+    try { await deleteStep4Post(userRef.current?.code, postId); setToast(' 삭제되었어요') }
+    catch { setToast(' 삭제에 실패했어요') }
   }
 
   if (loading || !user) return (
@@ -220,7 +220,7 @@ export default function ActivityPage() {
       flexDirection:'column', gap:18,
       backgroundImage:"url('/bg-loading.png')", backgroundSize:'cover', backgroundPosition:'center' }}>
       <div style={{ position:'relative' }}>
-        <div className="bounce" style={{ fontSize:60 }}>📚</div>
+        <div className="bounce" style={{ fontSize:60 }}></div>
         <div style={{ position:'absolute', top:-4, right:-8, width:20, height:20, borderRadius:'50%',
           background:'#FF8C42', animation:'pulse 1s infinite', boxShadow:'0 2px 8px rgba(255,140,66,.4)' }}/>
       </div>
@@ -261,7 +261,7 @@ export default function ActivityPage() {
         {device !== 'mobile' && (
           <span style={{ fontSize:15, fontWeight:800, letterSpacing:-0.3,
             background:EDU_GRAD, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-            backgroundClip:'text', flexShrink:0 }}>📊 메모 보드</span>
+            backgroundClip:'text', flexShrink:0 }}> 메모 보드</span>
         )}
 
         <div style={{ flex:1 }}/>
@@ -304,7 +304,7 @@ export default function ActivityPage() {
         <div style={{ display:'flex', alignItems:'center', gap: device==='mobile' ? 3 : 5,
           padding: device==='mobile' ? '4px 8px' : '4px 9px 4px 11px',
           borderRadius:999, background:'#FFF3E8', border:'1.5px solid #FFCB96', boxShadow:'0 2px 6px rgba(255,140,66,.14)' }}>
-          <span style={{ fontSize:10, color:'#D4601A', fontWeight:800 }}>🔑</span>
+          <span style={{ fontSize:10, color:'#D4601A', fontWeight:800 }}></span>
           <span style={{ fontSize: device==='mobile' ? 11 : 12, fontWeight:800, color:'#3D2B1F', letterSpacing: device==='mobile' ? 1 : 2 }}>{user.code}</span>
           <button onClick={()=>navigator.clipboard.writeText(user.code).then(()=>setToast('✅ 코드가 복사되었어요!'))}
             style={{ marginLeft:2, padding:'3px 8px', borderRadius:8, background:'#FF8C42', color:'#fff', border:'none', fontSize:10, fontWeight:800, cursor:'pointer', fontFamily:'inherit', minHeight:28 }}>복사</button>

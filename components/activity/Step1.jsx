@@ -1,9 +1,17 @@
 'use client'
 import { useState } from 'react'
-import { CHART_COLORS, padletPalette, tsNow } from '../../lib/constants'
-import { Sec, Tag, Btn } from './ui'
+import { CHART_COLORS, tsNow } from '../../lib/constants'
 import { useDevice } from '../../lib/DeviceContext'
 import { addStep1Post, toggleLike1, addComment1 } from '../../lib/firestore'
+import { Heart, MessageCircle, Crown, X, CheckCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+const AVATAR_COLORS = ['#5B41EB','#4EACD9','#5BBF7A','#C97DE8','#FF6B7A','#FFB432','#22D3EE','#F97316']
+function nameColor(name) {
+  let h = 0
+  for (let i = 0; i < (name || '').length; i++) h = name.charCodeAt(i) + ((h << 5) - h)
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
+}
 
 function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSelectRequest, onDelete }) {
   const [showCmt, setShowCmt] = useState(false)
@@ -11,13 +19,12 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
   const isMyPost   = post.name === myName
   const isLiked    = post.likedBy?.includes(myName)
   const isSelected = selectedPost?.postId === post.id || !!post.selected
+  
+  // 컬러 다이어트: 배경은 화이트 고정, 포인트는 왼쪽 바(bar)와 아이콘에만.
   const pal = isSelected
-    ? { bg:'#F0FDF4', border:'#34D399', hdr:'#DCFCE7', avBg:'#D1FAE5', avFg:'#047857' }
-    : isMyPost
-      ? { bg:'#FEFCE8', border:'#FCD34D', hdr:'#FFFBEB', avBg:'#FEF3C7', avFg:'#92400E' }
-      : padletPalette(post.name)
+    ? { border: 'border-gsp-500', accent: 'bg-gsp-500', text: 'text-gsp-600', light: 'bg-gsp-50' }
+    : { border: 'border-slate-100', accent: isMyPost ? 'bg-gsp-400' : 'bg-slate-200', text: 'text-slate-600', light: 'bg-slate-50' }
 
-  async function toggleLike() { await onLike(post.id, !isLiked) }
   async function submitCmt() {
     if (!cmtText.trim()) return
     await onComment(post.id, cmtText.trim())
@@ -25,240 +32,362 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onSele
   }
 
   return (
-    <div className={`padlet-card-item postcard-wrap${isSelected?' card-selected-pulse':''}`} style={{
-      background:pal.bg, border:`2px solid ${pal.border}`, borderRadius:14, overflow:'visible', position:'relative',
-      boxShadow:isSelected?`0 0 0 3px ${pal.border}55,0 8px 28px rgba(0,0,0,.18)`:`0 4px 16px rgba(0,0,0,.13)`,
-    }}>
-      {isSelected&&<div style={{position:'absolute',top:-18,left:'50%',transform:'translateX(-50%)',zIndex:20,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
-        <span className="crown-icon" style={{fontSize:24,lineHeight:1,display:'block'}}>👑</span>
-      </div>}
-      {isMyPost&&!isSelected&&<div style={{position:'absolute',top:-8,left:12,zIndex:10,padding:'2px 8px',borderRadius:999,background:'#F59E0B',color:'#fff',fontSize:10,fontWeight:800,boxShadow:'0 1px 4px rgba(245,158,11,.4)'}}>내 글</div>}
-      {isMyPost&&!isSelected&&<button onClick={()=>onDelete&&onDelete(post.id)} className="postcard-close" style={{position:'absolute',top:-8,right:-8,zIndex:10,width:22,height:22,borderRadius:'50%',background:'#EF4444',color:'#fff',border:'2px solid #fff',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(239,68,68,.45)'}}>✕</button>}
-      {isSelected&&<div style={{position:'absolute',top:8,right:10,zIndex:10,padding:'3px 9px',borderRadius:999,background:'#10B981',color:'#fff',fontSize:11,fontWeight:700,boxShadow:'0 2px 8px rgba(16,185,129,.4)'}}>✅ 선정됨</div>}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`
+        relative group transition-all duration-300
+        rounded-[20px] border bg-white shadow-sm
+        ${pal.border} ${isSelected ? 'ring-4 ring-gsp-500/5' : 'hover:shadow-md hover:border-slate-200'}
+      `}
+    >
+      {/* 상태 표시용 버티컬 바 (Bento Point) */}
+      <div className={`absolute top-5 left-0 w-1 h-10 rounded-r-full ${pal.accent} transition-colors`} />
 
-      <div style={{padding:'10px 12px 8px',display:'flex',alignItems:'center',gap:8,background:pal.hdr,borderRadius:'12px 12px 0 0'}}>
-        <div style={{width:30,height:30,borderRadius:'50%',flexShrink:0,background:pal.avBg,color:pal.avFg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700}}>{(post.name||'?')[0]}</div>
-        <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:700,color:'#1E293B'}}>{post.name}{isMyPost&&<span style={{fontSize:11,color:'#94A3B8',fontWeight:400}}> (나)</span>}</div>
-          <div style={{fontSize:11,color:'#94A3B8'}}>{post.time}</div>
+      {/* 책갈피 선정됨 배지 */}
+      {isSelected && (
+        <div style={{ position: 'absolute', top: 0, right: 18, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', filter: 'drop-shadow(2px 6px 10px rgba(255,180,50,0.45))' }}>
+          <div style={{
+            width: 54, background: '#FFB432',
+            borderRadius: 0,
+            paddingTop: 12, paddingBottom: 10,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+          }}>
+            <Crown size={16} fill="#fff" strokeWidth={0} />
+            <span style={{ fontSize: 13, fontWeight: 900, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1 }}>선정됨</span>
+          </div>
+          <div style={{ width: 0, height: 0, borderLeft: '27px solid #FFB432', borderRight: '27px solid #FFB432', borderBottom: '14px solid transparent' }} />
         </div>
-        {onSelectRequest&&!isSelected&&(
-          <button onClick={()=>onSelectRequest(post)} style={{fontSize:12,fontWeight:700,padding:'5px 11px',borderRadius:8,border:'1.5px solid #10B981',background:'#fff',color:'#10B981',cursor:'pointer',flexShrink:0,fontFamily:'inherit',transition:'all .15s',minHeight:36}}
-            onMouseEnter={e=>{e.currentTarget.style.background='#10B981';e.currentTarget.style.color='#fff'}}
-            onMouseLeave={e=>{e.currentTarget.style.background='#fff';e.currentTarget.style.color='#10B981'}}>선정</button>
+      )}
+
+      {/* 우측 상단 액션 */}
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        {isMyPost && !isSelected && (
+          <button onClick={() => onDelete?.(post.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1">
+            <X size={14} />
+          </button>
         )}
       </div>
 
-      <div style={{padding:'10px 14px'}}>
-        <div style={{fontSize:15,fontWeight:800,color:'#1E293B',lineHeight:1.35,marginBottom:5}}>
-          {post.topic||post.content?.split('\n')[0]?.replace('📌 주제: ','')}
+      {/* 카드 내용 */}
+      <div className="p-5">
+        <div className="flex items-center gap-2.5 mb-4">
+          <div style={{
+            width: 28, height: 28, borderRadius: '100px',
+            background: nameColor(post.name),
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 12, fontWeight: 700,
+            color: '#fff', flexShrink: 0,
+          }}>
+            {(post.name?.[0] ?? '?')}
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-800 leading-none">{post.name} {isMyPost && <span className="text-gsp-500 text-[9px] font-black ml-0.5">MY</span>}</p>
+            <p className="text-[9px] text-slate-400 mt-1 font-medium">{post.time}</p>
+          </div>
         </div>
-        {post.question&&<div style={{fontSize:12,color:'#475569',marginBottom:9,lineHeight:1.55}}>📌 {post.question}</div>}
-        {post.items?.length>0&&(
-          <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
-            {post.items.map((item,i)=>(
-              <span key={i} style={{padding:'3px 9px',borderRadius:999,fontSize:11,fontWeight:700,
-                background:CHART_COLORS[i%CHART_COLORS.length]+'18',color:CHART_COLORS[i%CHART_COLORS.length],
-                border:`1.5px solid ${CHART_COLORS[i%CHART_COLORS.length]}30`}}>{item}</span>
+
+        <h3 className="text-[15px] font-black text-slate-900 leading-tight mb-3 break-keep">
+          {post.topic || post.content?.split('\n')[0]?.replace('주제: ','').replace('📌 주제: ','')}
+        </h3>
+
+        {post.question && (
+          <div className="bg-slate-50/80 rounded-xl p-3 mb-4 border border-slate-100">
+            <p className="text-[12px] text-slate-600 leading-relaxed">
+              <span className="text-gsp-500 font-black mr-1.5">Q.</span>
+              {post.question}
+            </p>
+          </div>
+        )}
+
+        {/* 태그: 컬러를 완전히 뺌 (그래프에서만 컬러 사용) */}
+        {post.items?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {post.items.map((item, i) => (
+              <span key={i} className="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-bold border border-slate-200/50">
+                {item}
+              </span>
             ))}
           </div>
         )}
       </div>
 
-      {post.comments?.map((c,i)=>(
-        <div key={i} style={{fontSize:12,color:'#64748B',padding:'2px 14px 2px 18px',borderLeft:`2px solid ${pal.border}`,margin:'0 14px 3px',lineHeight:1.6}}>{c}</div>
-      ))}
-
-      <div style={{padding:'7px 10px 9px',display:'flex',alignItems:'center',gap:5,borderTop:`1px solid ${pal.border}50`}}>
-        <button onClick={toggleLike} style={{background:'none',border:'none',cursor:'pointer',fontSize:18,lineHeight:1,transition:'transform .15s',padding:'4px',minWidth:36,minHeight:36,display:'flex',alignItems:'center',justifyContent:'center'}}
-          onMouseEnter={e=>e.currentTarget.style.transform='scale(1.25)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
-          {isLiked?'❤️':'🤍'}
-        </button>
-        <button onClick={()=>setShowCmt(!showCmt)} style={{background:'none',border:'none',cursor:'pointer',fontSize:15,lineHeight:1,color:'#94A3B8',padding:'4px',minWidth:36,minHeight:36,display:'flex',alignItems:'center',justifyContent:'center'}}>💬</button>
-        {(post.likes>0||post.comments?.length>0)&&(
-          <span style={{fontSize:11,color:'#94A3B8'}}>
-            {post.likes>0&&<b style={{color:'#475569'}}>♥ {post.likes}</b>}
-            {post.likes>0&&post.comments?.length>0&&' · '}
-            {post.comments?.length>0&&`댓글 ${post.comments.length}`}
-          </span>
+      {/* 액션 바 */}
+      <div className="px-5 py-3 border-t border-slate-50 flex items-center justify-between">
+        <div className="flex gap-4">
+          <button onClick={() => onLike(post.id, !isLiked)} className="flex items-center gap-1.5 group">
+            <Heart className={`w-4 h-4 transition-all ${isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-300 group-hover:text-slate-400'}`} />
+            <span className="text-[11px] font-extrabold text-slate-400">{post.likes || 0}</span>
+          </button>
+          <button onClick={() => setShowCmt(!showCmt)} className="flex items-center gap-1.5 group">
+            <MessageCircle className={`w-4 h-4 transition-colors ${showCmt ? 'text-gsp-500' : 'text-slate-300 group-hover:text-slate-400'}`} />
+            <span className="text-[11px] font-extrabold text-slate-400">{post.comments?.length || 0}</span>
+          </button>
+        </div>
+        {onSelectRequest && !isSelected && (
+          <button onClick={() => onSelectRequest(post)} style={{ fontSize:11, fontWeight:900, color:'#5B41EB', padding:'6px 12px', borderRadius:999, background:'#fff', border:'1px solid #5B41EB', cursor:'pointer', fontFamily:'inherit', transition:'background .15s' }} onMouseEnter={e=>e.currentTarget.style.background='#EEEEF3'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
+            주제 선정
+          </button>
         )}
       </div>
 
-      {showCmt&&(
-        <div style={{padding:'0 12px 12px',display:'flex',gap:7}}>
-          <input value={cmtText} onChange={e=>setCmtText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submitCmt()}
-            placeholder="댓글 달기..."
-            style={{flex:1,padding:'8px 12px',borderRadius:999,border:`1.5px solid ${pal.border}`,fontSize:12,background:'#fff',outline:'none',fontFamily:'inherit'}}/>
-          <button onClick={submitCmt} style={{fontSize:12,fontWeight:700,color:'#fff',background:'#4EACD9',border:'none',borderRadius:8,cursor:'pointer',padding:'8px 12px',fontFamily:'inherit',minHeight:36}}>게시</button>
-        </div>
-      )}
-    </div>
+      {/* 댓글 영역 — absolute로 띄워서 다른 카드에 영향 없음 */}
+      <AnimatePresence>
+        {showCmt && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              zIndex: 50,
+              marginTop: 6,
+              background: '#fff',
+              borderRadius: 16,
+              border: '1px solid #e2e3e5',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+              padding: 14,
+            }}
+          >
+            <div className="space-y-2">
+              {post.comments?.map((c, i) => (
+                <div key={i} className="bg-slate-50 px-3 py-2 rounded-xl text-[11px] text-slate-600 border border-slate-100">{c}</div>
+              ))}
+              <div className="flex gap-2 pt-1">
+                <input value={cmtText}
+                  onChange={e => setCmtText(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && submitCmt()}
+                  placeholder="의견을 남겨 주세요" className="flex-1 px-3 py-2 bg-white border border-[#E2E3E5] rounded-[8px] text-[11px] outline-none focus:border-gsp-400 placeholder:text-[#8A949E]" />
+                <button onClick={submitCmt} className="bg-gsp-600 text-white px-3 py-2 rounded-full text-[11px] font-bold">등록</button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }
 
-export default function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, onSelectRequest, onDelete }) {
-  const device   = useDevice()
-  const isMobile = device === 'mobile'
-
-  const [showModal, setShowModal] = useState(false)
-  const [form,      setForm]      = useState({ topic:'', question:'', items:[] })
+export default function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, onSelectRequest, onDelete, showModal: showModalProp, onShowModal }) {
+  const device = useDevice()
+  const [showModalLocal, setShowModalLocal] = useState(false)
+  const showModal = showModalProp !== undefined ? showModalProp : showModalLocal
+  const setShowModal = onShowModal ?? setShowModalLocal
+  const [form, setForm] = useState({ topic:'', question:'', items:[] })
   const [itemInput, setItemInput] = useState('')
-  const [sharing,   setSharing]   = useState(false)
-  const [dragIdx,   setDragIdx]   = useState(null)
-  const [shareErr,  setShareErr]  = useState('')
+  const [sharing, setSharing] = useState(false)
+  const [shareErr, setShareErr] = useState('')
 
   function addItem() {
-    if (!itemInput.trim()) return
-    if (form.items.length>=8) return
-    setForm(f=>({...f,items:[...f.items,itemInput.trim()]})); setItemInput('')
+    if (!itemInput.trim() || form.items.length >= 8) return
+    setForm(f => ({ ...f, items: [...f.items, itemInput.trim()] }))
+    setItemInput('')
   }
-  function removeItem(i) { setForm(f=>({...f,items:f.items.filter((_,idx)=>idx!==i)})) }
-  function onDragStart(i) { setDragIdx(i) }
-  function onDragEnter(i) {
-    if (dragIdx===null||dragIdx===i) return
-    const next=[...form.items]; const [moved]=next.splice(dragIdx,1); next.splice(i,0,moved)
-    setForm(f=>({...f,items:next})); setDragIdx(i)
+  function removeItem(idx) {
+    setForm(f => ({ ...f, items: f.items.filter((_, i) => i !== idx) }))
   }
+  function closeModal() { setShowModal(false); setShareErr('') }
 
   async function doShare() {
-    if (!form.topic.trim()||!form.question.trim()||!form.items.length) return
+    if (!form.topic.trim() || !form.question.trim() || !form.items.length) return
     setSharing(true); setShareErr('')
     try {
-      const content=`📌 주제: ${form.topic}\n🔍 질문: ${form.question}\n📋 항목: ${form.items.join(', ')}`
-      await addStep1Post(code,{name:user.name,step:1,content,topic:form.topic,question:form.question,items:form.items,time:tsNow()})
-      setForm({topic:'',question:'',items:[]}); setItemInput(''); setShowModal(false)
-      onToast&&onToast('🚀 보드에 공유되었어요!')
-    } catch(err) { setShareErr('공유에 실패했어요. 잠시 후 다시 시도해 주세요.') }
+      const content = `주제: ${form.topic}\n질문: ${form.question}\n항목: ${form.items.join(', ')}`
+      await addStep1Post(code, {
+        name: user.name, step: 1, content,
+        topic: form.topic, question: form.question, items: form.items, time: tsNow(),
+      })
+      setForm({ topic:'', question:'', items:[] }); setItemInput(''); closeModal()
+      onToast?.('보드에 공유되었어요!')
+    } catch { setShareErr('공유에 실패했어요. 다시 시도해주세요.') }
     finally { setSharing(false) }
   }
 
-  const ready = form.topic.trim()&&form.question.trim()&&form.items.length>0
-
-  // 모바일: 1열, PC/태블릿: 3열
-  const gridCols = isMobile ? '1fr' : 'repeat(3, 1fr)'
-
-  // ── 작성 폼 (모바일: 바텀시트 스타일 / PC: 기존 오버레이) ─────────────────
-  const formContent = (
-    <div style={{background:'#fff',borderRadius:isMobile?'20px 20px 0 0':20,padding:'24px 22px 20px',width:'100%',maxWidth:isMobile?'100%':'min(420px,96vw)',maxHeight:isMobile?'80vh':'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,.25)',animation:'fadeUp .25s cubic-bezier(.34,1.3,.64,1)'}}>
-      {/* 모바일 핸들 */}
-      {isMobile&&<div style={{width:36,height:4,background:'#E2E8F2',borderRadius:999,margin:'-8px auto 16px'}}/>}
-      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:18}}>
-        <span style={{fontSize:18}}>📝</span>
-        <span style={{fontSize:17,fontWeight:800,color:'#1E293B'}}>탐구 문제 작성</span>
-        <button onClick={()=>setShowModal(false)} style={{marginLeft:'auto',width:30,height:30,borderRadius:'50%',background:'#F1F5F9',border:'none',fontSize:16,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#64748B'}}>✕</button>
-      </div>
-
-      {[{label:'📌 조사 주제',key:'topic',ph:'예: 우리 반 학생들이 좋아하는 간식의 종류'},{label:'🔍 조사 질문',key:'question',ph:'예: 가장 자주 먹는 간식은 무엇인가요?'}].map(f=>(
-        <div key={f.key} style={{marginBottom:14}}>
-          <div style={{fontSize:13,fontWeight:700,color:'#64748B',marginBottom:6}}>{f.label}</div>
-          <input value={form[f.key]} onChange={e=>{setForm(p=>({...p,[f.key]:e.target.value}));setShareErr('')}}
-            placeholder={f.ph} style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1.5px solid #CBD5E1',fontSize:14,background:'#F8FAFC',outline:'none',fontFamily:'inherit'}}
-            onFocus={e=>e.target.style.borderColor='#F97316'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
-        </div>
-      ))}
-
-      <div style={{fontSize:13,fontWeight:700,color:'#64748B',marginBottom:4}}>📋 조사 항목 <span style={{fontSize:11,fontWeight:400,color:'#94A3B8',marginLeft:6}}>최대 8개</span></div>
-      <div style={{display:'flex',gap:6,marginBottom:form.items.length>0?10:0}}>
-        <input value={itemInput} onChange={e=>setItemInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addItem()}
-          placeholder="예: 과자"
-          style={{flex:1,padding:'10px 14px',borderRadius:10,border:'1.5px solid #CBD5E1',fontSize:14,background:'#F8FAFC',outline:'none',fontFamily:'inherit'}}
-          onFocus={e=>e.target.style.borderColor='#F97316'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
-        <button onClick={addItem} disabled={!itemInput.trim()||form.items.length>=8}
-          style={{padding:'10px 16px',borderRadius:10,background:(!itemInput.trim()||form.items.length>=8)?'#E2E8F2':'#1E293B',color:(!itemInput.trim()||form.items.length>=8)?'#94A3B8':'#fff',border:'none',fontSize:14,fontWeight:700,cursor:(!itemInput.trim()||form.items.length>=8)?'not-allowed':'pointer',fontFamily:'inherit',flexShrink:0,transition:'all .15s',minHeight:44}}>추가</button>
-      </div>
-
-      {form.items.length>0&&(
-        <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:10}}>
-          {form.items.map((item,i)=>(
-            <div key={i} draggable onDragStart={()=>onDragStart(i)} onDragEnter={()=>onDragEnter(i)} onDragEnd={()=>setDragIdx(null)} onDragOver={e=>e.preventDefault()}
-              style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 12px',borderRadius:999,fontSize:12,fontWeight:700,background:CHART_COLORS[i%CHART_COLORS.length]+'15',color:CHART_COLORS[i%CHART_COLORS.length],border:`1.5px solid ${CHART_COLORS[i%CHART_COLORS.length]}35`,cursor:'grab',opacity:dragIdx===i?.5:1,userSelect:'none'}}>
-              {item}
-              <button onClick={()=>removeItem(i)} style={{fontSize:14,color:'inherit',background:'none',border:'none',cursor:'pointer',lineHeight:1,padding:0,minWidth:20,minHeight:20}}>×</button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {shareErr&&<div style={{marginTop:10,padding:'8px 12px',background:'#FEF2F2',border:'1px solid #FECACA',borderRadius:8,fontSize:12,color:'#DC2626',fontWeight:600}}>⚠️ {shareErr}</div>}
-
-      <button onClick={doShare} disabled={!ready||sharing} style={{width:'100%',padding:'13px',borderRadius:12,marginTop:16,background:ready&&!sharing?'linear-gradient(135deg,#F97316,#EF4444)':'#E2E8F2',color:ready&&!sharing?'#fff':'#94A3B8',border:'none',fontSize:15,fontWeight:700,cursor:ready&&!sharing?'pointer':'not-allowed',fontFamily:'inherit',transition:'all .15s',boxShadow:ready&&!sharing?'0 4px 14px rgba(249,115,22,.35)':'none',minHeight:48}}>
-        {sharing?'공유 중...':'🚀 보드에 올리기'}
-      </button>
-      <div style={{fontSize:12,color:'#94A3B8',textAlign:'center',marginTop:8}}>💡 올리면 모든 모둠원에게 바로 보여요</div>
-    </div>
-  )
+  const canShare = form.topic.trim() && form.question.trim() && form.items.length > 0
 
   return (
-    <div style={{position:'relative',flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+    <div className="relative flex-1 flex flex-col h-full bg-[#F3F4F8]">
       {/* 헤더 */}
-      <div style={{display:'flex',alignItems:'center',gap:12,padding:'10px 18px',background:'linear-gradient(135deg,#FFF3E8,#fff)',borderBottom:'2px solid #FFCB96',flexShrink:0,position:'relative',overflow:'hidden'}}>
-        <div style={{position:'absolute',right:-10,top:-10,width:50,height:50,borderRadius:'50%',background:'rgba(255,140,66,.10)',pointerEvents:'none'}}/>
-        <img src='/step1_icon.png' alt='Step 1' style={{width:36,height:36,display:'block',flexShrink:0}}/>
-        <div style={{fontWeight:800,fontSize:15,color:'#D4601A',letterSpacing:'-0.2px'}}>탐구 문제 정하기</div>
-        <div style={{marginLeft:'auto',display:'flex',gap:4}}>
-          {[1,2,3,4].map(n=><div key={n} style={{width:n<=1?20:8,height:7,borderRadius:999,background:n<=1?'#FF8C42':'#E6D8C8',boxShadow:n<=1?'0 2px 6px rgba(255,140,66,.40)':'none'}}/>)}
+      <header className="px-6 h-14 bg-white/70 backdrop-blur-lg border-b border-slate-100 flex items-center justify-between sticky top-0 z-40">
+        <div className="flex items-center gap-3">
+          <img src="/icon_01.png" alt="탐구 문제 정하기" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+          <div>
+            <h1 className="text-sm font-black text-slate-800 leading-none tracking-tight">1단계</h1>
+            <p className="text-[12px] text-slate-400 font-bold mt-1">탐구 문제 정하기</p>
+          </div>
         </div>
-      </div>
+        <div className="flex gap-1.5">
+          {[1,2,3,4].map(n => (
+            <div key={n} className={`h-1 rounded-full transition-all duration-300 ${n===1 ? 'w-6 bg-gsp-600' : 'w-1.5 bg-slate-200'}`} />
+          ))}
+        </div>
+      </header>
 
-      {/* 스크롤 영역 */}
-      <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch',padding: isMobile ? '12px 12px 80px' : '16px 20px 80px',backgroundImage:"url('/bg-activity.png')",backgroundSize:'cover',backgroundPosition:'center',backgroundAttachment:'local'}}>
+      <main className="flex-1 overflow-y-auto p-6 pb-40 space-y-6">
+        {selectedPost && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              position: 'relative',
+              borderRadius: 20,
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, #3b2fa0 0%, #5B41EB 60%, #7c6ff7 100%)',
+              padding: '20px 24px',
+              boxShadow: '0 8px 32px rgba(91,65,235,0.35)',
+              minHeight: 130,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: 12,
+            }}
+          >
+            {/* 배경 블러 원 */}
+            <div style={{ position:'absolute', top:-30, right:-30, width:160, height:160, borderRadius:8, background:'rgba(255,255,255,0.06)', pointerEvents:'none' }}/>
+            <div style={{ position:'absolute', bottom:-20, left:40, width:100, height:100, borderRadius:8, background:'rgba(255,255,255,0.04)', pointerEvents:'none' }}/>
 
-        {/* 선정된 문제 배너 */}
-        {selectedPost&&(
-          <div style={{background:'linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#0F172A 100%)',border:'2px solid #22D3EE',borderRadius:14,padding: isMobile ? '10px 12px' : '14px 18px',marginBottom:14,boxShadow:'0 0 0 1px #22D3EE30,0 0 20px #22D3EE40,0 8px 24px rgba(0,0,0,.5)',position:'relative',overflow:'hidden'}}>
-            <div style={{position:'absolute',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.15) 3px,rgba(0,0,0,.15) 4px)'}}/>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-              <div style={{display:'flex',gap:4}}>
-                {['#EF4444','#FBBF24','#22D3EE'].map(c=><div key={c} style={{width:8,height:8,borderRadius:'50%',background:c,boxShadow:`0 0 6px ${c}`}}/>)}
+            {/* 상단: 뱃지 + 제목 */}
+            <div>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.18)', borderRadius:8, padding:'3px 12px', marginBottom:10 }}>
+                <Crown size={12} fill="#FFB432" strokeWidth={0} />
+                <span style={{ fontSize:11, fontWeight:700, color:'#fff', letterSpacing:'-0.2px' }}>우리 모둠 탐구 문제</span>
               </div>
-              <span style={{fontSize:10,fontWeight:800,color:'#22D3EE',letterSpacing:3,textShadow:'0 0 8px #22D3EE',textTransform:'uppercase'}}>✅ 우리 모둠의 탐구 문제</span>
+              <h2 style={{ fontSize:20, fontWeight:800, color:'#fff', letterSpacing:'-0.5px', lineHeight:1.3, margin:0 }}>
+                {selectedPost.topic}
+              </h2>
             </div>
-            <div style={{fontSize: isMobile ? 15 : 18,fontWeight:800,color:'#F0FDF4',letterSpacing:'-0.3px',lineHeight:1.3,marginBottom:8,textShadow:'0 0 12px rgba(34,211,238,.6)'}}>{selectedPost.topic}</div>
-            <div style={{fontSize:13,color:'#94A3B8',marginBottom:8,lineHeight:1.6,borderLeft:'2px solid #22D3EE60',paddingLeft:10}}>
-              <span style={{color:'#22D3EE',fontWeight:700}}>Q.</span> {selectedPost.question}
+
+            {/* 하단: Q. 질문 + 태그 */}
+            <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+              {selectedPost.question && (
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ fontSize:13, fontWeight:900, color:'rgba(255,255,255,0.85)', flexShrink:0 }}>Q.</span>
+                  <span style={{ fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.88)', letterSpacing:'-0.2px' }}>{selectedPost.question}</span>
+                </div>
+              )}
+              {selectedPost.items?.length > 0 && (
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6, justifyContent:'flex-end' }}>
+                  {selectedPost.items.map((item, i) => (
+                    <span key={i} style={{ padding:'4px 12px', borderRadius:8, background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.25)', fontSize:12, fontWeight:600, color:'#fff', whiteSpace:'nowrap' }}>{item}</span>
+                  ))}
+                </div>
+              )}
             </div>
-            <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-              {selectedPost.items?.map((item,i)=>(
-                <span key={i} style={{padding:'3px 10px',borderRadius:6,fontSize:11,fontWeight:700,background:CHART_COLORS[i%CHART_COLORS.length]+'22',color:CHART_COLORS[i%CHART_COLORS.length],border:`1px solid ${CHART_COLORS[i%CHART_COLORS.length]}55`,boxShadow:`0 0 6px ${CHART_COLORS[i%CHART_COLORS.length]}30`}}>{item}</span>
-              ))}
-            </div>
-          </div>
+          </motion.div>
         )}
 
-        {/* 카드 그리드 */}
-        {posts.length===0?(
-          <div style={{textAlign:'center',padding:'40px 20px',color:'#475569'}}>
-            <div style={{fontSize:48,marginBottom:12}}>📋</div>
-            <div style={{fontSize:15,fontWeight:700,color:'#334155',marginBottom:6}}>아직 올라온 탐구 문제가 없어요</div>
-            <div style={{fontSize:13}}>하단 <b style={{color:'#F97316'}}>+</b> 버튼을 눌러서 첫 번째 아이디어를 올려보세요!</div>
-          </div>
-        ):(
-          <div style={{display:'grid',gridTemplateColumns:gridCols,gap: isMobile ? 14 : 12}}>
-            {posts.map(post=>(
-              <PadletStep1Card key={post.id} post={post} myName={user.name} selectedPost={selectedPost}
-                onLike={onLike} onComment={onComment} onSelectRequest={onSelectRequest} onDelete={onDelete}/>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {posts.map(post => (
+            <PadletStep1Card key={post.id} post={post} myName={user.name} selectedPost={selectedPost}
+              onLike={onLike} onComment={onComment} onSelectRequest={onSelectRequest} onDelete={onDelete}/>
+          ))}
+          {posts.length === 0 && (
+            <div className="col-span-full py-20 text-center space-y-3">
+              <p className="text-sm font-medium text-[#8A949E]">첫 번째 아이디어를 기다리고 있어요!</p>
+            </div>
+          )}
+        </div>
+      </main>
+
+
+      {/* 모달 */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
+            onClick={e => e.target === e.currentTarget && closeModal()}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 space-y-4"
+            >
+              {/* 모달 헤더 */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-base font-black text-slate-800">탐구 문제 작성</h3>
+                </div>
+                <button onClick={closeModal} className="text-slate-300 hover:text-slate-500 transition-colors p-1">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* 주제 */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">조사 주제</label>
+                <input
+                  value={form.topic}
+                  onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
+                  placeholder="예: 우리 반 학생들이 좋아하는 과목"
+                  className="w-full px-4 py-3 bg-slate-50 border border-[#E2E3E5] rounded-[8px] text-sm font-bold text-black outline-none bg-white focus:border-gsp-500 transition-all placeholder:text-[#8A949E] placeholder:font-medium"
+                />
+              </div>
+
+              {/* 질문 */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">탐구 질문</label>
+                <input
+                  value={form.question}
+                  onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
+                  placeholder="예: 어떤 과목을 가장 좋아하나요?"
+                  className="w-full px-4 py-3 bg-slate-50 border border-[#E2E3E5] rounded-[8px] text-sm font-bold text-black outline-none bg-white focus:border-gsp-500 transition-all placeholder:text-[#8A949E] placeholder:font-medium"
+                />
+              </div>
+
+              {/* 조사 항목 */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  조사 항목 <span className="normal-case font-medium text-slate-300">({form.items.length}/8)</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    value={itemInput}
+                    onChange={e => setItemInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && addItem()}
+                    placeholder="항목 입력 후 Enter"
+                    className="flex-1 px-4 py-2.5 bg-slate-50 border border-[#E2E3E5] rounded-[8px] text-sm font-bold text-black outline-none bg-white focus:border-gsp-500 transition-all placeholder:text-[#8A949E] placeholder:font-medium"
+                  />
+                  <button
+                    onClick={addItem}
+                    className="px-4 py-2.5 bg-gsp-600 text-white rounded-full text-sm font-black hover:bg-gsp-700 active:scale-95 transition-all"
+                  >추가</button>
+                </div>
+                {form.items.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {form.items.map((item, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-gsp-50 text-gsp-700 border border-gsp-100 rounded-full text-[11px] font-bold">
+                        {item}
+                        <button onClick={() => removeItem(i)} className="text-gsp-400 hover:text-gsp-700 transition-colors">
+                          <X size={10} strokeWidth={3} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {shareErr && (
+                <p className="text-xs font-bold text-red-500 bg-red-50 px-3 py-2 rounded-xl">{shareErr}</p>
+              )}
+
+              <button
+                onClick={doShare}
+                disabled={!canShare || sharing}
+                className="w-full py-3.5 bg-gsp-600 text-white rounded-full font-black text-sm shadow-lg shadow-gsp-100 hover:bg-gsp-700 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {sharing ? '올리는 중...' : '보드에 올리기'}
+              </button>
+              <p className="text-center text-[11px] text-slate-400 font-medium">올리면 모든 모둠원에게 바로 보여요.</p>
+            </motion.div>
+          </motion.div>
         )}
-      </div>
-
-      {/* FAB */}
-      {!showModal&&<button className="padlet-fab" onClick={()=>setShowModal(true)} title="탐구 문제 추가하기" style={{bottom: isMobile ? 16 : 22}}>＋</button>}
-
-      {/* 모달: 모바일=바텀시트, PC=중앙 오버레이 */}
-      {showModal&&(
-        isMobile ? (
-          <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.5)',zIndex:100,display:'flex',flexDirection:'column',justifyContent:'flex-end'}}
-            onClick={e=>{if(e.target===e.currentTarget)setShowModal(false)}}>
-            {formContent}
-          </div>
-        ) : (
-          <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.45)',backdropFilter:'blur(3px)',zIndex:100,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}
-            onClick={e=>{if(e.target===e.currentTarget)setShowModal(false)}}>
-            {formContent}
-          </div>
-        )
-      )}
+      </AnimatePresence>
     </div>
   )
 }

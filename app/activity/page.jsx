@@ -2,22 +2,22 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDevice } from '../../lib/DeviceContext'
-import { STEPS, STEP_COLORS, STEP_FULL_LABELS, EDU_GRAD } from '../../lib/constants'
 import {
   getOrCreateRoom, subscribeRoom, subscribeStep1Posts, subscribeStep4Posts,
   updateRoomStep, setSyncLeader, clearSyncLeader, updateDataTable, updateChartConfig,
-  setSelectedPost, addStep1Post, toggleLike1, addComment1, deleteStep1Post,
-  addStep4Post, toggleLike4, addComment4, deleteStep4Post,
+  setSelectedPost, toggleLike1, addComment1, deleteStep1Post,
+  toggleLike4, addComment4, deleteStep4Post,
   updatePresence, subscribePresence, removePresence,
-  createSurvey, getSurvey, subscribeSurvey, subscribeSurveyResponses, addSurveyResponse,
-  addStroke, subscribeStrokes, deleteMyStrokes, clearStrokes, setCurrentDrawer,
-  saveCanvasSnapshot, loadCanvasSnapshot,
-  updateRoomMeta, updateSurveyTopic,
-  setSelectionVote, agreeSelectionVote,
-  setLivePreview, resetSurvey,
+  subscribeSurvey, subscribeSurveyResponses,
+  subscribeStrokes, clearStrokes,
+  updateRoomMeta, resetSurvey, setSelectionVote, agreeSelectionVote
 } from '../../lib/firestore'
+
+import { motion, AnimatePresence } from 'framer-motion'
+import { LogOut, Copy, Key, CheckCircle2, Plus } from 'lucide-react'
 import { Toast, OnlineUsers } from '../../components/activity/ui'
 import { ConfirmResetModal, VoteModal } from '../../components/activity/modals'
+import BottomNav from '../../components/activity/BottomNav'
 import Step1 from '../../components/activity/Step1'
 import Step2 from '../../components/activity/Step2'
 import Step3 from '../../components/activity/Step3'
@@ -25,77 +25,59 @@ import Step4 from '../../components/activity/Step4'
 
 function useDb(fn, delay) {
   const t = useRef(null)
-  return useCallback((...a) => {
+  return useCallback(function() {
+    var args = arguments
     clearTimeout(t.current)
-    t.current = setTimeout(() => fn(...a), delay)
-  }, []) // eslint-disable-line
+    t.current = setTimeout(function() { fn.apply(void 0, args) }, delay)
+  }, [fn, delay])
 }
 
-
 export default function ActivityPage() {
-  const router   = useRouter()
-  const device   = useDevice()
-
-  const [user,        setUser]        = useState(null)
-  const [loading,     setLoading]     = useState(true)
-  const [room,        setRoom]        = useState({})
-  const [step1Posts,  setStep1Posts]  = useState([])
-  const [step4Posts,  setStep4Posts]  = useState([])
+  const router = useRouter()
+  const device = useDevice()
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [room, setRoom] = useState({})
+  const [step1Posts, setStep1Posts] = useState([])
+  const [step4Posts, setStep4Posts] = useState([])
   const [onlineUsers, setOnlineUsers] = useState([])
-  const [survey,      setSurvey]      = useState(null)
-  const [surveyResp,  setSurveyResp]  = useState([])
-  const [strokes,     setStrokes]     = useState([])
-  const [activeStep,  setActiveStep]  = useState(1)
-  const [freeMode,    setFreeMode]    = useState(false)
-  const [toast,       setToast]       = useState(null)
-  const [voteModal,   setVoteModal]   = useState(false)
+  const [survey, setSurvey] = useState(null)
+  const [surveyResp, setSurveyResp] = useState([])
+  const [strokes, setStrokes] = useState([])
+  const [activeStep, setActiveStep] = useState(1)
+  const [freeMode, setFreeMode] = useState(false)
+  const [toast, setToast] = useState(null)
+  const [voteModal,  setVoteModal]  = useState(false)
+  const [step1Modal, setStep1Modal] = useState(false)
   const [resetConfirmPost, setResetConfirmPost] = useState(null)
-  const [step3SnapshotImg, setStep3SnapshotImg] = useState(null)
 
-  const freeModeRef          = useRef(false); freeModeRef.current = freeMode
-  const iAmLeaderRef         = useRef(false)
-  const userRef              = useRef(null)
-  const presenceT            = useRef(null)
-  const remoteStep           = useRef(1)
-  const mainRef              = useRef(null)
-  const lastDismissedVoteRef = useRef(null)
+  const freeModeRef = useRef(false)
+  const userRef = useRef(null)
+  const presenceT = useRef(null)
+  const remoteStep = useRef(1)
+  const prevVotePostIdRef = useRef(null)
 
-  const dbTable = useDb((code, val) => updateDataTable(code, val), 700)
-  const dbChart = useDb((code, val) => updateChartConfig(code, val), 700)
-  const dbMeta  = useDb((code, val) => updateRoomMeta(code, val), 500)
+  const dbTable = useDb(function(code, val) { updateDataTable(code, val) }, 700)
+  const dbChart = useDb(function(code, val) { updateChartConfig(code, val) }, 700)
+  const dbMeta  = useDb(function(code, val) { updateRoomMeta(code, val) }, 500)
 
-  useEffect(() => {
-    const el = mainRef.current; if (!el) return
-    let debT = null
-    const handler = () => {
-      if (!iAmLeaderRef.current) return
-      clearTimeout(debT)
-      debT = setTimeout(() => updateRoomMeta(userRef.current.code, { syncScrollTop: el.scrollTop }), 120)
-    }
-    el.addEventListener('scroll', handler, { passive: true })
-    return () => { el.removeEventListener('scroll', handler); clearTimeout(debT) }
-  }, [])
-
-  useEffect(() => {
+  useEffect(function() {
     const stored = sessionStorage.getItem('gts_user')
     if (!stored) { router.push('/'); return }
     const u = JSON.parse(stored)
     setUser(u); userRef.current = u
-    localStorage.setItem('gts_last', JSON.stringify({ name: u.name, groupName: u.groupName, code: u.code }))
+    freeModeRef.current = freeMode
+    
     let unsubs = []
     async function init() {
       try {
         await getOrCreateRoom(u.code, u.groupName)
         await updatePresence(u.code, u.name)
-        presenceT.current = setInterval(() => updatePresence(u.code, u.name), 30_000)
-        unsubs.push(subscribeRoom(u.code, roomData => {
+        presenceT.current = setInterval(function() { updatePresence(u.code, u.name) }, 30000)
+        unsubs.push(subscribeRoom(u.code, function(roomData) {
           setRoom(roomData)
           remoteStep.current = roomData.currentStep || 1
-          if (!freeModeRef.current && roomData.syncLeader) {
-            setActiveStep(roomData.currentStep || 1)
-            if (mainRef.current && roomData.syncScrollTop !== undefined)
-              mainRef.current.scrollTop = roomData.syncScrollTop
-          }
+          if (!freeModeRef.current && roomData.syncLeader) setActiveStep(roomData.currentStep || 1)
         }))
         unsubs.push(subscribeStep1Posts(u.code, setStep1Posts))
         unsubs.push(subscribeStep4Posts(u.code, setStep4Posts))
@@ -104,311 +86,142 @@ export default function ActivityPage() {
         unsubs.push(subscribeSurveyResponses(u.code, setSurveyResp))
         unsubs.push(subscribeStrokes(u.code, setStrokes))
         setLoading(false)
-      } catch (err) {
-        console.error(err); setLoading(false)
-        setToast('⚠️ Firebase 연결 실패 — .env.local 파일을 확인해 주세요')
-      }
+      } catch (err) { setLoading(false); setToast('연결 실패') }
     }
     init()
-    return () => { unsubs.forEach(fn => fn()); clearInterval(presenceT.current); removePresence(u.code, u.name).catch(() => {}) }
-  }, []) // eslint-disable-line
-
-  useEffect(() => {
-    if (!freeMode && room.syncLeader) setActiveStep(remoteStep.current)
-  }, [freeMode]) // eslint-disable-line
+    return function() { unsubs.forEach(function(fn) { fn() }); clearInterval(presenceT.current); removePresence(u.code, u.name) }
+  }, [router, freeMode])
 
   async function changeStep(n) {
-    setActiveStep(n)
-    if (room.syncLeader === userRef.current?.name) {
-      await updateRoomStep(userRef.current.code, n)
-      if (mainRef.current) mainRef.current.scrollTop = 0
-      await updateRoomMeta(userRef.current.code, { syncScrollTop: 0 })
-    }
+    setActiveStep(n); if (room.syncLeader === userRef.current?.name) await updateRoomStep(userRef.current.code, n)
   }
 
-  function handleDataTable(next) { setRoom(r => ({ ...r, dataTable: next })); dbTable(userRef.current?.code, next) }
+  function handleDataTable(next) { setRoom(function(r) { return { ...r, dataTable: next } }); dbTable(userRef.current?.code, next) }
   function handleChartConfig(changes) {
-    const next = { ...room.chartConfig, ...changes }
-    setRoom(r => ({ ...r, chartConfig: next })); dbChart(userRef.current?.code, next)
+    const next = { ...room.chartConfig, ...changes }; setRoom(function(r) { return { ...r, chartConfig: next } }); dbChart(userRef.current?.code, next)
   }
-  function handleDrawMode(mode) { setRoom(r => ({ ...r, drawMode: mode })); dbMeta(userRef.current?.code, { drawMode: mode }) }
+  function handleDrawMode(mode) { setRoom(function(r) { return { ...r, drawMode: mode } }); dbMeta(userRef.current?.code, { drawMode: mode }) }
   function handleStep4State(changes) {
-    const next = { ...(room.step4State || {}), ...changes }
-    setRoom(r => ({ ...r, step4State: next })); dbMeta(userRef.current?.code, { step4State: next })
+    const next = { ...(room.step4State || {}), ...changes }; setRoom(function(r) { return { ...r, step4State: next } }); dbMeta(userRef.current?.code, { step4State: next })
   }
 
   async function handleLike1(postId, nowLiking) { await toggleLike1(userRef.current?.code, postId, user?.name, nowLiking) }
   async function handleComment1(postId, text) { await addComment1(userRef.current?.code, postId, text) }
-  async function handleDelete1(postId) {
-    try { await deleteStep1Post(userRef.current?.code, postId); setToast('🗑️ 삭제되었어요') }
-    catch { setToast('⚠️ 삭제에 실패했어요') }
-  }
+  async function handleDelete1(postId) { try { await deleteStep1Post(userRef.current?.code, postId); setToast('삭제 완료') } catch (e) { setToast('실패') } }
+  
+  // 다른 사용자의 주제 선정 투표 요청을 실시간으로 감지하여 VoteModal 표시
+  useEffect(function() {
+    if (!room.selectionVote || !user) return
+    const votePostId = room.selectionVote.postId
+    if (prevVotePostIdRef.current !== votePostId) {
+      prevVotePostIdRef.current = votePostId
+      setVoteModal(true)
+    }
+  }, [room.selectionVote?.postId]) // eslint-disable-line
 
-  async function doSelectVote(post) {
-    const voters = onlineUsers.map(u => u.name)
-    if (!voters.includes(user.name)) voters.push(user.name)
-    await setSelectionVote(userRef.current?.code, {
-      postId: post.id,
-      postData: { content: post.content, topic: post.topic, question: post.question, items: post.items },
-      requestedBy: user.name, voters, agreed: [user.name],
-    })
-    setVoteModal(true); setToast('🗳️ 모둠원에게 투표를 요청했어요!')
-  }
+  // 투표가 완전히 완료되면 탐구 문제 선정 처리 (요청자만 처리)
+  useEffect(function() {
+    if (!room.selectionVote || !user) return
+    var vote = room.selectionVote
+    var agreedCount = vote.agreed?.length || 0
+    var totalVoters = vote.voters?.length || 1
+    if (agreedCount >= totalVoters && totalVoters > 0 && vote.requestedBy === user.name) {
+      setSelectedPost(userRef.current?.code, { postId: vote.postData.id, ...vote.postData })
+        .then(function() {
+          updateRoomMeta(userRef.current?.code, { selectionVote: null })
+          setToast('탐구 문제가 선정되었어요!')
+        })
+    }
+  }, [room.selectionVote?.agreed?.length]) // eslint-disable-line
 
   async function handleSelectRequest(post) {
-    if (room.surveyActive || (room.selectedPost?.postId && room.selectedPost?.postId !== post.id)) {
-      setResetConfirmPost(post); return
+    if (room.surveyActive || (room.selectedPost?.postId && room.selectedPost?.postId !== post.id)) { setResetConfirmPost(post); return }
+    const voters = onlineUsers.map(function(u) { return u.name }); if (!voters.includes(user.name)) voters.push(user.name)
+    if (voters.length <= 1) {
+      await setSelectedPost(userRef.current?.code, { postId: post.id, ...post })
+      setToast('탐구 문제가 선정되었어요!'); return
     }
-    await doSelectVote(post)
+    await setSelectionVote(userRef.current?.code, { postId: post.id, postData: post, requestedBy: user.name, voters, agreed: [user.name] })
+    setVoteModal(true); setToast('투표 요청 완료!')
   }
 
   async function handleConfirmReset() {
-    const post = resetConfirmPost; setResetConfirmPost(null); if (!post) return
-    const code = userRef.current?.code
     try {
-      await Promise.all([
-        updateRoomMeta(code, { selectedPost:null, dataTable:[], chartConfig:{type:'bar',title:''}, step4State:{}, drawMode:'draw', surveyActive:false, selectionVote:null, currentDrawer:null, livePreview:null }),
-        clearStrokes(code), resetSurvey(code),
-      ])
-      setRoom(r => ({ ...r, selectedPost:null, dataTable:[], chartConfig:{type:'bar',title:''}, step4State:{}, drawMode:'draw', surveyActive:false }))
-      setToast('🔄 모든 데이터가 초기화되었어요!')
-    } catch (e) { console.error(e); setToast('⚠️ 초기화에 실패했어요.'); return }
-    await doSelectVote(post)
+      await updateRoomMeta(userRef.current?.code, { selectedPost: null, dataTable: [], chartConfig: { type: 'bar' }, step4State: {}, surveyActive: false })
+      await clearStrokes(userRef.current?.code); await resetSurvey(userRef.current?.code)
+      setToast('초기화 완료'); handleSelectRequest(resetConfirmPost); setResetConfirmPost(null)
+    } catch (e) { setToast('실패') }
   }
 
   async function handleVote() { await agreeSelectionVote(userRef.current?.code, user.name) }
-  async function handleCancelVote() {
-    await setSelectionVote(userRef.current?.code, null)
+  async function handleVoteDecline() {
+    await updateRoomMeta(userRef.current?.code, { selectionVote: null })
+    prevVotePostIdRef.current = null
     setVoteModal(false)
-    setToast('투표가 취소되었습니다.')
   }
-  async function handleDeclineVote() {
-    await setSelectionVote(userRef.current?.code, null)
-    setVoteModal(false)
-    setToast('투표가 취소되었습니다.')
-  }
-
-  useEffect(() => {
-    const sv = room.selectionVote; if (!sv || !user) return
-    if (!sv.agreed?.includes(user.name)) {
-      const voteKey = `${sv.postId}_${sv.requestedBy}_${sv.voters?.length}`
-      if (lastDismissedVoteRef.current !== voteKey) setVoteModal(true)
-    }
-    const allAgreed = sv.voters?.length > 0 && sv.agreed?.length >= sv.voters?.length
-    const notYetSelected = !room.selectedPost?.postId || room.selectedPost?.postId !== sv.postId
-    if (allAgreed && notYetSelected) {
-      const post = sv.postData; if (!post) return
-      const finalize = async () => {
-        await setSelectedPost(userRef.current?.code, { postId:sv.postId, name:sv.requestedBy, topic:post.topic, question:post.question, items:post.items, content:post.content })
-        if (room.surveyActive) await updateSurveyTopic(userRef.current?.code, post.topic, post.question, post.items)
-        await setSelectionVote(userRef.current?.code, null)
-        setVoteModal(false); setToast('🎉 탐구 문제가 만장일치로 선정되었어요!')
-      }
-      if (sv.requestedBy === user.name) finalize().catch(console.error)
-    }
-  }, [room.selectionVote]) // eslint-disable-line
-
   async function handleLike4(postId, nowLiking) { await toggleLike4(userRef.current?.code, postId, user?.name, nowLiking) }
   async function handleComment4(postId, text) { await addComment4(userRef.current?.code, postId, text) }
-  async function handleDelete4(postId) {
-    try { await deleteStep4Post(userRef.current?.code, postId); setToast('🗑️ 삭제되었어요') }
-    catch { setToast('⚠️ 삭제에 실패했어요') }
-  }
 
   if (loading || !user) return (
-    <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center',
-      flexDirection:'column', gap:18,
-      backgroundImage:"url('/bg-loading.png')", backgroundSize:'cover', backgroundPosition:'center' }}>
-      <div style={{ position:'relative' }}>
-        <div className="bounce" style={{ fontSize:60 }}>📚</div>
-        <div style={{ position:'absolute', top:-4, right:-8, width:20, height:20, borderRadius:'50%',
-          background:'#FF8C42', animation:'pulse 1s infinite', boxShadow:'0 2px 8px rgba(255,140,66,.4)' }}/>
-      </div>
-      <div style={{ fontSize:17, fontWeight:800, color:'#3D2B1F', letterSpacing:'-0.3px' }}>연결 중...</div>
-      <div style={{ fontSize:13, color:'#8C7B6E', fontWeight:700, background:'rgba(255,255,255,.9)', padding:'8px 20px',
-        borderRadius:999, border:'2.5px solid #E6D8C8', boxShadow:'0 3px 10px rgba(140,90,50,.08)' }}>잠시만 기다려 주세요 😊</div>
-    </div>
+    <div className="w-full h-full flex items-center justify-center bg-slate-50 font-black">연결 중...</div>
   )
 
-  const step        = STEPS[activeStep - 1]
-  const items       = room.selectedPost?.items || []
-  const dataTable   = room.dataTable   || []
-  const chartConfig = room.chartConfig || { type:'bar', title:'' }
-  const drawMode    = room.drawMode    || 'draw'
-  const step4State  = room.step4State  || {}
-  const iAmLeader   = room.syncLeader === user.name
+  const iAmLeader = room.syncLeader === user.name
   const hasSyncLead = !!room.syncLeader
-  iAmLeaderRef.current = iAmLeader
-
-  const done = [null, !!room.selectedPost,
-    dataTable.some(d => Number(d.value) > 0),
-    (chartConfig.title || strokes.length > 0), true]
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', width:'100%', height:'100%',
-      overflow:'hidden', backgroundImage:"url('/bg-activity.png')", backgroundSize:'cover', backgroundPosition:'center' }}>
-
+    <div className="flex flex-col w-full h-full overflow-hidden bg-[#FAFBFF]">
       {/* ── 상단 헤더 ── */}
-      <header style={{ background:'rgba(255,255,255,.92)', backdropFilter:'blur(12px)',
-        height: device==='mobile' ? 48 : 44,
-        display:'flex', alignItems:'center',
-        padding: device==='mobile' ? '0 10px' : '0 14px',
-        gap: device==='mobile' ? 6 : 10,
-        flexShrink:0,
-        borderBottom:'1.5px solid rgba(230,216,200,.6)', boxShadow:'0 2px 12px rgba(0,0,0,.08)' }}>
-
-        {/* 로고: 모바일에서는 숨김 */}
-        {device !== 'mobile' && (
-          <span style={{ fontSize:15, fontWeight:800, letterSpacing:-0.3,
-            background:EDU_GRAD, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-            backgroundClip:'text', flexShrink:0 }}>📊 메모 보드</span>
-        )}
-
-        <div style={{ flex:1 }}/>
-
-        {/* 동기화 pill: 모바일에서는 점 표시만 */}
-        {device === 'mobile' ? (
-          hasSyncLead && (
-            <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:999,
-              background:iAmLeader?'#ECFDF5':'#EFF6FF',
-              border:`1px solid ${iAmLeader?'#A7F3D0':'#BFDBFE'}`,
-              fontSize:10, fontWeight:700, color:iAmLeader?'#047857':'#1D4ED8' }}>
-              <span style={{ width:6, height:6, borderRadius:'50%', background:iAmLeader?'#10B981':'#3B82F6', animation:'pulse 1.5s infinite', display:'inline-block', flexShrink:0 }}/>
-              {iAmLeader ? '동기화 중' : `${room.syncLeader}`}
-            </div>
-          )
-        ) : (
-          <div style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:999,
-            background:hasSyncLead?iAmLeader?'#ECFDF5':'#EFF6FF':'#F8FAFC',
-            border:`1px solid ${hasSyncLead?iAmLeader?'#A7F3D0':'#BFDBFE':'#E2E8F2'}`,
-            fontSize:10, fontWeight:700, color:hasSyncLead?iAmLeader?'#047857':'#1D4ED8':'#64748B' }}>
-            {hasSyncLead && <span style={{ width:6, height:6, borderRadius:'50%',
-              background:iAmLeader?'#10B981':'#3B82F6', animation:'pulse 1.5s infinite', display:'inline-block', flexShrink:0 }}/>}
-            {hasSyncLead ? iAmLeader ? '내 화면 동기화 중' : `${room.syncLeader}님 동기화 중` : freeMode ? '🔓 자유 탐색' : '동기화 없음'}
-            {freeMode ? (
-              <button onClick={()=>{ setFreeMode(false); setActiveStep(remoteStep.current) }} style={{ marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'#FF8C42', color:'#fff', border:'none', cursor:'pointer', fontFamily:'inherit' }}>← 합류</button>
-            ) : (
-              <button onClick={()=>setFreeMode(true)} style={{ marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit' }}>자유</button>
-            )}
-            {!hasSyncLead ? (
-              <button onClick={async()=>{ await setSyncLeader(userRef.current?.code, userRef.current?.name, activeStep); setToast('🔗 화면 동기화를 시작했어요!') }} style={{ marginLeft:3, padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit' }}>동기화</button>
-            ) : iAmLeader ? (
-              <button onClick={async()=>await clearSyncLeader(userRef.current?.code)} style={{ padding:'1px 7px', borderRadius:999, fontSize:10, fontWeight:800, background:'rgba(0,0,0,.08)', color:'inherit', border:'none', cursor:'pointer', fontFamily:'inherit' }}>해제</button>
-            ) : null}
+      <header className="h-14 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 z-50">
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2 font-black text-slate-800 tracking-tighter text-[18px]">
+            메모 보드
           </div>
-        )}
-
-        <OnlineUsers users={onlineUsers}/>
-
-        {/* 참여 코드 */}
-        <div style={{ display:'flex', alignItems:'center', gap: device==='mobile' ? 3 : 5,
-          padding: device==='mobile' ? '4px 8px' : '4px 9px 4px 11px',
-          borderRadius:999, background:'#FFF3E8', border:'1.5px solid #FFCB96', boxShadow:'0 2px 6px rgba(255,140,66,.14)' }}>
-          <span style={{ fontSize:10, color:'#D4601A', fontWeight:800 }}>🔑</span>
-          <span style={{ fontSize: device==='mobile' ? 11 : 12, fontWeight:800, color:'#3D2B1F', letterSpacing: device==='mobile' ? 1 : 2 }}>{user.code}</span>
-          <button onClick={()=>navigator.clipboard.writeText(user.code).then(()=>setToast('✅ 코드가 복사되었어요!'))}
-            style={{ marginLeft:2, padding:'3px 8px', borderRadius:8, background:'#FF8C42', color:'#fff', border:'none', fontSize:10, fontWeight:800, cursor:'pointer', fontFamily:'inherit', minHeight:28 }}>복사</button>
+          <div className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold flex items-center gap-2 ${hasSyncLead ? 'bg-gsp-50 text-gsp-600' : 'bg-slate-50 text-slate-400'}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${hasSyncLead ? 'bg-current animate-pulse' : 'bg-slate-300'}`} />
+            {hasSyncLead ? (iAmLeader ? '화면 공유 중' : room.syncLeader + '님 화면 보는 중') : '개별 활동 중'}
+            {!hasSyncLead ? (
+              <button onClick={function() { setSyncLeader(user.code, user.name, activeStep) }} className="ml-1 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-sm hover:border-gsp-500 transition-colors">공유 시작</button>
+            ) : iAmLeader && (
+              <button onClick={function() { clearSyncLeader(user.code) }} className="ml-1 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-sm">해제</button>
+            )}
+          </div>
         </div>
-
-        <button onClick={()=>{ sessionStorage.removeItem('gts_user'); router.push('/') }}
-          style={{ padding: device==='mobile' ? '5px 8px' : '5px 12px', borderRadius:10, background:'#fff', color:'#8C7B6E', border:'1.5px solid #E6D8C8', fontSize:11, fontWeight:800, cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', minHeight:32 }}
-          onMouseEnter={e=>{ e.currentTarget.style.background='#FFF0F1'; e.currentTarget.style.color='#C0364A' }}
-          onMouseLeave={e=>{ e.currentTarget.style.background='#fff'; e.currentTarget.style.color='#8C7B6E' }}>
-          {device==='mobile' ? '나가기' : '나가기 →'}
-        </button>
+        <div className="flex items-center gap-3">
+          <OnlineUsers users={onlineUsers} />
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-[8px] shadow-lg shadow-slate-200">
+            <Key size={12} className="text-gsp-400" />
+            <span className="text-xs font-black tracking-widest">{user.code}</span>
+            <button onClick={function() { navigator.clipboard.writeText(user.code); setToast('복사 완료') }} className="ml-1 hover:text-gsp-400 transition-colors"><Copy size={12}/></button>
+          </div>
+          <button onClick={function() { sessionStorage.removeItem('gts_user'); router.push('/') }} className="p-2 text-slate-400 hover:text-gsp-600 transition-all hover:bg-gsp-50 rounded-xl"><LogOut size={20}/></button>
+        </div>
       </header>
 
-      {/* ── 바디 ── */}
-      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-        <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
+      <main className="flex-1 relative overflow-hidden flex flex-col">
+        <AnimatePresence mode="wait">
+          <motion.div key={activeStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1 flex flex-col overflow-hidden">
+            {activeStep === 1 && <Step1 user={user} code={user.code} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
+            {activeStep === 2 && <Step2 user={user} code={user.code} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
+            {activeStep === 3 && <Step3 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={handleChartConfig} strokes={strokes} currentDrawer={room.currentDrawer} drawMode={room.drawMode} onDrawMode={handleDrawMode}/>}
+            {activeStep === 4 && <Step4 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4}/>}
+          </motion.div>
+        </AnimatePresence>
 
-          {activeStep === 1 && (
-            <Step1 user={user} code={user.code} posts={step1Posts}
-              selectedPost={room.selectedPost} onToast={setToast}
-              onLike={handleLike1} onComment={handleComment1}
-              onSelectRequest={handleSelectRequest} onDelete={handleDelete1}/>
-          )}
+        {activeStep === 1 && !step1Modal && (
+          <button
+            onClick={() => setStep1Modal(true)}
+            className="fixed bottom-[86px] right-6 w-14 h-14 bg-gsp-500 text-white rounded-full shadow-[0_8px_24px_rgba(91,65,235,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center z-[200]"
+          >
+            <Plus size={24} strokeWidth={3} />
+          </button>
+        )}
+        <BottomNav currentStep={activeStep} onStepChange={changeStep} />
+      </main>
 
-          {activeStep === 4 && (
-            <Step4 user={user} code={user.code}
-              items={items} dataTable={dataTable} chartConfig={chartConfig}
-              step4State={step4State} onStep4State={handleStep4State}
-              posts4={step4Posts}
-              onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4}/>
-          )}
-
-          {(activeStep === 2 || activeStep === 3) && (
-            <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-              <main ref={mainRef} style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0,
-                backgroundImage:"url('/bg-activity.png')", backgroundSize:'cover',
-                backgroundPosition:'center', backgroundAttachment:'local' }}>
-                {activeStep === 2 && (
-                  <Step2 user={user} code={user.code} selectedPost={room.selectedPost}
-                    dataTable={dataTable} onChange={handleDataTable}
-                    surveyActive={room.surveyActive || false} survey={survey} surveyResponses={surveyResp}
-                    activeStep={activeStep}/>
-                )}
-                {activeStep === 3 && (
-                  <Step3 user={user} code={user.code}
-                    items={items} dataTable={dataTable}
-                    chartConfig={chartConfig} onChartConfig={handleChartConfig}
-                    strokes={strokes} currentDrawer={room.currentDrawer || null}
-                    drawMode={drawMode} onDrawMode={handleDrawMode}
-                    livePreview={room.livePreview || null}
-                    selectedPost={room.selectedPost}
-                    step3SnapshotImg={step3SnapshotImg}
-                    onStep3SnapshotImg={setStep3SnapshotImg}
-                    activeStep={activeStep}/>
-                )}
-              </main>
-            </div>
-          )}
-        </div>
-
-        {/* ── 하단 탭 네비게이션 ── */}
-        <nav style={{ display:'flex', flexShrink:0, height: device==='mobile' ? 58 : 62,
-          background:'rgba(255,255,255,.97)', backdropFilter:'blur(12px)',
-          borderTop:'1.5px solid #E6D8C8', boxShadow:'0 -4px 16px rgba(61,43,31,.08)',
-          paddingBottom: device==='mobile' ? 'env(safe-area-inset-bottom, 0px)' : 0 }}>
-          {STEPS.map((s, idx) => {
-            const isActive = activeStep === s.n
-            const isDone   = done[s.n] && !isActive
-            const clr      = STEP_COLORS[idx]
-            const mobileLabel = ['탐구 문제','자료 수집','그래프','결과 해석'][idx]
-            return (
-              <button key={s.n} onClick={()=>changeStep(s.n)} style={{ flex:1, display:'flex', flexDirection:'column',
-                alignItems:'center', justifyContent:'center', gap:2, border:'none', background:'none',
-                cursor:'pointer', fontFamily:'inherit', position:'relative', padding:'5px 2px 4px', transition:'background .15s',
-                minHeight: 44 }}>
-                {isActive && <div style={{ position:'absolute', top:0, left:'15%', right:'15%',
-                  height:3, borderRadius:'0 0 3px 3px', background:clr, boxShadow:`0 2px 8px ${clr}60` }}/>}
-                <div style={{ width:30, height:30, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
-                  opacity: isActive ? 1 : isDone ? 0.75 : 0.45,
-                  transition:'all .2s',
-                  filter: isActive ? `drop-shadow(0 2px 6px ${clr}80)` : 'none' }}>
-                  <img src={`/step${s.n}_icon.png`} alt={`Step ${s.n}`}
-                    style={{ width:30, height:30, objectFit:'contain' }}/>
-                </div>
-                <div style={{ fontSize: device==='mobile' ? 9 : 10, fontWeight:isActive?800:isDone?700:600,
-                  color:isActive?clr:isDone?clr:'#94A3B8',
-                  lineHeight:1.3, textAlign:'center', letterSpacing:'-0.3px', whiteSpace:'nowrap' }}>
-                  {device==='mobile' ? mobileLabel : STEP_FULL_LABELS[idx]}
-                </div>
-              </button>
-            )
-          })}
-        </nav>
-      </div>
-
-      {resetConfirmPost && (
-        <ConfirmResetModal topicName={room.selectedPost?.topic} onConfirm={handleConfirmReset} onCancel={()=>setResetConfirmPost(null)}/>
-      )}
-      {voteModal && room.selectionVote && (
-        <VoteModal vote={room.selectionVote} myName={user.name} onAgree={handleVote}
-          onClose={handleDeclineVote}
-          onCancel={handleCancelVote} isRequester={room.selectionVote?.requestedBy===user.name}/>
-      )}
-      {toast && <Toast msg={toast} onDone={()=>setToast(null)}/>}
+      {resetConfirmPost && <ConfirmResetModal topicName={room.selectedPost?.topic} onConfirm={handleConfirmReset} onCancel={function() { setResetConfirmPost(null) }}/>}
+      {voteModal && room.selectionVote && <VoteModal vote={room.selectionVote} myName={user.name} onAgree={handleVote} onClose={function() { setVoteModal(false) }} onDecline={handleVoteDecline} isRequester={room.selectionVote?.requestedBy === user.name} />}
+      {toast && <Toast msg={toast} onDone={function() { setToast(null) }} />}
     </div>
   )
 }
