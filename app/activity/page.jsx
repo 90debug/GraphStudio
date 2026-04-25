@@ -56,6 +56,7 @@ export default function ActivityPage() {
   const presenceT = useRef(null)
   const remoteStep = useRef(1)
   const prevVotePostIdRef = useRef(null)
+  const syncLeaderRef = useRef(null)  // 현재 syncLeader 이름 추적 (cleanup용)
 
   const dbTable = useDb(function(code, val) { updateDataTable(code, val) }, 700)
   const dbChart = useDb(function(code, val) { updateChartConfig(code, val) }, 700)
@@ -76,12 +77,20 @@ export default function ActivityPage() {
         presenceT.current = setInterval(function() { updatePresence(u.code, u.name) }, 30000)
         unsubs.push(subscribeRoom(u.code, function(roomData) {
           setRoom(roomData)
+          syncLeaderRef.current = roomData.syncLeader || null
           remoteStep.current = roomData.currentStep || 1
           if (!freeModeRef.current && roomData.syncLeader) setActiveStep(roomData.currentStep || 1)
         }))
         unsubs.push(subscribeStep1Posts(u.code, setStep1Posts))
         unsubs.push(subscribeStep4Posts(u.code, setStep4Posts))
-        unsubs.push(subscribePresence(u.code, setOnlineUsers))
+        unsubs.push(subscribePresence(u.code, function(members) {
+          setOnlineUsers(members)
+          // 화면 동기화 중인 리더가 접속 이탈했으면 자동 해제
+          const leader = syncLeaderRef.current
+          if (leader && !members.find(function(m) { return m.name === leader })) {
+            clearSyncLeader(u.code)
+          }
+        }))
         unsubs.push(subscribeSurvey(u.code, setSurvey))
         unsubs.push(subscribeSurveyResponses(u.code, setSurveyResp))
         unsubs.push(subscribeStrokes(u.code, setStrokes))
@@ -89,7 +98,20 @@ export default function ActivityPage() {
       } catch (err) { setLoading(false); setToast('연결 실패') }
     }
     init()
-    return function() { unsubs.forEach(function(fn) { fn() }); clearInterval(presenceT.current); removePresence(u.code, u.name) }
+    // 탭 닫기/새로고침 시 동기화 해제
+    function handleBeforeUnload() {
+      if (syncLeaderRef.current === u.name) clearSyncLeader(u.code)
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return function() {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      unsubs.forEach(function(fn) { fn() })
+      clearInterval(presenceT.current)
+      removePresence(u.code, u.name)
+      // 컴포넌트 언마운트 시 동기화 리더였으면 해제
+      if (syncLeaderRef.current === u.name) clearSyncLeader(u.code)
+    }
   }, [router, freeMode])
 
   async function changeStep(n) {
