@@ -222,7 +222,7 @@ export default function ActivityPage() {
         </div>
         <div className="flex items-center gap-3">
           <OnlineUsers users={onlineUsers} />
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-[8px] shadow-lg shadow-slate-200">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-[8px] shadow-lg shadow-slate-200">
             <Key size={12} className="text-gsp-400" />
             <span className="text-xs font-black tracking-widest">{user.code}</span>
             <button onClick={function() { navigator.clipboard.writeText(user.code); setToast('복사 완료') }} className="ml-1 hover:text-gsp-400 transition-colors"><Copy size={12}/></button>

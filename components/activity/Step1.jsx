@@ -13,7 +13,8 @@ function nameColor(name) {
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
 }
 
-function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDeleteComment, onSelectRequest, onDelete, showCmt, onToggleCmt }) {
+function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDeleteComment, onSelectRequest, onDelete }) {
+  const [showCmt, setShowCmt] = useState(false)
   const [cmtText, setCmtText] = useState('')
   const isMyPost   = post.name === myName
   const isLiked    = post.likedBy?.includes(myName)
@@ -119,7 +120,7 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
             <Heart className={`w-4 h-4 transition-all ${isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-300 group-hover:text-slate-400'}`} />
             <span className="text-[11px] font-extrabold text-slate-400">{post.likes || 0}</span>
           </button>
-          <button onClick={() => onToggleCmt()} className="flex items-center gap-1.5 group">
+          <button onClick={() => setShowCmt(s => !s)} className="flex items-center gap-1.5 group">
             <MessageCircle className={`w-4 h-4 transition-colors ${showCmt ? 'text-gsp-500' : 'text-slate-300 group-hover:text-slate-400'}`} />
             <span className="text-[11px] font-extrabold text-slate-400">{post.comments?.length || 0}</span>
           </button>
@@ -187,7 +188,6 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
 export default function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, onDeleteComment, onSelectRequest, onDelete, showModal: showModalProp, onShowModal }) {
   const device = useDevice()
   const [showModalLocal, setShowModalLocal] = useState(false)
-  const [openCommentId, setOpenCommentId] = useState(null)
   const showModal = showModalProp !== undefined ? showModalProp : showModalLocal
   const setShowModal = onShowModal ?? setShowModalLocal
   const [form, setForm] = useState({ topic:'', question:'', items:[] })
@@ -296,9 +296,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {posts.map(post => (
             <PadletStep1Card key={post.id} post={post} myName={user.name} selectedPost={selectedPost}
-              onLike={onLike} onComment={onComment} onDeleteComment={onDeleteComment} onSelectRequest={onSelectRequest} onDelete={onDelete}
-              showCmt={openCommentId === post.id}
-              onToggleCmt={() => setOpenCommentId(id => id === post.id ? null : post.id)}/>
+              onLike={onLike} onComment={onComment} onDeleteComment={onDeleteComment} onSelectRequest={onSelectRequest} onDelete={onDelete}/>
           ))}
           {posts.length === 0 && (
             <div className="col-span-full py-20 text-center space-y-3">
