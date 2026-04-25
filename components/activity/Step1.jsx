@@ -357,17 +357,17 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
                   조사 항목 <span className="normal-case font-medium text-slate-300">({form.items.length}/8)</span>
                 </label>
-                <div className="flex gap-2">
+                <div style={{display:'flex',gap:8,alignItems:'center'}}>
                   <input
                     value={itemInput}
                     onChange={e => setItemInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && addItem()}
                     placeholder="항목 입력 후 Enter"
-                    className="flex-1 px-4 py-2.5 bg-slate-50 border border-[#E2E3E5] rounded-[8px] text-sm font-bold text-black outline-none bg-white focus:border-gsp-500 transition-all placeholder:text-[#8A949E] placeholder:font-medium"
+                    style={{flex:1, minWidth:0, padding:'10px 14px', borderRadius:8, border:'1px solid #E2E3E5', fontSize:13, fontWeight:700, outline:'none', background:'#fff', fontFamily:'inherit'}}
                   />
                   <button
                     onClick={addItem}
-                    className="px-4 py-2.5 bg-gsp-600 text-white rounded-full text-sm font-black hover:bg-gsp-700 active:scale-95 transition-all"
+                    style={{padding:'10px 16px', borderRadius:999, background:'#5B41EB', color:'#fff', border:'none', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit', flexShrink:0, whiteSpace:'nowrap', minHeight:42}}
                   >추가</button>
                 </div>
                 {form.items.length > 0 && (

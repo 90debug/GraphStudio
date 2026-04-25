@@ -151,7 +151,7 @@ export default function Step3({
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
               <thead>
                 <tr style={{borderBottom:'1px solid #e2e3e5'}}>
-                  {['항목','명수','%'].map(h=>(
+                  {['항목','수','%'].map(h=>(
                     <th key={h} style={{padding:'5px 8px',textAlign:h==='항목'?'left':'right',color:'#5B41EB',fontWeight:700}}>{h}</th>
                   ))}
                 </tr>
@@ -227,7 +227,7 @@ export default function Step3({
                 <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
                   <thead>
                     <tr style={{borderBottom:'1px solid #e2e3e5'}}>
-                      {['항목','명수','%'].map(h=>(
+                      {['항목','수','%'].map(h=>(
                         <th key={h} style={{padding:'5px 8px',textAlign:h==='항목'?'left':'right',color:'#5B41EB',fontWeight:700}}>{h}</th>
                       ))}
                     </tr>

@@ -175,6 +175,27 @@ export default function JoinPage() {
         position: 'relative',
         minHeight: isMobile ? '100vh' : undefined,
       }}>
+        {/* 모바일 전용: 비디오 배경 */}
+        {isMobile && (
+          <>
+            <video
+              autoPlay muted loop playsInline
+              src="/main.mp4"
+              style={{
+                position: 'absolute', inset: 0,
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                zIndex: 0,
+              }}
+            />
+            {/* 반투명 흰색 오버레이 - UI 가독성 확보 */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(255,255,255,0.82)',
+              zIndex: 1,
+            }}/>
+          </>
+        )}
 
         {/* 폼 컨텐츠 */}
         <div style={{
@@ -183,6 +204,8 @@ export default function JoinPage() {
           display: 'flex',
           flexDirection: 'column',
           gap: 'var(--spacing-24)',
+          position: 'relative',
+          zIndex: 2,
         }}>
           {/* 탭 바 */}
           <div style={{
