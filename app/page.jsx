@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useDevice } from '../lib/DeviceContext'
 import { createSession, createRoomInSession } from '../lib/firestore'
 
+// ── TextInput ──────────────────────────────────────────────────────────────────
 function TextInput({ label, placeholder, value, onChange, maxLength }) {
   const [focused, setFocused] = useState(false)
   return (
@@ -20,19 +21,13 @@ function TextInput({ label, placeholder, value, onChange, maxLength }) {
         onChange={onChange}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        style={{
-          width: '100%', height: '48px', padding: '0 var(--spacing-16)',
-          border: `1px solid ${focused ? 'var(--color-purple-500)' : 'var(--color-cool-gray-200)'}`,
-          borderRadius: '8px', fontFamily: 'var(--font-body)', fontSize: '16px', fontWeight: 400,
-          color: 'var(--color-black)', outline: 'none', background: 'var(--color-white)',
-          transition: 'border-color 0.18s', letterSpacing: 'normal',
-        }}
+        style={{ width: '100%', height: '48px', padding: '0 var(--spacing-16)', border: `1px solid ${focused ? 'var(--color-purple-500)' : 'var(--color-cool-gray-200)'}`, borderRadius: '8px', fontFamily: 'var(--font-body)', fontSize: '16px', fontWeight: 400, color: 'var(--color-black)', outline: 'none', background: 'var(--color-white)', transition: 'border-color 0.18s', letterSpacing: 'normal' }}
       />
     </div>
   )
 }
 
-/* 역할 선택 카드 (이모지 없음) */
+// ── 역할 선택 카드 (이모지 없음) ──────────────────────────────────────────────
 function RoleCard({ onSelect }) {
   return (
     <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-20)' }}>
@@ -45,9 +40,7 @@ function RoleCard({ onSelect }) {
           { role: 'teacher', label: '선생님이에요.', desc: '수업 세션을 만들고 관리해요.' },
           { role: 'student', label: '학생이에요.', desc: '모둠을 만들거나 참여해요.' },
         ].map(({ role, label, desc }) => (
-          <button
-            key={role}
-            onClick={() => onSelect(role)}
+          <button key={role} onClick={() => onSelect(role)}
             style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-16)', padding: 'var(--spacing-16) var(--spacing-20)', border: '2px solid var(--color-cool-gray-200)', borderRadius: '14px', background: 'var(--color-white)', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s, background 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-purple-300)'; e.currentTarget.style.background = 'var(--color-cool-gray-100)' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-cool-gray-200)'; e.currentTarget.style.background = 'var(--color-white)' }}
@@ -63,7 +56,6 @@ function RoleCard({ onSelect }) {
   )
 }
 
-/* 모바일 전용 오버레이 팝업 */
 function RoleModal({ onSelect }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-24)' }}>
@@ -82,7 +74,8 @@ function ChangeRoleBtn({ onClick }) {
   )
 }
 
-/* 교사 폼 — 학교명 필수 */
+// ── 교사 폼 ────────────────────────────────────────────────────────────────────
+// lastSession 카드는 JoinPage 레벨에서 렌더링하므로 이 폼에서는 제외
 function TeacherForm({ onChangeRole }) {
   const router = useRouter()
   const [school, setSchool] = useState('')
@@ -90,11 +83,10 @@ function TeacherForm({ onChangeRole }) {
   const [classNum, setClassNum] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [lastSession, setLastSession] = useState(null)
 
-  useEffect(() => {
-    try { const s = localStorage.getItem('gts_teacher_last'); if (s) setLastSession(JSON.parse(s)) } catch {}
-  }, [])
+  // 기존 세션 코드로 접속
+  const [existingCode, setExistingCode] = useState('')
+  const [existingError, setExistingError] = useState('')
 
   async function handleCreate(e) {
     e.preventDefault()
@@ -111,8 +103,16 @@ function TeacherForm({ onChangeRole }) {
     } finally { setLoading(false) }
   }
 
+  function handleGoExisting() {
+    const code = existingCode.trim().toUpperCase()
+    if (!code) return setExistingError('세션 코드를 입력해 주세요')
+    if (code.length !== 6) return setExistingError('6자리 코드를 입력해 주세요')
+    router.push(`/teacher?session=${code}`)
+  }
+
   return (
     <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-24)', position: 'relative', zIndex: 2 }}>
+      {/* 수업 만들기 */}
       <div>
         <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '22px', fontWeight: 700, color: 'var(--color-black)', letterSpacing: '-0.4px' }}>수업 만들기</h2>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-cool-gray-400)', marginTop: '4px' }}>세션 코드가 발급되면 학생에게 공유해 주세요.</p>
@@ -127,31 +127,45 @@ function TeacherForm({ onChangeRole }) {
         <button type="submit" disabled={loading} style={{ width: '100%', height: '56px', background: loading ? 'var(--color-cool-gray-200)' : 'var(--color-purple-500)', color: 'var(--color-white)', fontFamily: 'var(--font-body)', fontSize: '16px', fontWeight: 600, border: '1px solid var(--color-black-overlay-10)', borderRadius: '100px', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '-0.4px', marginTop: 'var(--spacing-8)' }}>
           {loading ? '세션 생성 중…' : '수업 만들기'}
         </button>
-      </form>
-      {lastSession && (
-        <div style={{ background: 'var(--color-purple-400)', borderRadius: '12px', padding: 'var(--spacing-16) var(--spacing-20)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-10)', boxShadow: '0 4px 16px rgba(91,65,235,0.25)' }}>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>이전 세션</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-10)' }}>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, color: 'var(--color-white)', letterSpacing: '-0.3px' }}>
-                {[lastSession.school, lastSession.grade && `${lastSession.grade}학년`, lastSession.classNum && `${lastSession.classNum}반`].filter(Boolean).join(' ')}
-              </p>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: '20px', fontWeight: 800, color: 'var(--color-white)', letterSpacing: '4px', marginTop: '2px' }}>{lastSession.sessionCode}</p>
-            </div>
-            <button onClick={() => router.push(`/teacher?session=${lastSession.sessionCode}`)} style={{ padding: '10px 18px', background: 'var(--color-purple-500)', border: 'none', borderRadius: '999px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--color-white)', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(72,51,201,0.4)' }}>
-              대시보드 열기
-            </button>
-          </div>
+        {/* 역할 바꾸기 — '수업 만들기' 버튼 바로 아래 */}
+        <div style={{ textAlign: 'center' }}>
+          <ChangeRoleBtn onClick={onChangeRole} />
         </div>
-      )}
-      <div style={{ textAlign: 'center' }}>
-        <ChangeRoleBtn onClick={onChangeRole} />
+      </form>
+
+      {/* 구분선 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ flex: 1, height: '1px', background: 'var(--color-cool-gray-200)' }} />
+        <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-cool-gray-400)', flexShrink: 0 }}>또는</span>
+        <div style={{ flex: 1, height: '1px', background: 'var(--color-cool-gray-200)' }} />
+      </div>
+
+      {/* 기존 세션 코드로 접속 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-10)' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-cool-gray-400)' }}>이미 만든 수업이 있으신가요?</p>
+        <div style={{ display: 'flex', gap: 'var(--spacing-8)', alignItems: 'flex-end' }}>
+          <div style={{ flex: 1 }}>
+            <TextInput
+              placeholder="기존 세션 코드 입력"
+              value={existingCode}
+              onChange={e => { setExistingCode(e.target.value.toUpperCase()); setExistingError('') }}
+              maxLength={6}
+            />
+          </div>
+          <button
+            onClick={handleGoExisting}
+            style={{ height: '48px', padding: '0 var(--spacing-16)', background: 'var(--color-purple-500)', color: 'var(--color-white)', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, border: 'none', borderRadius: '8px', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+          >
+            열기
+          </button>
+        </div>
+        {existingError && <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--state-error)' }}>{existingError}</p>}
       </div>
     </div>
   )
 }
 
-/* 학생 폼 — 세션코드 좌측 정렬, center 제거 */
+// ── 학생 폼 ────────────────────────────────────────────────────────────────────
 function StudentForm({ onChangeRole }) {
   const router = useRouter()
   const [mode, setMode] = useState('new')
@@ -198,24 +212,15 @@ function StudentForm({ onChangeRole }) {
       </div>
 
       <form onSubmit={mode === 'new' ? handleNew : handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-16)' }}>
-        {/* 세션 코드 — 좌측 정렬 (center 미사용) */}
         {mode === 'new' && (
-          <TextInput
-            label="세션 코드"
-            placeholder="예: 4K9M2X"
-            value={sessionCode}
-            maxLength={6}
-            onChange={e => { setSessionCode(e.target.value.toUpperCase()); setError('') }}
-          />
+          <TextInput label="세션 코드" placeholder="예: 4K9M2X" value={sessionCode} maxLength={6} onChange={e => { setSessionCode(e.target.value.toUpperCase()); setError('') }} />
         )}
         <TextInput label="이름" placeholder="예: 김민준" value={name} onChange={e => { setName(e.target.value); setError('') }} />
-        {mode === 'new' ? (
-          <TextInput label="모둠 이름" placeholder="예: 2모둠" value={groupName} onChange={e => { setGroupName(e.target.value); setError('') }} />
-        ) : (
-          <TextInput label="참여 코드" placeholder="예: ABC123" value={joinCode} maxLength={6} onChange={e => { setJoinCode(e.target.value.toUpperCase()); setError('') }} />
-        )}
+        {mode === 'new'
+          ? <TextInput label="모둠 이름" placeholder="예: 2모둠" value={groupName} onChange={e => { setGroupName(e.target.value); setError('') }} />
+          : <TextInput label="참여 코드" placeholder="예: ABC123" value={joinCode} maxLength={6} onChange={e => { setJoinCode(e.target.value.toUpperCase()); setError('') }} />
+        }
         {error && <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-17-size)', fontWeight: 500, color: 'var(--state-error)', textAlign: 'center' }}>{error}</p>}
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-16)' }}>
           <button type="submit" disabled={loading} style={{ width: '100%', height: '56px', background: loading ? 'var(--color-cool-gray-200)' : 'var(--color-purple-500)', color: 'var(--color-white)', fontFamily: 'var(--font-body)', fontSize: '16px', fontWeight: 600, border: '1px solid var(--color-black-overlay-10)', borderRadius: '100px', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '-0.4px' }}>
             {loading ? '처리 중…' : mode === 'new' ? '모둠 활동 시작하기' : '모둠 활동 참여하기'}
@@ -234,44 +239,34 @@ function StudentForm({ onChangeRole }) {
   )
 }
 
-/* 이어서 활동하기 카드
-   PC  → 우측 패널 절대 하단
-   모바일 → 콘텐츠 흐름 내 하단 (fixed 미사용 → 키보드에 영향 없음)
-*/
-function LastGroupCard({ lastGroup }) {
-  const router = useRouter()
+// ── 공통 하단 카드 (학생/교사 동일 스타일) ─────────────────────────────────────
+// 교사 '대시보드 열기' 카드와 동일: 라벨 + 수평 flex(정보 | 버튼)
+function BottomCard({ label, line1, line2, btnLabel, onBtn }) {
   return (
-    <div style={{ background: 'var(--color-purple-400)', borderRadius: '12px', padding: 'var(--spacing-16) var(--spacing-20)', boxShadow: '0 4px 16px rgba(91,65,235,0.25)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-10)' }}>
-      {/* 아바타 + 이름 + 코드 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-12)' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '100px', background: 'rgba(255,255,255,0.25)', border: '1.5px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-body)', fontSize: '18px', fontWeight: 700, color: 'var(--color-white)', flexShrink: 0 }}>
-          {lastGroup.name?.[0] ?? '?'}
+    <div style={{ background: 'var(--color-purple-400)', borderRadius: '12px', padding: 'var(--spacing-16) var(--spacing-20)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-10)', boxShadow: '0 4px 16px rgba(91,65,235,0.25)' }}>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>{label}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-10)' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, color: 'var(--color-white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.3px' }}>{line1}</p>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '20px', fontWeight: 800, color: 'var(--color-white)', letterSpacing: '4px', marginTop: '2px' }}>{line2}</p>
         </div>
-        <div style={{ minWidth: 0 }}>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-17-size)', fontWeight: 700, color: 'var(--color-white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastGroup.name}</p>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500, color: 'rgba(255,255,255,0.75)' }}>{lastGroup.code}</p>
-        </div>
+        <button onClick={onBtn} style={{ padding: '10px 18px', background: 'var(--color-purple-500)', border: 'none', borderRadius: '999px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--color-white)', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(72,51,201,0.4)' }}>
+          {btnLabel}
+        </button>
       </div>
-      {/* 버튼 — 항상 전체 너비로 별도 행 */}
-      <button
-        onClick={() => {
-          sessionStorage.setItem('gts_user', JSON.stringify({ ...lastGroup, role: 'member' }))
-          router.push('/activity')
-        }}
-        style={{ width: '100%', padding: '11px 0', background: 'var(--color-purple-500)', border: 'none', borderRadius: '999px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--color-white)', cursor: 'pointer', boxShadow: '0 2px 8px rgba(72,51,201,0.4)' }}
-      >
-        이어서 활동하기
-      </button>
     </div>
   )
 }
 
+// ── 메인 페이지 ────────────────────────────────────────────────────────────────
 export default function JoinPage() {
   const device = useDevice()
   const isMobile = device === 'mobile'
+  const router = useRouter()
   const [role, setRole] = useState(null)
   const [showRoleModal, setShowRoleModal] = useState(false)
-  const [lastGroup, setLastGroup] = useState(null)
+  const [lastGroup, setLastGroup] = useState(null)    // 학생
+  const [lastSession, setLastSession] = useState(null) // 교사
 
   useEffect(() => {
     try {
@@ -279,16 +274,27 @@ export default function JoinPage() {
       if (saved === 'teacher' || saved === 'student') setRole(saved)
       else setShowRoleModal(true)
     } catch { setShowRoleModal(true) }
-    try {
-      const s = localStorage.getItem('gts_last')
-      if (s) setLastGroup(JSON.parse(s))
-    } catch {}
+    try { const s = localStorage.getItem('gts_last'); if (s) setLastGroup(JSON.parse(s)) } catch {}
+    try { const s = localStorage.getItem('gts_teacher_last'); if (s) setLastSession(JSON.parse(s)) } catch {}
   }, [])
 
   function handleSelectRole(r) { localStorage.setItem('gts_role', r); setRole(r); setShowRoleModal(false) }
   function handleChangeRole() { localStorage.removeItem('gts_role'); setRole(null); setShowRoleModal(true) }
 
   const showInlineRoleSelect = !role && !isMobile
+
+  // 교사 대시보드 카드 데이터
+  const teacherCardLine1 = lastSession
+    ? [lastSession.school, lastSession.grade && `${lastSession.grade}학년`, lastSession.classNum && `${lastSession.classNum}반`].filter(Boolean).join(' ')
+    : ''
+  const teacherCardLine2 = lastSession?.sessionCode || ''
+
+  // 학생 이어서 카드 데이터
+  const studentCardLine1 = lastGroup?.name || ''
+  const studentCardLine2 = lastGroup?.code || ''
+
+  const showTeacherCard = role === 'teacher' && !!lastSession
+  const showStudentCard = role === 'student' && !!lastGroup
 
   return (
     <>
@@ -312,16 +318,7 @@ export default function JoinPage() {
         )}
 
         {/* 우측 폼 패널 */}
-        <div style={{
-          flex: isMobile ? '1' : '0 0 30%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          padding: isMobile ? '40px 24px 40px' : '60px 20px 24px',
-          position: 'relative',
-          minHeight: isMobile ? '100vh' : undefined,
-        }}>
+        <div style={{ flex: isMobile ? '1' : '0 0 30%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: isMobile ? '40px 24px 40px' : '60px 20px 24px', position: 'relative', minHeight: isMobile ? '100vh' : undefined }}>
           {isMobile && (
             <>
               <video autoPlay muted loop playsInline src="/main.mp4" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
@@ -332,21 +329,62 @@ export default function JoinPage() {
           {/* PC: 역할 미선택 → 인라인 */}
           {showInlineRoleSelect && <RoleCard onSelect={handleSelectRole} />}
 
+          {/* 폼 */}
           {role === 'teacher' && <TeacherForm onChangeRole={handleChangeRole} />}
           {role === 'student' && <StudentForm onChangeRole={handleChangeRole} />}
 
-          {/* 이어서 활동하기 카드
-              PC  → absolute 하단 (패널이 position:relative)
-              모바일 → 일반 흐름 내 하단 (fixed 미사용)
+          {/* ── 하단 카드 ────────────────────────────────────────────────
+              PC:  절대 위치 하단
+              모바일: 일반 흐름 하단 (fixed 미사용 → 키보드 영향 없음)
           */}
-          {role === 'student' && lastGroup && !isMobile && (
+          {showTeacherCard && !isMobile && (
             <div style={{ position: 'absolute', bottom: 'var(--spacing-24)', left: 'var(--spacing-20)', right: 'var(--spacing-20)', zIndex: 10 }}>
-              <LastGroupCard lastGroup={lastGroup} />
+              <BottomCard
+                label="이전 세션"
+                line1={teacherCardLine1}
+                line2={teacherCardLine2}
+                btnLabel="대시보드 열기"
+                onBtn={() => router.push(`/teacher?session=${lastSession.sessionCode}`)}
+              />
             </div>
           )}
-          {role === 'student' && lastGroup && isMobile && (
+          {showTeacherCard && isMobile && (
             <div style={{ width: '100%', maxWidth: '320px', marginTop: 'var(--spacing-32)', position: 'relative', zIndex: 2 }}>
-              <LastGroupCard lastGroup={lastGroup} />
+              <BottomCard
+                label="이전 세션"
+                line1={teacherCardLine1}
+                line2={teacherCardLine2}
+                btnLabel="대시보드 열기"
+                onBtn={() => router.push(`/teacher?session=${lastSession.sessionCode}`)}
+              />
+            </div>
+          )}
+          {showStudentCard && !isMobile && (
+            <div style={{ position: 'absolute', bottom: 'var(--spacing-24)', left: 'var(--spacing-20)', right: 'var(--spacing-20)', zIndex: 10 }}>
+              <BottomCard
+                label="이전 모둠"
+                line1={studentCardLine1}
+                line2={studentCardLine2}
+                btnLabel="이어서 활동하기"
+                onBtn={() => {
+                  sessionStorage.setItem('gts_user', JSON.stringify({ ...lastGroup, role: 'member' }))
+                  router.push('/activity')
+                }}
+              />
+            </div>
+          )}
+          {showStudentCard && isMobile && (
+            <div style={{ width: '100%', maxWidth: '320px', marginTop: 'var(--spacing-32)', position: 'relative', zIndex: 2 }}>
+              <BottomCard
+                label="이전 모둠"
+                line1={studentCardLine1}
+                line2={studentCardLine2}
+                btnLabel="이어서 활동하기"
+                onBtn={() => {
+                  sessionStorage.setItem('gts_user', JSON.stringify({ ...lastGroup, role: 'member' }))
+                  router.push('/activity')
+                }}
+              />
             </div>
           )}
         </div>

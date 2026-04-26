@@ -1,19 +1,20 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LogOut, Copy } from 'lucide-react'
 import { useDevice } from '../../lib/DeviceContext'
 import {
   subscribeSession, subscribeSessionRooms, subscribePresence,
-  resetRoomData, resetAllRoomsInSession,
+  subscribeStep4Posts, resetRoomData, resetAllRoomsInSession,
 } from '../../lib/firestore'
 
 // ── 단계 완료 판단 ────────────────────────────────────────────────────────────
-function isStepComplete(room, step, step4PostsMap) {
+// 4단계: step4Posts에 문서가 하나라도 있으면 완료
+function isStepComplete(room, step, step4Counts) {
   if (step === 1) return !!room.selectedPost
   if (step === 2) return Array.isArray(room.dataTable) && room.dataTable.some(r => Object.values(r).some(v => v && String(v).trim()))
   if (step === 3) return !!(room.canvasSnapshot || (room.chartConfig && room.chartConfig.title))
-  if (step === 4) return (step4PostsMap?.[room.id] || 0) > 0
+  if (step === 4) return (step4Counts?.[room.id] || 0) > 0
   return false
 }
 
@@ -33,7 +34,7 @@ function StepPip({ step, status }) {
 }
 
 // ── 사이드바 (PC 전용) ────────────────────────────────────────────────────────
-function Sidebar({ session, rooms, navTab, setNavTab }) {
+function Sidebar({ session, rooms, navTab, setNavTab, onCopied }) {
   const onlineCount = rooms.filter(r => r._online).length
   const totalMembers = rooms.reduce((sum, r) => sum + (r._memberCount || 0), 0)
   const avgStep = rooms.length > 0
@@ -42,12 +43,32 @@ function Sidebar({ session, rooms, navTab, setNavTab }) {
   const avgStepRounded = Math.round(avgStep)
   const progressPct = Math.round((avgStep / 4) * 100)
 
+  function handleCopy() {
+    if (!session?.sessionCode) return
+    navigator.clipboard.writeText(session.sessionCode).then(() => onCopied?.())
+  }
+
   return (
     <div style={{ width: '220px', flexShrink: 0, background: 'var(--slate-dk)', display: 'flex', flexDirection: 'column', padding: 'var(--spacing-20)', gap: 'var(--spacing-20)', height: '100%', overflow: 'hidden' }}>
-      {/* 세션 코드 */}
+      {/* 세션 코드 + 복사 */}
       <div>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '6px' }}>세션 코드</p>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '28px', fontWeight: 800, color: 'var(--color-white)', letterSpacing: '6px' }}>{session?.sessionCode || '------'}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '28px', fontWeight: 800, color: 'var(--color-white)', letterSpacing: '6px' }}>
+            {session?.sessionCode || '------'}
+          </p>
+          {session?.sessionCode && (
+            <button
+              onClick={handleCopy}
+              title="복사"
+              style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', borderRadius: '6px', flexShrink: 0, transition: 'color 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
+            >
+              <Copy size={14} />
+            </button>
+          )}
+        </div>
         {session && (
           <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
             {[session.school, session.grade && `${session.grade}학년`, session.classNum && `${session.classNum}반`].filter(Boolean).join(' ') || '학교 정보 없음'}
@@ -68,7 +89,7 @@ function Sidebar({ session, rooms, navTab, setNavTab }) {
         ))}
       </div>
 
-      {/* 평균 진행도 — 정수 표시 */}
+      {/* 평균 진행도 */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
           <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>평균 진행 단계</span>
@@ -79,14 +100,15 @@ function Sidebar({ session, rooms, navTab, setNavTab }) {
         </div>
       </div>
 
-      {/* 네비 */}
+      {/* 네비 — 아이콘 이미지 사용 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
         {[
-          { key: 'rooms', label: '모둠 현황', icon: '📊' },
-          { key: 'manage', label: '세션 관리', icon: '⚙️' },
+          { key: 'rooms',  label: '모둠 현황', icon: '/icon_03.png' },
+          { key: 'manage', label: '세션 관리', icon: '/icon_05.png' },
         ].map(({ key, label, icon }) => (
           <button key={key} onClick={() => setNavTab(key)} className="h-step-item" style={{ background: navTab === key ? 'rgba(255,255,255,0.13)' : 'transparent', color: navTab === key ? 'var(--color-white)' : 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: navTab === key ? 700 : 500 }}>
-            <span>{icon}</span><span>{label}</span>
+            <img src={icon} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: navTab === key ? 1 : 0.6, flexShrink: 0 }} />
+            <span>{label}</span>
           </button>
         ))}
       </div>
@@ -95,21 +117,22 @@ function Sidebar({ session, rooms, navTab, setNavTab }) {
 }
 
 // ── 모둠 현황 ─────────────────────────────────────────────────────────────────
-function RoomsTable({ rooms, step4PostsMap, isMobile }) {
+function RoomsTable({ rooms, step4Counts, isMobile }) {
+  // 배경: 1단계 배경색(--s1-bg)
+  const emptyBg = 'var(--s1-bg)'
+
   if (rooms.length === 0) {
     return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 'var(--spacing-16)', opacity: 0.5 }}>
-        <span style={{ fontSize: '48px' }}>🏫</span>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>아직 참여한 모둠이 없어요</p>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--text-2)' }}>세션 코드를 학생에게 공유해 주세요</p>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 'var(--spacing-16)', opacity: 0.6, background: emptyBg }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>아직 참여한 모둠이 없어요.</p>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--text-2)' }}>세션 코드를 학생에게 공유해 주세요.</p>
       </div>
     )
   }
 
-  // 모바일: 카드 목록
   if (isMobile) {
     return (
-      <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-16)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-10)' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-16)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-10)', background: emptyBg }}>
         {rooms.map(room => {
           const isOnline = !!room._online
           const topic = room.selectedPost?.topic || room.selectedPost?.text || '-'
@@ -123,9 +146,9 @@ function RoomsTable({ rooms, step4PostsMap, isMobile }) {
                 </div>
                 <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)' }}>{room._memberCount || 0}명</span>
               </div>
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: topic !== '-' ? '8px' : 0 }}>
                 {[1, 2, 3, 4].map(step => {
-                  const done = isStepComplete(room, step, step4PostsMap)
+                  const done = isStepComplete(room, step, step4Counts)
                   const status = done ? 'done' : cur === step ? 'active' : 'pending'
                   return <StepPip key={step} step={step} status={status} />
                 })}
@@ -140,9 +163,8 @@ function RoomsTable({ rooms, step4PostsMap, isMobile }) {
     )
   }
 
-  // PC: 테이블
   return (
-    <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-20)' }}>
+    <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-20)', background: emptyBg }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-body)' }}>
         <thead>
           <tr style={{ borderBottom: '2px solid var(--border)' }}>
@@ -164,7 +186,7 @@ function RoomsTable({ rooms, step4PostsMap, isMobile }) {
                 <td style={{ padding: '12px', fontSize: '14px', fontWeight: 700, color: 'var(--text)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.teamName || room.groupName || '-'}</td>
                 <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-2)', whiteSpace: 'nowrap' }}>{room._memberCount || 0}명</td>
                 {[1, 2, 3, 4].map(step => {
-                  const done = isStepComplete(room, step, step4PostsMap)
+                  const done = isStepComplete(room, step, step4Counts)
                   const status = done ? 'done' : cur === step ? 'active' : 'pending'
                   return (
                     <td key={step} style={{ padding: '12px', textAlign: 'center' }}>
@@ -253,10 +275,15 @@ function ManageTab({ rooms, sessionCode, onAction }) {
 }
 
 // ── 상단 바 ───────────────────────────────────────────────────────────────────
-function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms }) {
+function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopied }) {
   const tabTitles = { rooms: '모둠 현황', manage: '세션 관리' }
   const onlineCount = rooms.filter(r => r._online).length
   const totalMembers = rooms.reduce((sum, r) => sum + (r._memberCount || 0), 0)
+
+  function handleCopy() {
+    if (!session?.sessionCode) return
+    navigator.clipboard.writeText(session.sessionCode).then(() => onCopied?.())
+  }
 
   return (
     <div style={{ flexShrink: 0, background: 'var(--color-white)', borderBottom: '1px solid var(--border)', zIndex: 10 }}>
@@ -264,9 +291,16 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms }) {
         {/* 왼쪽 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-10)' }}>
           {isMobile ? (
-            <div>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '10px', fontWeight: 700, color: 'var(--text-2)', letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block' }}>세션</span>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '20px', fontWeight: 800, color: 'var(--text)', letterSpacing: '3px', lineHeight: 1 }}>{session?.sessionCode || '------'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '10px', fontWeight: 700, color: 'var(--text-2)', letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block' }}>세션</span>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '20px', fontWeight: 800, color: 'var(--text)', letterSpacing: '3px', lineHeight: 1 }}>{session?.sessionCode || '------'}</span>
+              </div>
+              {session?.sessionCode && (
+                <button onClick={handleCopy} title="복사" style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-2)', borderRadius: '6px' }}>
+                  <Copy size={14} />
+                </button>
+              )}
             </div>
           ) : (
             <h1 style={{ fontFamily: 'var(--font-body)', fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>{tabTitles[navTab]}</h1>
@@ -276,15 +310,12 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms }) {
           )}
         </div>
 
-        {/* 오른쪽: 액션 + 나가기 */}
+        {/* 오른쪽 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-10)' }}>
           {actionMsg && (
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, color: 'var(--state-selected)', animation: 'fadeIn 0.3s ease' }}>✓ {actionMsg}</p>
           )}
-          <button
-            onClick={onGoHome}
-            title="메인 화면으로"
-            style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-2)', transition: 'background 0.15s, color 0.15s' }}
+          <button onClick={onGoHome} title="메인 화면으로" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-2)', transition: 'background 0.15s, color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--slate-bg)'; e.currentTarget.style.color = 'var(--text)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-2)' }}
           >
@@ -315,9 +346,12 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms }) {
 function BottomTabBar({ navTab, setNavTab }) {
   return (
     <div style={{ flexShrink: 0, display: 'flex', background: 'var(--color-white)', borderTop: '1px solid var(--border)', height: '56px' }}>
-      {[{ key: 'rooms', label: '모둠 현황', icon: '📊' }, { key: 'manage', label: '세션 관리', icon: '⚙️' }].map(({ key, label, icon }) => (
+      {[
+        { key: 'rooms',  label: '모둠 현황', icon: '/icon_03.png' },
+        { key: 'manage', label: '세션 관리', icon: '/icon_05.png' },
+      ].map(({ key, label, icon }) => (
         <button key={key} onClick={() => setNavTab(key)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: navTab === key ? 700 : 400, color: navTab === key ? 'var(--s1)' : 'var(--text-2)' }}>
-          <span style={{ fontSize: '18px' }}>{icon}</span>
+          <img src={icon} alt="" style={{ width: '22px', height: '22px', objectFit: 'contain', opacity: navTab === key ? 1 : 0.5 }} />
           <span>{label}</span>
         </button>
       ))}
@@ -336,11 +370,13 @@ export default function TeacherPage() {
   const [session, setSession] = useState(null)
   const [rooms, setRooms] = useState([])
   const [presenceCounts, setPresenceCounts] = useState({})
+  const [step4Counts, setStep4Counts] = useState({}) // roomId → post count
   const [navTab, setNavTab] = useState('rooms')
   const [actionMsg, setActionMsg] = useState('')
   const [loading, setLoading] = useState(true)
 
   const presenceUnsubsRef = useRef({})
+  const step4UnsubsRef    = useRef({})
 
   useEffect(() => { if (!sessionCode) router.replace('/') }, [sessionCode, router])
 
@@ -358,47 +394,54 @@ export default function TeacherPage() {
     return unsub
   }, [sessionCode])
 
-  // 각 모둠 presence 구독 — 학생 수 실시간 반영
+  // presence + step4Posts 구독 관리
   useEffect(() => {
     const currentIds = new Set(rooms.map(r => r.id))
-    const trackedIds = new Set(Object.keys(presenceUnsubsRef.current))
+    const presenceTracked = new Set(Object.keys(presenceUnsubsRef.current))
+    const step4Tracked    = new Set(Object.keys(step4UnsubsRef.current))
 
-    // 신규 방 구독
     rooms.forEach(room => {
-      if (!trackedIds.has(room.id)) {
-        const unsub = subscribePresence(room.id, members => {
+      if (!presenceTracked.has(room.id)) {
+        presenceUnsubsRef.current[room.id] = subscribePresence(room.id, members => {
           setPresenceCounts(prev => ({ ...prev, [room.id]: members.length }))
         })
-        presenceUnsubsRef.current[room.id] = unsub
+      }
+      if (!step4Tracked.has(room.id)) {
+        step4UnsubsRef.current[room.id] = subscribeStep4Posts(room.id, posts => {
+          setStep4Counts(prev => ({ ...prev, [room.id]: posts.length }))
+        })
       }
     })
 
-    // 삭제된 방 구독 해제
-    trackedIds.forEach(id => {
-      if (!currentIds.has(id)) {
-        presenceUnsubsRef.current[id]?.()
-        delete presenceUnsubsRef.current[id]
-        setPresenceCounts(prev => { const next = { ...prev }; delete next[id]; return next })
-      }
+    ;[presenceUnsubsRef, step4UnsubsRef].forEach((ref, ri) => {
+      const tracked = ri === 0 ? presenceTracked : step4Tracked
+      tracked.forEach(id => {
+        if (!currentIds.has(id)) {
+          ref.current[id]?.()
+          delete ref.current[id]
+        }
+      })
     })
   }, [rooms])
 
   // 언마운트 시 전체 해제
   useEffect(() => {
-    return () => { Object.values(presenceUnsubsRef.current).forEach(fn => fn?.()) }
+    return () => {
+      Object.values(presenceUnsubsRef.current).forEach(fn => fn?.())
+      Object.values(step4UnsubsRef.current).forEach(fn => fn?.())
+    }
   }, [])
 
-  // presence 기반 enriched rooms
+  // enriched rooms
   const enrichedRooms = rooms.map(r => ({
     ...r,
     _online: (presenceCounts[r.id] ?? 0) > 0,
     _memberCount: presenceCounts[r.id] ?? 0,
   }))
 
-  function showAction(msg) {
-    setActionMsg(msg)
-    setTimeout(() => setActionMsg(''), 3000)
-  }
+  function showAction(msg) { setActionMsg(msg); setTimeout(() => setActionMsg(''), 3000) }
+
+  function handleCopied() { showAction('복사되었습니다') }
 
   if (!sessionCode) return null
 
@@ -421,17 +464,16 @@ export default function TeacherPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', background: 'var(--bg)', overflow: 'hidden' }}>
-      {/* PC 전용 사이드바 */}
-      {!isMobile && <Sidebar session={session} rooms={enrichedRooms} navTab={navTab} setNavTab={setNavTab} />}
+      {!isMobile && (
+        <Sidebar session={session} rooms={enrichedRooms} navTab={navTab} setNavTab={setNavTab} onCopied={handleCopied} />
+      )}
 
-      {/* 메인 영역 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        <TopBar session={session} navTab={navTab} actionMsg={actionMsg} onGoHome={() => router.push('/')} isMobile={isMobile} rooms={enrichedRooms} />
+        <TopBar session={session} navTab={navTab} actionMsg={actionMsg} onGoHome={() => router.push('/')} isMobile={isMobile} rooms={enrichedRooms} onCopied={handleCopied} />
 
-        {navTab === 'rooms' && <RoomsTable rooms={enrichedRooms} step4PostsMap={{}} isMobile={isMobile} />}
+        {navTab === 'rooms' && <RoomsTable rooms={enrichedRooms} step4Counts={step4Counts} isMobile={isMobile} />}
         {navTab === 'manage' && <ManageTab rooms={enrichedRooms} sessionCode={sessionCode} onAction={showAction} />}
 
-        {/* 모바일 하단 탭 */}
         {isMobile && <BottomTabBar navTab={navTab} setNavTab={setNavTab} />}
       </div>
     </div>
