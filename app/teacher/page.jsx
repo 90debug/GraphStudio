@@ -37,11 +37,14 @@ function StepPip({ step, status }) {
 function Sidebar({ session, rooms, navTab, setNavTab, onCopied }) {
   const onlineCount = rooms.filter(r => r._online).length
   const totalMembers = rooms.reduce((sum, r) => sum + (r._memberCount || 0), 0)
-  const avgStep = rooms.length > 0
-    ? rooms.reduce((sum, r) => sum + (r.currentStep || 1), 0) / rooms.length
-    : 0
-  const avgStepRounded = Math.round(avgStep)
-  const progressPct = Math.round((avgStep / 4) * 100)
+  // 온라인 여부와 무관하게 currentStep 기반 평균 계산
+  // Math.floor로 항상 완전히 도달한 단계 기준 표시
+  const validRooms = rooms.filter(r => typeof r.currentStep === 'number')
+  const avgStep = validRooms.length > 0
+    ? validRooms.reduce((sum, r) => sum + r.currentStep, 0) / validRooms.length
+    : 1
+  const avgStepRounded = Math.floor(avgStep)
+  const progressPct = Math.round(((avgStepRounded - 1) / 3) * 100)  // 1→0%, 2→33%, 3→67%, 4→100%
 
   function handleCopy() {
     if (!session?.sessionCode) return
