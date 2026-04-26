@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useDevice } from '../lib/DeviceContext'
 import { createSession, createRoomInSession } from '../lib/firestore'
 
-// ── TextInput ──────────────────────────────────────────────────────────────
-function TextInput({ label, placeholder, value, onChange, maxLength, center }) {
+function TextInput({ label, placeholder, value, onChange, maxLength }) {
   const [focused, setFocused] = useState(false)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-8)', width: '100%' }}>
@@ -26,18 +25,14 @@ function TextInput({ label, placeholder, value, onChange, maxLength, center }) {
           border: `1px solid ${focused ? 'var(--color-purple-500)' : 'var(--color-cool-gray-200)'}`,
           borderRadius: '8px', fontFamily: 'var(--font-body)', fontSize: '16px', fontWeight: 400,
           color: 'var(--color-black)', outline: 'none', background: 'var(--color-white)',
-          transition: 'border-color 0.18s',
-          textAlign: center ? 'center' : 'left',
-          // center 여부와 상관없이 자간은 항상 normal → placeholder도 동일하게
-          letterSpacing: 'normal',
-          textTransform: center ? 'uppercase' : 'none',
+          transition: 'border-color 0.18s', letterSpacing: 'normal',
         }}
       />
     </div>
   )
 }
 
-// ── 역할 선택 카드 (공용) ────────────────────────────────────────────────────
+/* 역할 선택 카드 (이모지 없음) */
 function RoleCard({ onSelect }) {
   return (
     <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-20)' }}>
@@ -47,9 +42,9 @@ function RoleCard({ onSelect }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-10)' }}>
         {[
-          { role: 'teacher', emoji: '👩‍🏫', label: '선생님이에요.', desc: '수업 세션을 만들고 관리해요.' },
-          { role: 'student', emoji: '🙋', label: '학생이에요.', desc: '모둠을 만들거나 참여해요.' },
-        ].map(({ role, emoji, label, desc }) => (
+          { role: 'teacher', label: '선생님이에요.', desc: '수업 세션을 만들고 관리해요.' },
+          { role: 'student', label: '학생이에요.', desc: '모둠을 만들거나 참여해요.' },
+        ].map(({ role, label, desc }) => (
           <button
             key={role}
             onClick={() => onSelect(role)}
@@ -57,7 +52,6 @@ function RoleCard({ onSelect }) {
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-purple-300)'; e.currentTarget.style.background = 'var(--color-cool-gray-100)' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-cool-gray-200)'; e.currentTarget.style.background = 'var(--color-white)' }}
           >
-            <span style={{ fontSize: '32px', lineHeight: 1, flexShrink: 0 }}>{emoji}</span>
             <div>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', fontWeight: 700, color: 'var(--color-black)' }}>{label}</p>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-cool-gray-400)', marginTop: '2px' }}>{desc}</p>
@@ -69,7 +63,7 @@ function RoleCard({ onSelect }) {
   )
 }
 
-// 모바일 전용 팝업 (오버레이)
+/* 모바일 전용 오버레이 팝업 */
 function RoleModal({ onSelect }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-24)' }}>
@@ -80,19 +74,15 @@ function RoleModal({ onSelect }) {
   )
 }
 
-// ── 역할 바꾸기 버튼 ──────────────────────────────────────────────────────────
 function ChangeRoleBtn({ onClick }) {
   return (
-    <button
-      onClick={onClick}
-      style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500, color: 'var(--color-cool-gray-400)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px', padding: 0 }}
-    >
+    <button onClick={onClick} style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500, color: 'var(--color-cool-gray-400)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px', padding: 0 }}>
       역할 바꾸기
     </button>
   )
 }
 
-// ── 교사 폼 ───────────────────────────────────────────────────────────────────
+/* 교사 폼 — 학교명 필수 */
 function TeacherForm({ onChangeRole }) {
   const router = useRouter()
   const [school, setSchool] = useState('')
@@ -108,15 +98,15 @@ function TeacherForm({ onChangeRole }) {
 
   async function handleCreate(e) {
     e.preventDefault()
+    if (!school.trim()) return setError('학교명을 입력해 주세요')
     if (!grade.trim()) return setError('학년을 입력해 주세요')
     if (!classNum.trim()) return setError('반을 입력해 주세요')
     setLoading(true); setError('')
     try {
       const sessionCode = await createSession({ school: school.trim(), grade: grade.trim(), classNum: classNum.trim() })
-      const info = { sessionCode, school: school.trim(), grade: grade.trim(), classNum: classNum.trim() }
-      localStorage.setItem('gts_teacher_last', JSON.stringify(info))
+      localStorage.setItem('gts_teacher_last', JSON.stringify({ sessionCode, school: school.trim(), grade: grade.trim(), classNum: classNum.trim() }))
       router.push(`/teacher?session=${sessionCode}`)
-    } catch (err) {
+    } catch {
       setError('세션 생성에 실패했습니다. 네트워크를 확인해 주세요.')
     } finally { setLoading(false) }
   }
@@ -128,7 +118,7 @@ function TeacherForm({ onChangeRole }) {
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-cool-gray-400)', marginTop: '4px' }}>세션 코드가 발급되면 학생에게 공유해 주세요.</p>
       </div>
       <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-16)' }}>
-        <TextInput label="학교명 (선택)" placeholder="예: 한울초등학교" value={school} onChange={e => { setSchool(e.target.value); setError('') }} />
+        <TextInput label="학교명" placeholder="예: 한울초등학교" value={school} onChange={e => { setSchool(e.target.value); setError('') }} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-10)' }}>
           <TextInput label="학년" placeholder="예: 5" value={grade} onChange={e => { setGrade(e.target.value); setError('') }} maxLength={2} />
           <TextInput label="반" placeholder="예: 3" value={classNum} onChange={e => { setClassNum(e.target.value); setError('') }} maxLength={3} />
@@ -154,7 +144,6 @@ function TeacherForm({ onChangeRole }) {
           </div>
         </div>
       )}
-      {/* 역할 바꾸기 — 폼 하단 */}
       <div style={{ textAlign: 'center' }}>
         <ChangeRoleBtn onClick={onChangeRole} />
       </div>
@@ -162,7 +151,7 @@ function TeacherForm({ onChangeRole }) {
   )
 }
 
-// ── 학생 폼 ───────────────────────────────────────────────────────────────────
+/* 학생 폼 — 세션코드 좌측 정렬, center 제거 */
 function StudentForm({ onChangeRole }) {
   const router = useRouter()
   const [mode, setMode] = useState('new')
@@ -202,22 +191,20 @@ function StudentForm({ onChangeRole }) {
 
   return (
     <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-24)', position: 'relative', zIndex: 2 }}>
-      {/* 탭 바 */}
       <div style={{ display: 'flex', background: 'var(--color-cool-gray-100)', borderRadius: '8px', height: '48px', overflow: 'hidden' }}>
         {[{ key: 'new', label: '새 모둠 만들기' }, { key: 'join', label: '코드로 참여' }].map(({ key, label }) => (
           <button key={key} onClick={() => { setMode(key); setError('') }} style={{ flex: 1, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: mode === key ? 600 : 400, color: mode === key ? 'var(--color-white)' : 'var(--color-cool-gray-500)', background: mode === key ? 'var(--color-purple-300)' : 'transparent', borderRadius: '8px', border: 'none', cursor: 'pointer', transition: 'background 0.18s, color 0.18s' }}>{label}</button>
         ))}
       </div>
 
-      {/* 입력 폼 */}
       <form onSubmit={mode === 'new' ? handleNew : handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-16)' }}>
+        {/* 세션 코드 — 좌측 정렬 (center 미사용) */}
         {mode === 'new' && (
           <TextInput
             label="세션 코드"
             placeholder="예: 4K9M2X"
             value={sessionCode}
             maxLength={6}
-            center
             onChange={e => { setSessionCode(e.target.value.toUpperCase()); setError('') }}
           />
         )}
@@ -225,7 +212,7 @@ function StudentForm({ onChangeRole }) {
         {mode === 'new' ? (
           <TextInput label="모둠 이름" placeholder="예: 2모둠" value={groupName} onChange={e => { setGroupName(e.target.value); setError('') }} />
         ) : (
-          <TextInput label="참여 코드" placeholder="예: ABC123" value={joinCode} maxLength={6} center onChange={e => { setJoinCode(e.target.value.toUpperCase()); setError('') }} />
+          <TextInput label="참여 코드" placeholder="예: ABC123" value={joinCode} maxLength={6} onChange={e => { setJoinCode(e.target.value.toUpperCase()); setError('') }} />
         )}
         {error && <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-17-size)', fontWeight: 500, color: 'var(--state-error)', textAlign: 'center' }}>{error}</p>}
 
@@ -238,7 +225,6 @@ function StudentForm({ onChangeRole }) {
               ? (<>모둠을 만들면 <strong style={{ fontWeight: 600, color: 'var(--color-purple-500)' }}>참여 코드</strong>가 생성돼요.</>)
               : (<>모둠장에게 받은 <strong style={{ fontWeight: 600, color: 'var(--color-purple-500)' }}>6자리 코드</strong>를 입력하세요.</>)}
           </p>
-          {/* 역할 바꾸기 — '생성돼요.' 바로 아래 */}
           <div style={{ textAlign: 'center' }}>
             <ChangeRoleBtn onClick={onChangeRole} />
           </div>
@@ -248,24 +234,31 @@ function StudentForm({ onChangeRole }) {
   )
 }
 
-// ── 이어서 활동하기 카드 ─────────────────────────────────────────────────────
+/* 이어서 활동하기 카드
+   PC  → 우측 패널 절대 하단
+   모바일 → 콘텐츠 흐름 내 하단 (fixed 미사용 → 키보드에 영향 없음)
+*/
 function LastGroupCard({ lastGroup }) {
   const router = useRouter()
   return (
-    <div style={{ background: 'var(--color-purple-400)', borderRadius: '12px', padding: 'var(--spacing-16) var(--spacing-20)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-16)', boxShadow: '0 4px 16px rgba(91,65,235,0.25)' }}>
-      <div style={{ width: '44px', height: '44px', borderRadius: '100px', background: 'rgba(255,255,255,0.25)', border: '1.5px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-20-size)', fontWeight: 700, color: 'var(--color-white)', flexShrink: 0 }}>
-        {lastGroup.name?.[0] ?? '?'}
+    <div style={{ background: 'var(--color-purple-400)', borderRadius: '12px', padding: 'var(--spacing-16) var(--spacing-20)', boxShadow: '0 4px 16px rgba(91,65,235,0.25)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-10)' }}>
+      {/* 아바타 + 이름 + 코드 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-12)' }}>
+        <div style={{ width: '40px', height: '40px', borderRadius: '100px', background: 'rgba(255,255,255,0.25)', border: '1.5px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-body)', fontSize: '18px', fontWeight: 700, color: 'var(--color-white)', flexShrink: 0 }}>
+          {lastGroup.name?.[0] ?? '?'}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-17-size)', fontWeight: 700, color: 'var(--color-white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastGroup.name}</p>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500, color: 'rgba(255,255,255,0.75)' }}>{lastGroup.code}</p>
+        </div>
       </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-17-size)', fontWeight: 700, color: 'var(--color-white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lastGroup.name}</p>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500, color: 'rgba(255,255,255,0.75)' }}>{lastGroup.code}</p>
-      </div>
+      {/* 버튼 — 항상 전체 너비로 별도 행 */}
       <button
         onClick={() => {
           sessionStorage.setItem('gts_user', JSON.stringify({ ...lastGroup, role: 'member' }))
           router.push('/activity')
         }}
-        style={{ padding: '10px 18px', background: 'var(--color-purple-500)', border: 'none', borderRadius: '999px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--color-white)', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(72,51,201,0.4)' }}
+        style={{ width: '100%', padding: '11px 0', background: 'var(--color-purple-500)', border: 'none', borderRadius: '999px', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--color-white)', cursor: 'pointer', boxShadow: '0 2px 8px rgba(72,51,201,0.4)' }}
       >
         이어서 활동하기
       </button>
@@ -273,7 +266,6 @@ function LastGroupCard({ lastGroup }) {
   )
 }
 
-// ── 메인 페이지 ──────────────────────────────────────────────────────────────
 export default function JoinPage() {
   const device = useDevice()
   const isMobile = device === 'mobile'
@@ -284,65 +276,52 @@ export default function JoinPage() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem('gts_role')
-      if (saved === 'teacher' || saved === 'student') { setRole(saved) }
-      else { setShowRoleModal(true) }
+      if (saved === 'teacher' || saved === 'student') setRole(saved)
+      else setShowRoleModal(true)
     } catch { setShowRoleModal(true) }
-
     try {
       const s = localStorage.getItem('gts_last')
       if (s) setLastGroup(JSON.parse(s))
     } catch {}
   }, [])
 
-  function handleSelectRole(r) {
-    localStorage.setItem('gts_role', r)
-    setRole(r)
-    setShowRoleModal(false)
-  }
+  function handleSelectRole(r) { localStorage.setItem('gts_role', r); setRole(r); setShowRoleModal(false) }
+  function handleChangeRole() { localStorage.removeItem('gts_role'); setRole(null); setShowRoleModal(true) }
 
-  function handleChangeRole() {
-    localStorage.removeItem('gts_role')
-    setRole(null)
-    setShowRoleModal(true)
-  }
-
-  // PC에서 role이 없으면 모달 대신 오른쪽 패널에 인라인 표시
   const showInlineRoleSelect = !role && !isMobile
 
   return (
     <>
-      {/* 모바일 전용 역할 선택 팝업 */}
       {isMobile && showRoleModal && <RoleModal onSelect={handleSelectRole} />}
 
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', background: 'var(--color-white)', overflow: isMobile ? 'auto' : 'hidden' }}>
 
-        {/* ── 좌측 히어로 패널 (PC 전용) ── */}
+        {/* 좌측 히어로 (PC 전용) */}
         {!isMobile && (
           <div style={{ flex: '0 0 calc(70% - var(--spacing-36))', position: 'relative', overflow: 'hidden', background: 'var(--color-purple-400)', borderRadius: '30px', margin: 'var(--spacing-36) 0 var(--spacing-36) var(--spacing-36)' }}>
-            <video src="/hero.mp4" autoPlay loop muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'left bottom', transform: 'scale(1.05)', transformOrigin: 'center center', pointerEvents: 'none' }} />
+            <video src="/hero.mp4" autoPlay loop muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'left bottom', transform: 'scale(1.05)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', left: 'var(--spacing-48)', right: '38%', top: 'calc(15% - 20px)', display: 'flex', flexDirection: 'column' }}>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: 'calc(var(--text-section-semibold-size) * 0.75)', fontWeight: 'var(--text-section-semibold-weight)', lineHeight: 1.3, color: 'var(--color-white)', letterSpacing: '-0.54px', marginBottom: 'var(--spacing-8)' }}>
                 탐구 주제를 정하고<br />그래프로 표현해 보세요!
               </p>
-              <h1 style={{ fontFamily: 'var(--font-body)', fontSize: 'calc(var(--text-hero-size) * 0.75)', fontWeight: 'var(--text-hero-weight)', lineHeight: 'var(--text-hero-lh)', color: 'var(--color-white)', letterSpacing: '-0.93px', marginBottom: 'var(--spacing-16)' }}>
+              <h1 style={{ fontFamily: 'var(--font-body)', fontSize: 'calc(var(--text-hero-size) * 0.75)', fontWeight: 'var(--text-hero-weight)', lineHeight: 'var(--text-hero-lh)', color: 'var(--color-white)', letterSpacing: '-0.93px' }}>
                 여러가지 그래프
               </h1>
             </div>
           </div>
         )}
 
-        {/* ── 우측 폼 패널 ── */}
+        {/* 우측 폼 패널 */}
         <div style={{
           flex: isMobile ? '1' : '0 0 30%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'flex-start',
-          padding: isMobile ? '40px 24px 100px' : '60px 20px 24px',
+          padding: isMobile ? '40px 24px 40px' : '60px 20px 24px',
           position: 'relative',
           minHeight: isMobile ? '100vh' : undefined,
         }}>
-          {/* 모바일 배경 */}
           {isMobile && (
             <>
               <video autoPlay muted loop playsInline src="/main.mp4" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
@@ -350,32 +329,23 @@ export default function JoinPage() {
             </>
           )}
 
-          {/* PC: 역할 미선택 → 인라인 선택 */}
+          {/* PC: 역할 미선택 → 인라인 */}
           {showInlineRoleSelect && <RoleCard onSelect={handleSelectRole} />}
 
-          {/* 역할 선택 후: 폼 */}
           {role === 'teacher' && <TeacherForm onChangeRole={handleChangeRole} />}
           {role === 'student' && <StudentForm onChangeRole={handleChangeRole} />}
 
-          {/* 이어서 활동하기 카드 — 화면 하단 */}
-          {role === 'student' && lastGroup && (
-            <div style={{
-              width: '100%',
-              maxWidth: '320px',
-              // PC: 패널 내 절대 하단 / 모바일: 고정 하단
-              position: isMobile ? 'fixed' : 'absolute',
-              bottom: isMobile ? '0' : 'var(--spacing-24)',
-              left: isMobile ? '0' : undefined,
-              right: isMobile ? '0' : undefined,
-              padding: isMobile ? 'var(--spacing-16) var(--spacing-24)' : '0 var(--spacing-20)',
-              zIndex: 10,
-              // PC에서 패널 너비(30%) 안에 맞추기 위해 left/right 조정
-              ...(isMobile ? {} : {
-                left: '50%',
-                transform: 'translateX(-50%)',
-                padding: 0,
-              }),
-            }}>
+          {/* 이어서 활동하기 카드
+              PC  → absolute 하단 (패널이 position:relative)
+              모바일 → 일반 흐름 내 하단 (fixed 미사용)
+          */}
+          {role === 'student' && lastGroup && !isMobile && (
+            <div style={{ position: 'absolute', bottom: 'var(--spacing-24)', left: 'var(--spacing-20)', right: 'var(--spacing-20)', zIndex: 10 }}>
+              <LastGroupCard lastGroup={lastGroup} />
+            </div>
+          )}
+          {role === 'student' && lastGroup && isMobile && (
+            <div style={{ width: '100%', maxWidth: '320px', marginTop: 'var(--spacing-32)', position: 'relative', zIndex: 2 }}>
               <LastGroupCard lastGroup={lastGroup} />
             </div>
           )}
