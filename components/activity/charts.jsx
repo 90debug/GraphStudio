@@ -216,8 +216,8 @@ export function StripChart({ data }) {
 
 
 export function LineChart({ data }) {
-  const { msg, hasData } = useChartState(data)
-  if (!hasData) return <NoData msg={msg}/>
+  const hasData = data?.some(d => Number(d.value) > 0)
+  if (!hasData) return <NoData />
   const W=320, H=180, pT=24, pL=40, pB=30
   const values = data.map(d=>Number(d.value)||0)
   const maxV = Math.max(...values,1)
