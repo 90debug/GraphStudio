@@ -323,10 +323,7 @@ export default function ActivityPage() {
           <button onClick={() => { const sc = user?.sessionCode; if(sc && announcement?.id) localStorage.setItem('gts_ann_seen_'+sc, announcement.id); setAnnouncement(null) }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '14px', flexShrink: 0, padding: '0 4px' }}>✕</button>
         </div>
       )}
-      {/* watch 모드 인터랙션 차단 오버레이 */}
-      {watchMode && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9998, cursor: 'default' }} onClickCapture={e => e.stopPropagation()} />
-      )}
+      {/* watch 모드: 쓰기 핸들러는 noop으로 처리 (오버레이 없이 스크롤/클릭 허용) */}
       {/* ── 상단 헤더 ── */}
       <header className="h-14 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 z-50">
         <div className="flex items-center gap-4">
@@ -352,7 +349,7 @@ export default function ActivityPage() {
           </div>
           {/* 알림 아이콘 */}
           {!watchMode && (
-            <div style={{ position:'relative' }}>
+            <div style={{ position:'relative' }} onBlur={function(e){ if(!e.currentTarget.contains(e.relatedTarget)) setShowNotifPanel(false) }} tabIndex={-1}>
               <button
                 onClick={function() { setShowNotifPanel(function(v){return !v}) }}
                 className="p-2 text-slate-400 hover:text-gsp-600 transition-all hover:bg-gsp-50 rounded-xl"
@@ -362,8 +359,7 @@ export default function ActivityPage() {
                 {announcement && <span style={{ position:'absolute', top:5, right:5, width:7, height:7, borderRadius:'50%', background:'#E24B4A', border:'1.5px solid #fff', display:'block' }}/>}
               </button>
               {showNotifPanel && (
-                <div style={{ position:'absolute', top:'40px', right:0, zIndex:8001, background:'#fff', border:'1px solid #e2e3e5', borderRadius:12, padding:'12px 14px', width:240, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', maxHeight:280, overflowY:'auto' }}
-                  onClick={function(e){e.stopPropagation()}}>
+                <div style={{ position:'absolute', top:'40px', right:0, zIndex:8001, background:'#fff', border:'1px solid #e2e3e5', borderRadius:12, padding:'12px 14px', width:240, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', maxHeight:280, overflowY:'scroll', WebkitOverflowScrolling:'touch', touchAction:'pan-y' }}>
                   <p style={{ fontSize:11, fontWeight:700, color:'#8C7B6E', marginBottom:8 }}>선생님 공지</p>
                   {recentAnnouncements.length===0
                     ? <p style={{ fontSize:13, color:'#8C7B6E' }}>공지가 없습니다.</p>
@@ -385,10 +381,11 @@ export default function ActivityPage() {
       <main className="flex-1 relative overflow-hidden flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div key={activeStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1 flex flex-col overflow-hidden">
-            {activeStep === 1 && <Step1 user={watchUser} code={activeCode} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} onDeleteComment={handleDeleteComment1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
-            {activeStep === 2 && <Step2 user={watchUser} code={activeCode} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
-            {activeStep === 3 && <Step3 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={handleChartConfig} strokes={strokes} currentDrawer={room.currentDrawer} drawMode={room.drawMode||'draw'} onDrawMode={handleDrawMode} livePreview={room.livePreview} selectedPost={room.selectedPost} step3SnapshotImg={room.canvasSnapshot} onStep3SnapshotImg={(img)=>updateRoomMeta(userRef.current?.code,{canvasSnapshot:img})}/>}
-            {activeStep === 4 && <Step4 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4} onDeleteComment4={handleDeleteComment4}/>}
+            {/* watch 모드: 쓰기 핸들러 noop, 읽기(스크롤·클릭) 허용 */}
+            {activeStep === 1 && <Step1 user={watchUser} code={activeCode} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={watchMode ? function(){} : handleLike1} onComment={watchMode ? function(){} : handleComment1} onSelectRequest={watchMode ? function(){} : handleSelectRequest} onDelete={watchMode ? function(){} : handleDelete1} onDeleteComment={watchMode ? function(){} : handleDeleteComment1} showModal={false} onShowModal={watchMode ? function(){} : setStep1Modal}/>}
+            {activeStep === 2 && <Step2 user={watchUser} code={activeCode} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={watchMode ? function(){} : handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
+            {activeStep === 3 && <Step3 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={watchMode ? function(){} : handleChartConfig} strokes={strokes} currentDrawer={watchMode ? null : room.currentDrawer} drawMode={room.drawMode||'draw'} onDrawMode={watchMode ? function(){} : handleDrawMode} livePreview={room.livePreview} selectedPost={room.selectedPost} step3SnapshotImg={room.canvasSnapshot} onStep3SnapshotImg={watchMode ? function(){} : (img)=>updateRoomMeta(userRef.current?.code,{canvasSnapshot:img})}/>}
+            {activeStep === 4 && <Step4 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={watchMode ? function(){} : handleStep4State} posts4={step4Posts} onLike4={watchMode ? function(){} : handleLike4} onComment4={watchMode ? function(){} : handleComment4} onDelete4={watchMode ? function(){} : handleDelete4} onDeleteComment4={watchMode ? function(){} : handleDeleteComment4}/>}
           </motion.div>
         </AnimatePresence>
 
@@ -400,13 +397,13 @@ export default function ActivityPage() {
             <Plus size={24} strokeWidth={3} />
           </button>
         )}
-        <BottomNav currentStep={activeStep} onStepChange={changeStep} />
+        <BottomNav currentStep={activeStep} onStepChange={watchMode ? function(){} : changeStep} />
       </main>
 
       {resetConfirmPost && <ConfirmResetModal topicName={room.selectedPost?.topic} onConfirm={handleConfirmReset} onCancel={function() { setResetConfirmPost(null) }}/>}
       {!watchMode && voteModal && room.selectionVote && <VoteModal vote={room.selectionVote} myName={user?.name||''} onAgree={handleVote} onClose={function() { setVoteModal(false) }} onDecline={handleVoteDecline} isRequester={room.selectionVote?.requestedBy === user?.name} />}
       {toast && <Toast msg={toast} onDone={function() { setToast(null) }} />}
-      {showNotifPanel && <div style={{ position:'fixed', inset:0, zIndex:8000 }} onClick={function(){setShowNotifPanel(false)}}/>}
+      {showNotifPanel && <div style={{ position:'fixed', inset:0, zIndex:8000, pointerEvents:'none' }} />}
     </div>
   )
 }

@@ -405,12 +405,17 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopie
   const onlineCount = rooms.filter(r => r._online).length
   const totalMembers = rooms.reduce((sum, r) => sum + (r._memberCount || 0), 0)
   const [showNotif, setShowNotif] = useState(false)
-  const [lastSeenCount, setLastSeenCount] = useState(0)
+  // localStorage에 마지막으로 확인한 공지 수를 저장 → 새로고침 후에도 유지
+  const [lastSeenCount, setLastSeenCount] = useState(() => {
+    try { return Number(localStorage.getItem('gts_teacher_ann_seen') || '0') } catch { return 0 }
+  })
   const hasNew = announcements.length > lastSeenCount
 
   function handleNotifClick() {
     setShowNotif(v => !v)
-    setLastSeenCount(announcements.length)
+    const newCount = announcements.length
+    setLastSeenCount(newCount)
+    try { localStorage.setItem('gts_teacher_ann_seen', String(newCount)) } catch {}
   }
 
   useEffect(() => {
