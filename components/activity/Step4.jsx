@@ -6,8 +6,87 @@ import { useDevice } from '../../lib/DeviceContext'
 import { CHART_CMPS } from './charts'
 import { addStep4Post, loadCanvasSnapshot } from '../../lib/firestore'
 import { tsNow } from '../../lib/constants'
-import { Heart, MessageCircle, X } from 'lucide-react'
+import { Heart, MessageCircle, X, ZoomIn } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+// ── 이미지 확대 모달 (PC 전용) ─────────────────────────────────────────────────
+function ImageModal({ src, onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position:'fixed', inset:0, zIndex:99999,
+        background:'rgba(0,0,0,0.75)', backdropFilter:'blur(4px)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        cursor:'zoom-out',
+      }}
+    >
+      <div onClick={e=>e.stopPropagation()} style={{ position:'relative', maxWidth:'88vw', maxHeight:'88vh' }}>
+        <img
+          src={src}
+          alt="확대 이미지"
+          style={{
+            maxWidth:'88vw', maxHeight:'88vh',
+            borderRadius:16, boxShadow:'0 24px 80px rgba(0,0,0,0.45)',
+            objectFit:'contain', display:'block',
+          }}
+        />
+        <button
+          onClick={onClose}
+          style={{
+            position:'absolute', top:-14, right:-14,
+            width:36, height:36, borderRadius:'50%',
+            background:'#fff', border:'none',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            cursor:'pointer', boxShadow:'0 2px 12px rgba(0,0,0,0.2)',
+            color:'#334155', fontSize:14, fontWeight:800,
+          }}
+        ><X size={16}/></button>
+      </div>
+    </div>
+  )
+}
+
+// ── 차트 확대 모달 (PC 전용) ───────────────────────────────────────────────────
+function ChartModal({ children, title, onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position:'fixed', inset:0, zIndex:99999,
+        background:'rgba(0,0,0,0.65)', backdropFilter:'blur(4px)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        cursor:'zoom-out',
+      }}
+    >
+      <div
+        onClick={e=>e.stopPropagation()}
+        style={{
+          background:'#fff', borderRadius:20,
+          padding:'28px 32px 32px',
+          maxWidth:'80vw', width:640,
+          boxShadow:'0 24px 80px rgba(0,0,0,0.35)',
+          cursor:'default', position:'relative',
+        }}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position:'absolute', top:14, right:14,
+            width:32, height:32, borderRadius:'50%',
+            background:'#F1F5F9', border:'none',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            cursor:'pointer', color:'#64748B',
+          }}
+        ><X size={15}/></button>
+        {title && (
+          <div style={{ fontWeight:800, fontSize:17, color:'#1E293B', textAlign:'center', marginBottom:20 }}>{title}</div>
+        )}
+        <div>{children}</div>
+      </div>
+    </div>
+  )
+}
 
 // ── 아바타 색상 ────────────────────────────────────────────────────────────────
 const AVATAR_COLORS = ['#5B41EB','#4EACD9','#5BBF7A','#C97DE8','#FF6B7A','#FFB432','#22D3EE','#F97316']
@@ -124,6 +203,8 @@ function PadletStep4Card({ post, myName, onLike, onComment, onDeleteComment, onD
 // ── WorkPanel
 // ps, checks, loadedImg 는 로컬 state — Firestore 동기화 없음 (개인 작성)
 function WorkPanel({ code, user, items, dataTable, chartConfig }) {
+  const device   = useDevice()
+  const isMobile = device === 'mobile'
   const [loadingImg, setLoadingImg] = useState(false)
   const [noteInput,  setNoteInput]  = useState('')
   const [notes,      setNotes]      = useState([])
@@ -133,6 +214,10 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
   const [ps,       setPs]       = useState('')
   const [checks,   setChecks]   = useState({})
   const [loadedImg,setLoadedImg]= useState(null)
+
+  // 이미지 확대 모달 state (PC 전용)
+  const [modalImgSrc,    setModalImgSrc]    = useState(null)
+  const [showChartModal, setShowChartModal] = useState(false)
 
   const chartData = items.map((label, i) => ({ label, value: dataTable[i]?.value || 0 }))
   const ChartComp = CHART_CMPS[chartConfig.type] || CHART_CMPS.bar
@@ -171,11 +256,41 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
     <div style={{ display:'flex', flexDirection:'column', overflow:'hidden', flex:1 }}>
       <div style={{ flex:1, overflowY:'auto', WebkitOverflowScrolling:'touch', padding:14 }}>
 
+        {/* 이미지 확대 모달 (PC 전용) */}
+        {!isMobile && modalImgSrc && (
+          <ImageModal src={modalImgSrc} onClose={()=>setModalImgSrc(null)}/>
+        )}
+        {!isMobile && showChartModal && (
+          <ChartModal title={chartConfig.title||'완성된 그래프'} onClose={()=>setShowChartModal(false)}>
+            {chartConfig.type==='pie' ? <ChartComp data={chartData} compact={true}/> : <ChartComp data={chartData}/>}
+          </ChartModal>
+        )}
+
         {/* 완성된 그래프 */}
         <div style={{ background:'#EEEEF3', border:'1px solid #e2e3e5', borderRadius:12, padding:12, marginBottom:12 }}>
           <div style={{ fontSize:12, fontWeight:700, color:'#5B41EB', marginBottom:6 }}>{chartConfig.title||'완성된 그래프'}</div>
           {hasData ? (
-            <div style={{ transform:'scale(0.82)', transformOrigin:'top left', width:'122%', pointerEvents:'none', overflow:'hidden' }}>
+            <div
+              onClick={()=>{ if (!isMobile) setShowChartModal(true) }}
+              title={!isMobile ? '클릭하여 확대' : undefined}
+              style={{
+                transform:'scale(0.82)', transformOrigin:'top left', width:'122%',
+                pointerEvents: isMobile ? 'none' : 'auto',
+                overflow:'hidden', borderRadius:8,
+                cursor: isMobile ? 'default' : 'zoom-in',
+                position:'relative',
+              }}
+            >
+              {!isMobile && (
+                <div style={{
+                  position:'absolute', top:6, right:6, zIndex:2,
+                  background:'rgba(91,65,235,0.85)', borderRadius:6,
+                  padding:'3px 7px', display:'flex', alignItems:'center', gap:4,
+                  fontSize:10, color:'#fff', fontWeight:700, pointerEvents:'none',
+                }}>
+                  <ZoomIn size={11}/> 확대
+                </div>
+              )}
               {chartConfig.type==='pie' ? <ChartComp data={chartData} compact={true}/> : <ChartComp data={chartData}/>}
             </div>
           ) : (
@@ -184,7 +299,31 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
           <button onClick={doLoadCanvas} disabled={loadingImg} style={{ marginTop:8, width:'100%', padding:'6px', borderRadius:7, border:'1px solid #e2e3e5', background:'#fff', color:'#5B41EB', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', minHeight:36 }}>
             {loadingImg ? '불러오는 중...' : '직접 그린 그래프 불러오기'}
           </button>
-          {loadedImg && <img src={loadedImg} alt="직접 그린 그래프" style={{ width:'100%', borderRadius:6, border:'1px solid #e2e3e5', marginTop:8 }}/>}
+          {loadedImg && (
+            <div style={{ position:'relative', marginTop:8 }}>
+              <img
+                src={loadedImg}
+                alt="직접 그린 그래프"
+                onClick={()=>{ if (!isMobile) setModalImgSrc(loadedImg) }}
+                title={!isMobile ? '클릭하여 확대' : undefined}
+                style={{
+                  width:'100%', borderRadius:6, border:'1px solid #e2e3e5',
+                  cursor: isMobile ? 'default' : 'zoom-in',
+                  display:'block',
+                }}
+              />
+              {!isMobile && (
+                <div style={{
+                  position:'absolute', top:8, right:8,
+                  background:'rgba(91,65,235,0.85)', borderRadius:6,
+                  padding:'3px 7px', display:'flex', alignItems:'center', gap:4,
+                  fontSize:10, color:'#fff', fontWeight:700, pointerEvents:'none',
+                }}>
+                  <ZoomIn size={11}/> 확대
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 알 수 있는 사실 — 라벨 위, 좌측 정렬 */}

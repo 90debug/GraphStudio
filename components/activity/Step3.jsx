@@ -304,20 +304,20 @@ export default function Step3({
                 </div>
                 <Lbl>그래프 제목</Lbl>
                 {/* 제목 입력: 로컬 입력 → 엔터/추가 버튼으로 확정 */}
-                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:10}}>
+                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:10,overflow:'hidden'}}>
                   <input
                     value={titleInput}
                     onChange={e=>setTitleInput(e.target.value)}
                     onKeyDown={handleTitleKeyDown}
                     placeholder="예: 공공 예절별 학생 수의 비율"
-                    style={{flex:1,padding:'10px 14px',borderRadius:8,border:'1px solid #E2E3E5',fontSize:13,fontWeight:400,outline:'none',background:'#fff',fontFamily:'inherit'}}
+                    style={{flex:1,minWidth:0,padding:'10px 10px',borderRadius:8,border:'1px solid #E2E3E5',fontSize:13,fontWeight:400,outline:'none',background:'#fff',fontFamily:'inherit'}}
                     onFocus={e=>e.target.style.borderColor='#5B41EB'}
                     onBlur={e=>e.target.style.borderColor='#E2E3E5'}
                   />
                   <button
                     type="button"
                     onClick={confirmTitle}
-                    style={{padding:'10px 16px',borderRadius:999,background:chartConfig.title?'#8382e2':'#5B41EB',color:'#fff',border:'none',fontSize:13,fontWeight:800,cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap',minHeight:42}}
+                    style={{padding:'10px 12px',borderRadius:999,background:chartConfig.title?'#8382e2':'#5B41EB',color:'#fff',border:'none',fontSize:13,fontWeight:800,cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap',minHeight:42}}
                   >{chartConfig.title ? '수정' : '추가'}</button>
                 </div>
                 {chartConfig.title&&(
