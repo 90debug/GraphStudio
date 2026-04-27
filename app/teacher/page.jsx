@@ -68,7 +68,7 @@ function AnnouncementPanel({ sessionCode, onAction }) {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 16 }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 16, background: 'var(--s1-bg)' }}>
       {/* 입력 영역 */}
       <div className="edu-sec">
         <p className="sec-label">새 공지 작성</p>
@@ -177,7 +177,7 @@ function Sidebar({ session, rooms, navTab, setNavTab, onCopied, step4Counts }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
         {[
           { key: 'rooms',   label: '모둠 현황', icon: '/icon_03.png' },
-          { key: 'announce',label: '공지사항',  icon: '/icon_06.png' },
+          { key: 'announce',label: '공지 사항',  icon: '/icon_06.png' },
           { key: 'manage',  label: '세션 관리', icon: '/icon_05.png' },
         ].map(({ key, label, icon }) => (
           <button key={key} onClick={() => setNavTab(key)} className="h-step-item" style={{ background: navTab === key ? 'rgba(255,255,255,0.13)' : 'transparent', color: navTab === key ? 'var(--color-white)' : 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: navTab === key ? 700 : 500 }}>
@@ -229,7 +229,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)' }}>{room._memberCount || 0}명</span>
                   {isOnline && (
-                    <button onClick={() => handleMonitor(room)} title="화면 모니터링" style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>👁</button>
+                    <button onClick={() => handleMonitor(room)} title="화면 모니터링" style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)', borderRadius: '6px', cursor: 'pointer' }}><img src='/icon_07.png' alt='모니터링' style={{ width:16, height:16, objectFit:'contain' }}/></button>
                   )}
                 </div>
               </div>
@@ -290,10 +290,10 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
                     <button
                       onClick={() => handleMonitor(room)}
                       title={`${room.teamName || room.groupName} 화면 보기`}
-                      style={{ width: '30px', height: '30px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', transition: 'background 0.15s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-purple-50, #EEEDFE)'}
+                      style={{ width: '30px', height: '30px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)', borderRadius: '6px', cursor: 'pointer', transition: 'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--s1-bg)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'var(--slate-bg)'}
-                    >👁</button>
+                    ><img src="/icon_07.png" alt="모니터링" style={{ width:16, height:16, objectFit:'contain' }}/></button>
                   ) : (
                     <span style={{ fontSize: '12px', color: 'var(--color-cool-gray-300)' }}>—</span>
                   )}
@@ -401,7 +401,7 @@ function NotifDropdown({ announcements, onClose }) {
 
 // ── 상단 바 ───────────────────────────────────────────────────────────────────
 function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopied, announcements, sessionCode }) {
-  const tabTitles = { rooms: '모둠 현황', announce: '공지사항', manage: '세션 관리' }
+  const tabTitles = { rooms: '모둠 현황', announce: '공지 사항', manage: '세션 관리' }
   const onlineCount = rooms.filter(r => r._online).length
   const totalMembers = rooms.reduce((sum, r) => sum + (r._memberCount || 0), 0)
   const [showNotif, setShowNotif] = useState(false)
@@ -494,7 +494,7 @@ function BottomTabBar({ navTab, setNavTab }) {
     <div style={{ flexShrink: 0, display: 'flex', background: 'var(--color-white)', borderTop: '1px solid var(--border)', height: '56px' }}>
       {[
         { key: 'rooms',    label: '모둠 현황', icon: '/icon_03.png' },
-        { key: 'announce', label: '공지사항',  icon: '/icon_06.png' },
+        { key: 'announce', label: '공지 사항',  icon: '/icon_06.png' },
         { key: 'manage',   label: '세션 관리', icon: '/icon_05.png' },
       ].map(({ key, label, icon }) => (
         <button key={key} onClick={() => setNavTab(key)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: navTab === key ? 700 : 400, color: navTab === key ? 'var(--s1)' : 'var(--text-2)' }}>

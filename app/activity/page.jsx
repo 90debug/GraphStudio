@@ -56,6 +56,7 @@ export default function ActivityPage() {
   const [allAnnouncements, setAllAnnouncements] = useState([])  // 히스토리
   const [showNotifPanel, setShowNotifPanel] = useState(false)
   const annTimerRef = useRef(null)
+  const mountTimeRef = useRef(Date.now())  // 마운트 시각 기록 → 이후 공지만 토스트
   const [step1Modal, setStep1Modal] = useState(false)
   const [resetConfirmPost, setResetConfirmPost] = useState(null)
 
@@ -116,10 +117,18 @@ export default function ActivityPage() {
         function subscribeAnn(sc) {
           unsubs.push(subscribeLastAnnouncement(sc, function(ann) {
             if (!ann) return
+            // 마운트 이전 공지 or 이미 읽은 공지는 토스트 안 띄움
+            const lastSeenId = localStorage.getItem('gts_ann_seen_' + sc)
+            const annTs = ann.sentAt?.toMillis ? ann.sentAt.toMillis() : (ann.sentAt?.seconds ? ann.sentAt.seconds * 1000 : 0)
+            const isNew = ann.id !== lastSeenId && annTs > mountTimeRef.current - 3000
             setAnnouncement(prev => {
+              if (!isNew) return prev
               if (prev?.id === ann.id) return prev
               clearTimeout(annTimerRef.current)
-              annTimerRef.current = setTimeout(() => setAnnouncement(null), 8000)
+              annTimerRef.current = setTimeout(() => {
+                setAnnouncement(null)
+                localStorage.setItem('gts_ann_seen_' + sc, ann.id)
+              }, 8000)
               return ann
             })
           }))
@@ -306,12 +315,12 @@ export default function ActivityPage() {
       )}
       {/* 공지사항 토스트 — 타이틀 영역 부근 (헤더 바로 아래) */}
       {announcement && !watchMode && (
-        <div style={{ position: 'fixed', top: '64px', left: '50%', transform: 'translateX(-50%)', zIndex: 8000, maxWidth: 'calc(100vw - 40px)', width: '360px', background: '#1E293B', color: '#fff', borderRadius: '10px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.25)', animation: 'fadeUp .26s cubic-bezier(.34,1.3,.64,1)', border: '1px solid rgba(255,255,255,0.12)', overflow: 'hidden' }}>
-          <span style={{ fontSize: '16px', flexShrink: 0 }}>📢</span>
+        <div style={{ position: 'fixed', top: '64px', left: '50%', transform: 'translateX(-50%)', zIndex: 8000, maxWidth: 'calc(100vw - 40px)', width: '360px', background: 'var(--s1)', color: '#fff', borderRadius: '10px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 8px 32px rgba(91,65,235,0.4)', animation: 'fadeUp .26s cubic-bezier(.34,1.3,.64,1)', border: '1px solid rgba(255,255,255,0.18)', overflow: 'hidden', opacity: 0.96 }}>
+          <span style={{ fontSize: '11px', fontWeight: 800, background: 'rgba(255,255,255,0.18)', padding: '3px 7px', borderRadius: '6px', flexShrink: 0, letterSpacing: '0.3px' }}>[공지]</span>
           <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
             <div id="ann-scroll" style={{ whiteSpace: 'nowrap', fontSize: '13px', fontWeight: 600, lineHeight: 1.4, animationDuration: '0s', display: 'inline-block', willChange: 'transform' }}>{announcement.text}</div>
           </div>
-          <button onClick={() => setAnnouncement(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '14px', flexShrink: 0, padding: '0 4px' }}>✕</button>
+          <button onClick={() => { const sc = user?.sessionCode; if(sc && announcement?.id) localStorage.setItem('gts_ann_seen_'+sc, announcement.id); setAnnouncement(null) }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '14px', flexShrink: 0, padding: '0 4px' }}>✕</button>
         </div>
       )}
       {/* watch 모드 인터랙션 차단 오버레이 */}
@@ -376,14 +385,14 @@ export default function ActivityPage() {
       <main className="flex-1 relative overflow-hidden flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div key={activeStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1 flex flex-col overflow-hidden">
-            {activeStep === 1 && <Step1 user={user} code={activeCode} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} onDeleteComment={handleDeleteComment1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
-            {activeStep === 2 && <Step2 user={user} code={activeCode} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
-            {activeStep === 3 && <Step3 user={user} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={handleChartConfig} strokes={strokes} currentDrawer={room.currentDrawer} drawMode={room.drawMode||'draw'} onDrawMode={handleDrawMode} livePreview={room.livePreview} selectedPost={room.selectedPost} step3SnapshotImg={room.canvasSnapshot} onStep3SnapshotImg={(img)=>updateRoomMeta(userRef.current?.code,{canvasSnapshot:img})}/>}
-            {activeStep === 4 && <Step4 user={user} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4} onDeleteComment4={handleDeleteComment4}/>}
+            {activeStep === 1 && <Step1 user={watchUser} code={activeCode} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} onDeleteComment={handleDeleteComment1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
+            {activeStep === 2 && <Step2 user={watchUser} code={activeCode} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
+            {activeStep === 3 && <Step3 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={handleChartConfig} strokes={strokes} currentDrawer={room.currentDrawer} drawMode={room.drawMode||'draw'} onDrawMode={handleDrawMode} livePreview={room.livePreview} selectedPost={room.selectedPost} step3SnapshotImg={room.canvasSnapshot} onStep3SnapshotImg={(img)=>updateRoomMeta(userRef.current?.code,{canvasSnapshot:img})}/>}
+            {activeStep === 4 && <Step4 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4} onDeleteComment4={handleDeleteComment4}/>}
           </motion.div>
         </AnimatePresence>
 
-        {activeStep === 1 && !step1Modal && (
+        {activeStep === 1 && !step1Modal && !watchMode && (
           <button
             onClick={() => setStep1Modal(true)}
             className="fixed bottom-[86px] right-6 w-14 h-14 bg-gsp-500 text-white rounded-full shadow-[0_8px_24px_rgba(91,65,235,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center z-[200]"
@@ -395,7 +404,7 @@ export default function ActivityPage() {
       </main>
 
       {resetConfirmPost && <ConfirmResetModal topicName={room.selectedPost?.topic} onConfirm={handleConfirmReset} onCancel={function() { setResetConfirmPost(null) }}/>}
-      {voteModal && room.selectionVote && <VoteModal vote={room.selectionVote} myName={user.name} onAgree={handleVote} onClose={function() { setVoteModal(false) }} onDecline={handleVoteDecline} isRequester={room.selectionVote?.requestedBy === user.name} />}
+      {!watchMode && voteModal && room.selectionVote && <VoteModal vote={room.selectionVote} myName={user?.name||''} onAgree={handleVote} onClose={function() { setVoteModal(false) }} onDecline={handleVoteDecline} isRequester={room.selectionVote?.requestedBy === user?.name} />}
       {toast && <Toast msg={toast} onDone={function() { setToast(null) }} />}
       {showNotifPanel && <div style={{ position:'fixed', inset:0, zIndex:8000 }} onClick={function(){setShowNotifPanel(false)}}/>}
     </div>

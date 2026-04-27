@@ -333,7 +333,7 @@ export default function JoinPage() {
                 탐구 주제를 정하고<br />그래프로 표현해 보세요!
               </p>
               <h1 style={{ fontFamily: 'var(--font-body)', fontSize: 'calc(var(--text-hero-size) * 0.75)', fontWeight: 'var(--text-hero-weight)', lineHeight: 'var(--text-hero-lh)', color: 'var(--color-white)', letterSpacing: '-0.93px' }}>
-                여러가지 그래프
+                여러 가지 그래프
               </h1>
             </div>
           </div>
