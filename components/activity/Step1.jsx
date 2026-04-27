@@ -186,7 +186,8 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
 }
 
 export default function Step1({ user, code, posts, selectedPost, onToast, onLike, onComment, onDeleteComment, onSelectRequest, onDelete, showModal: showModalProp, onShowModal }) {
-  const device = useDevice()
+  const device   = useDevice()
+  const isMobile = device === 'mobile'
   const [showModalLocal, setShowModalLocal] = useState(false)
   const showModal = showModalProp !== undefined ? showModalProp : showModalLocal
   const setShowModal = onShowModal ?? setShowModalLocal
@@ -348,7 +349,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
                 <input
                   value={form.question}
                   onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
-                  placeholder="예: 반려동물을 키우면서 실천하고 있는 공공 예절은 무엇인가요?"
+                  placeholder={isMobile ? '예: 어떤 공공 예절을 실천하고 있나요?' : '예: 반려동물을 키우면서 실천하고 있는 공공 예절은 무엇인가요?'}
                   className="w-full px-4 py-3 bg-slate-50 border border-[#E2E3E5] rounded-[8px] text-sm font-bold text-black outline-none bg-white focus:border-gsp-500 transition-all placeholder:text-[#8A949E] placeholder:font-medium"
                 />
               </div>

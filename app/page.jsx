@@ -322,7 +322,7 @@ export default function JoinPage() {
     <>
       {isMobile && showRoleModal && <RoleModal onSelect={handleSelectRole} />}
 
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', background: 'var(--color-white)', overflow: isMobile ? 'auto' : 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', background: isMobile ? '#F5F3FF' : 'var(--color-white)', overflow: isMobile ? 'auto' : 'hidden' }}>
 
         {/* 좌측 히어로 (PC 전용) */}
         {!isMobile && (
