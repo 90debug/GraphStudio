@@ -15,12 +15,18 @@ const CHART_TYPES = [
 
 export default function Step3({
   user, code, items, dataTable, chartConfig, onChartConfig,
-  strokes, currentDrawer, drawMode, onDrawMode, livePreview,
-  selectedPost, step3SnapshotImg, onStep3SnapshotImg, activeStep = 3
+  strokes, currentDrawer, drawMode: _drawModeProp, onDrawMode, livePreview,
+  selectedPost, step3SnapshotImg, onStep3SnapshotImg, activeStep = 3,
+  readOnly = false,
 }) {
   const device   = useDevice()
   const isMobile = device === 'mobile'
-  // 모바일에서는 전체화면 기능 미제공
+  // drawMode를 로컬 state로 관리 → Firestore 동기화 없이 개인별 독립 탭
+  const [drawMode, setLocalDrawMode] = useState('draw')
+  function handleTabClick(mode) {
+    setLocalDrawMode(mode)
+    // onDrawMode는 외부에서 noop으로 전달되어도 로컬은 정상 동작
+  }
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   const chartData = items.map((label, i) => ({ label, value: dataTable[i]?.value || 0 }))
@@ -62,7 +68,7 @@ export default function Step3({
   const modeButtons = (
     <div style={{display:'flex',gap:7,flexShrink:0}}>
       {[['draw','직접 그리기','#5B41EB'],['auto','자동 그래프','#5B41EB']].map(([mode,label,clr])=>(
-        <button key={mode} type="button" onClick={()=>onDrawMode(mode)} style={{
+        <button key={mode} type="button" onClick={()=>handleTabClick(mode)} style={{
           flex:1, padding:isMobile?'10px 8px':'9px 20px', minHeight:44, borderRadius:999,
           fontSize:isMobile?13:14, fontWeight:700, cursor:'pointer', border:'1px solid',
           fontFamily:'inherit', transition:'all .15s',

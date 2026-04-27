@@ -15,7 +15,7 @@ function nameColor(name) {
 }
 
 export default function DrawingCanvas({
-  code, userName, strokes, currentDrawer, livePreview,
+  code, userName, strokes, currentDrawer, livePreview, readOnly = false,
   snapshotImg, onSnapshotImg,
   isMobile,
   isFullscreen = false,
@@ -204,6 +204,7 @@ export default function DrawingCanvas({
 
   // ── 마우스 이벤트 ──────────────────────────────────────────────────
   function handleStart(e) {
+    if(readOnly) return
     if(e.type.startsWith('touch')) return
     e.preventDefault()
     const p=getPos(e,canvasRef.current)
@@ -214,8 +215,9 @@ export default function DrawingCanvas({
     if(e.type.startsWith('touch')) return
     e.preventDefault()
     const p=getPos(e,canvasRef.current)
-    sendCursorPos(p)
+    if(!readOnly) sendCursorPos(p)
     if(!drawing.current) return
+    if(readOnly) return
     processMove(e,p)
   }
   function handleEnd(e) {
@@ -286,7 +288,7 @@ export default function DrawingCanvas({
   // ── 터치 non-passive ──────────────────────────────────────────────
   useEffect(()=>{
     const canvas=canvasRef.current; if(!canvas) return
-    function onTS(e){e.preventDefault();if(!e.touches?.length)return;const p=getPos(e,canvas);drawing.current=true;startPt.current=p;curStroke.current=[p];setCurrentDrawer(code,userName)}
+    function onTS(e){e.preventDefault();if(readOnly||!e.touches?.length)return;const p=getPos(e,canvas);drawing.current=true;startPt.current=p;curStroke.current=[p];setCurrentDrawer(code,userName)}
     function onTM(e){e.preventDefault();if(!drawing.current)return;processMove(e)}
     function onTE(e){e.preventDefault();if(!drawing.current)return;processEnd(e)}
     canvas.addEventListener('touchstart',onTS,{passive:false})
