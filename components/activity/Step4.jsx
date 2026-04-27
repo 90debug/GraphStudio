@@ -295,12 +295,12 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
             >
               {!isMobile && (
                 <div style={{
-                  position:'absolute', top:6, right:6, zIndex:2,
-                  background:'rgba(91,65,235,0.85)', borderRadius:6,
-                  padding:'3px 7px', display:'flex', alignItems:'center', gap:4,
-                  fontSize:10, color:'#fff', fontWeight:700, pointerEvents:'none',
+                  position:'absolute', top:8, right:8, zIndex:2,
+                  background:'rgba(91,65,235,0.85)', borderRadius:'50%',
+                  width:26, height:26, display:'flex', alignItems:'center', justifyContent:'center',
+                  color:'#fff', pointerEvents:'none',
                 }}>
-                  <ZoomIn size={11}/> 확대
+                  <ZoomIn size={13}/>
                 </div>
               )}
               {chartConfig.type==='pie' ? <ChartComp data={chartData} compact={true}/> : <ChartComp data={chartData}/>}
@@ -327,11 +327,11 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
               {!isMobile && (
                 <div style={{
                   position:'absolute', top:8, right:8,
-                  background:'rgba(91,65,235,0.85)', borderRadius:6,
-                  padding:'3px 7px', display:'flex', alignItems:'center', gap:4,
-                  fontSize:10, color:'#fff', fontWeight:700, pointerEvents:'none',
+                  background:'rgba(91,65,235,0.85)', borderRadius:'50%',
+                  width:26, height:26, display:'flex', alignItems:'center', justifyContent:'center',
+                  color:'#fff', pointerEvents:'none',
                 }}>
-                  <ZoomIn size={11}/> 확대
+                  <ZoomIn size={13}/>
                 </div>
               )}
             </div>
