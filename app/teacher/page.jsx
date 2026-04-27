@@ -34,17 +34,23 @@ function StepPip({ step, status }) {
 }
 
 // ── 사이드바 (PC 전용) ────────────────────────────────────────────────────────
-function Sidebar({ session, rooms, navTab, setNavTab, onCopied }) {
+function Sidebar({ session, rooms, step4Counts, navTab, setNavTab, onCopied }) {
   const onlineCount = rooms.filter(r => r._online).length
   const totalMembers = rooms.reduce((sum, r) => sum + (r._memberCount || 0), 0)
-  // 온라인 여부와 무관하게 currentStep 기반 평균 계산
-  // Math.floor로 항상 완전히 도달한 단계 기준 표시
-  const validRooms = rooms.filter(r => typeof r.currentStep === 'number')
+  // 각 모둠의 '완료된 최고 단계'를 계산하여 평균
+  function completedStep(room) {
+    if ((step4Counts?.[room.id] || 0) > 0) return 4
+    if (room.canvasSnapshot || (room.chartConfig && room.chartConfig.title)) return 3
+    if (Array.isArray(room.dataTable) && room.dataTable.some(r => Object.values(r).some(v => v && String(v).trim()))) return 2
+    if (room.selectedPost) return 1
+    return 0
+  }
+  const validRooms = rooms.filter(r => r.id)
   const avgStep = validRooms.length > 0
-    ? validRooms.reduce((sum, r) => sum + r.currentStep, 0) / validRooms.length
-    : 1
-  const avgStepRounded = Math.floor(avgStep)
-  const progressPct = Math.round(((avgStepRounded - 1) / 3) * 100)  // 1→0%, 2→33%, 3→67%, 4→100%
+    ? validRooms.reduce((sum, r) => sum + completedStep(r), 0) / validRooms.length
+    : 0
+  const avgStepRounded = Math.round(avgStep)
+  const progressPct = avgStep > 0 ? Math.round((avgStep / 4) * 100) : 0
 
   function handleCopy() {
     if (!session?.sessionCode) return
@@ -386,7 +392,21 @@ export default function TeacherPage() {
   // 세션 구독
   useEffect(() => {
     if (!sessionCode) return
-    const unsub = subscribeSession(sessionCode, s => { setSession(s); setLoading(false) })
+    const unsub = subscribeSession(sessionCode, s => {
+      setSession(s)
+      setLoading(false)
+      // '코드로 접속' 경로 포함, 항상 최신 세션 정보를 로컬에 저장
+      if (s) {
+        try {
+          localStorage.setItem('gts_teacher_last', JSON.stringify({
+            sessionCode: s.sessionCode,
+            school: s.school || '',
+            grade: s.grade || '',
+            classNum: s.classNum || '',
+          }))
+        } catch {}
+      }
+    })
     return unsub
   }, [sessionCode])
 
@@ -468,7 +488,7 @@ export default function TeacherPage() {
   return (
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', background: 'var(--bg)', overflow: 'hidden' }}>
       {!isMobile && (
-        <Sidebar session={session} rooms={enrichedRooms} navTab={navTab} setNavTab={setNavTab} onCopied={handleCopied} />
+        <Sidebar session={session} rooms={enrichedRooms} step4Counts={step4Counts} navTab={navTab} setNavTab={setNavTab} onCopied={handleCopied} />
       )}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>

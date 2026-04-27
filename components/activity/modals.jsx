@@ -117,9 +117,9 @@ export function VoteModal({ vote, myName, onAgree, onClose, onDecline, onCancel,
               찬성 완료! 다른 모둠원을 기다리는 중...
             </div>
             {isRequester && (
-              <button onClick={onCancel} style={{ padding:'11px',borderRadius:999,background:'#FFF0F1',color:'#C0364A',
+              <button onClick={onDecline} style={{ padding:'11px',borderRadius:999,background:'#FFF0F1',color:'#C0364A',
                 border:'1px solid #FFB0B0',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit' }}>
-                투표 취소하고 다시 요청하기
+                투표 취소
               </button>
             )}
           </div>

@@ -214,4 +214,32 @@ export function StripChart({ data }) {
   )
 }
 
-export const CHART_CMPS = { bar: BarChart, pie: PieChart, strip: StripChart }
+
+export function LineChart({ data }) {
+  const { msg, hasData } = useChartState(data)
+  if (!hasData) return <NoData msg={msg}/>
+  const W=320, H=180, pT=24, pL=40, pB=30
+  const values = data.map(d=>Number(d.value)||0)
+  const maxV = Math.max(...values,1)
+  const xs = data.map((_,i)=>pL+(i/(data.length-1||1))*(W-pL-10))
+  const ys = values.map(v=>pT+H*(1-v/maxV))
+  const polyline = xs.map((x,i)=>`${x},${ys[i]}`).join(' ')
+  return (
+    <svg viewBox={`0 0 ${W} ${H+pB}`} style={{width:'100%',maxHeight:220,overflow:'visible'}}>
+      {[0,.25,.5,.75,1].map(p=>(
+        <line key={p} x1={pL} y1={pT+H*(1-p)} x2={W-10} y2={pT+H*(1-p)}
+          stroke='#f1f5f9' strokeWidth={1}/>
+      ))}
+      <polyline points={polyline} fill="none" stroke={CHART_COLORS[0]} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round"/>
+      {xs.map((x,i)=>(
+        <g key={i}>
+          <circle cx={x} cy={ys[i]} r={5} fill={CHART_COLORS[i%CHART_COLORS.length]} stroke='#fff' strokeWidth={2}/>
+          <text x={x} y={ys[i]-10} textAnchor="middle" fontSize={10} fill='#64748B' fontWeight={700}>{values[i]}</text>
+          <text x={x} y={H+pT+pB-4} textAnchor="middle" fontSize={10} fill='#94A3B8' fontWeight={600}>{data[i].label}</text>
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+export const CHART_CMPS = { bar: BarChart, pie: PieChart, strip: StripChart, line: LineChart }

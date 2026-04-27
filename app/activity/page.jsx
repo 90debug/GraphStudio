@@ -10,7 +10,7 @@ import {
   updatePresence, subscribePresence, removePresence,
   subscribeSurvey, subscribeSurveyResponses,
   subscribeStrokes, clearStrokes,
-  updateRoomMeta, resetSurvey, setSelectionVote, agreeSelectionVote
+  updateRoomMeta, clearSelectionVote, resetSurvey, setSelectionVote, agreeSelectionVote
 } from '../../lib/firestore'
 
 import { motion, AnimatePresence } from 'framer-motion'
@@ -182,7 +182,11 @@ export default function ActivityPage() {
 
   async function handleVote() { await agreeSelectionVote(userRef.current?.code, user.name) }
   async function handleVoteDecline() {
-    await updateRoomMeta(userRef.current?.code, { selectionVote: null })
+    try {
+      await clearSelectionVote(userRef.current?.code)
+    } catch {
+      // Firestore 실패해도 로컬 UI는 닫음
+    }
     prevVotePostIdRef.current = null
     setVoteModal(false)
   }

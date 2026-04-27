@@ -10,6 +10,7 @@ const CHART_TYPES = [
   { type:'bar',   label:'막대그래프' },
   { type:'pie',   label:'원그래프'   },
   { type:'strip', label:'띠그래프'   },
+  { type:'line',  label:'꺾은선그래프' },
 ]
 
 export default function Step3({
@@ -79,10 +80,10 @@ export default function Step3({
       {/* 헤더 */}
       <header className="px-6 h-14 bg-white/70 backdrop-blur-lg border-b border-slate-100 flex items-center justify-between sticky top-0 z-40" style={{flexShrink:0}}>
         <div className="flex items-center gap-3">
-          <img src="/icon_03.png" alt="그래프 나타내기" style={{width:36,height:36,objectFit:'contain',flexShrink:0}}/>
+          <img src="/icon_03.png" alt="그래프로 나타내기" style={{width:36,height:36,objectFit:'contain',flexShrink:0}}/>
           <div>
             <h1 className="text-sm font-black text-slate-800 leading-none tracking-tight">3단계</h1>
-            <p className="text-[12px] text-slate-400 font-bold mt-1">그래프 나타내기</p>
+            <p className="text-[12px] text-slate-400 font-bold mt-1">그래프로 나타내기</p>
           </div>
         </div>
         <div className="flex gap-1.5">
@@ -192,7 +193,7 @@ export default function Step3({
                   ))}
                 </div>
                 <Lbl>그래프 제목</Lbl>
-                <Inp value={chartConfig.title} onChange={v=>onChartConfig({title:v})} placeholder="예: 우리 반 좋아하는 간식 조사 결과" style={{marginBottom:14}}/>
+                <Inp value={chartConfig.title} onChange={v=>onChartConfig({title:v})} placeholder="예: 공공 예절별 학생 수의 비율" style={{marginBottom:14}}/>
                 {chartConfig.title&&(
                   <div style={{fontWeight:700,fontSize:16,textAlign:'center',marginBottom:12,color:'#3D2B1F'}}>{chartConfig.title}</div>
                 )}
@@ -270,7 +271,7 @@ export default function Step3({
                   ))}
                 </div>
                 <Lbl>그래프 제목</Lbl>
-                <Inp value={chartConfig.title} onChange={v=>onChartConfig({title:v})} placeholder="예: 우리 반 좋아하는 간식 조사 결과" style={{marginBottom:14}}/>
+                <Inp value={chartConfig.title} onChange={v=>onChartConfig({title:v})} placeholder="예: 공공 예절별 학생 수의 비율" style={{marginBottom:14}}/>
                 {chartConfig.title&&(
                   <div style={{fontWeight:700,fontSize:16,textAlign:'center',marginBottom:12,color:'#3D2B1F'}}>{chartConfig.title}</div>
                 )}

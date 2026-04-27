@@ -130,6 +130,13 @@ function TeacherForm({ onChangeRole }) {
     const code = existingCode.trim().toUpperCase()
     if (!code) return setExistingError('세션 코드를 입력해 주세요.')
     if (code.length !== 6) return setExistingError('6자리 코드를 입력해 주세요.')
+    // 코드로 접속 시에도 이전 세션 이력 저장 (기기 변경 지원)
+    try {
+      const prev = JSON.parse(localStorage.getItem('gts_teacher_last') || '{}')
+      if (prev.sessionCode !== code) {
+        localStorage.setItem('gts_teacher_last', JSON.stringify({ sessionCode: code, school: '', grade: '', classNum: '' }))
+      }
+    } catch {}
     router.push(`/teacher?session=${code}`)
   }
 

@@ -333,22 +333,22 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
 
               {/* 주제 */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">조사 주제</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">탐구 문제</label>
                 <input
                   value={form.topic}
                   onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
-                  placeholder="예: 우리 반 학생들이 좋아하는 과목"
+                  placeholder="예: 건강한 반려동물 문화"
                   className="w-full px-4 py-3 bg-slate-50 border border-[#E2E3E5] rounded-[8px] text-sm font-bold text-black outline-none bg-white focus:border-gsp-500 transition-all placeholder:text-[#8A949E] placeholder:font-medium"
                 />
               </div>
 
               {/* 질문 */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">탐구 질문</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">조사 질문</label>
                 <input
                   value={form.question}
                   onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
-                  placeholder="예: 어떤 과목을 가장 좋아하나요?"
+                  placeholder="반려동물을 키우면서 실천하고 있는 공공 예절은 무엇인가요?"
                   className="w-full px-4 py-3 bg-slate-50 border border-[#E2E3E5] rounded-[8px] text-sm font-bold text-black outline-none bg-white focus:border-gsp-500 transition-all placeholder:text-[#8A949E] placeholder:font-medium"
                 />
               </div>
@@ -363,7 +363,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
                     value={itemInput}
                     onChange={e => setItemInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && addItem()}
-                    placeholder="항목 입력 후 Enter"
+                    placeholder="예: 배변 봉투 챙기기"
                     style={{flex:1, minWidth:0, padding:'10px 14px', borderRadius:8, border:'1px solid #E2E3E5', fontSize:13, fontWeight:700, outline:'none', background:'#fff', fontFamily:'inherit'}}
                   />
                   <button
