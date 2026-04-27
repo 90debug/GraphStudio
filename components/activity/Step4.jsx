@@ -194,9 +194,9 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
           <div style={{ display:'flex', gap:6, marginBottom:8 }}>
             <input value={noteInput} onChange={e=>setNoteInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addNote()}
               placeholder="예: 동물 등록 비율이 가장 낮습니다."
-              style={{ flex:1, padding:'8px 10px', borderRadius:8, border:'1px solid #F1F5F9', fontSize:12, background:'#F8FAFC', outline:'none', fontFamily:'inherit', minHeight:40 }}
-              onFocus={e=>e.target.style.borderColor='#5B41EB'} onBlur={e=>e.target.style.borderColor='#CBD5E1'}/>
-            <button onClick={addNote} style={{ padding:'8px 12px', borderRadius:8, background:'#1E293B', color:'#fff', border:'none', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', flexShrink:0, minHeight:40 }}>추가</button>
+              style={{ flex:1, padding:'10px 14px', borderRadius:8, border:'1px solid #E2E3E5', fontSize:13, fontWeight:400, background:'#fff', outline:'none', fontFamily:'inherit', minHeight:42 }}
+              onFocus={e=>e.target.style.borderColor='#5B41EB'} onBlur={e=>e.target.style.borderColor='#E2E3E5'}/>
+            <button onClick={addNote} style={{ padding:'10px 16px', borderRadius:999, background:'#5B41EB', color:'#fff', border:'none', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:'inherit', flexShrink:0, whiteSpace:'nowrap', minHeight:42 }}>추가</button>
           </div>
           {notes.length>0 ? (
             <div style={{ display:'flex', flexDirection:'column', gap:5 }}>

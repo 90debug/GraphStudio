@@ -28,6 +28,16 @@ export default function Step3({
     // onDrawMode는 외부에서 noop으로 전달되어도 로컬은 정상 동작
   }
   const [isFullscreen, setIsFullscreen] = useState(false)
+  // 제목 입력: 로컬 state에서 관리 → 추가/엔터 확정 시 onChartConfig 호출
+  const [titleInput, setTitleInput] = useState(chartConfig.title || '')
+  function confirmTitle() {
+    const v = titleInput.trim()
+    if (!v) return
+    onChartConfig({ title: v })
+  }
+  function handleTitleKeyDown(e) {
+    if (e.key === 'Enter' && !e.nativeEvent.isComposing) confirmTitle()
+  }
 
   const chartData = items.map((label, i) => ({ label, value: dataTable[i]?.value || 0 }))
   const ChartComp = CHART_CMPS[chartConfig.type] || CHART_CMPS.bar
@@ -199,7 +209,23 @@ export default function Step3({
                   ))}
                 </div>
                 <Lbl>그래프 제목</Lbl>
-                <Inp value={chartConfig.title} onChange={v=>onChartConfig({title:v})} placeholder="예: 공공 예절별 학생 수의 비율" style={{marginBottom:14}}/>
+                {/* 제목 입력: 로컬 입력 → 엔터/추가 버튼으로 확정 */}
+                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:10}}>
+                  <input
+                    value={titleInput}
+                    onChange={e=>setTitleInput(e.target.value)}
+                    onKeyDown={handleTitleKeyDown}
+                    placeholder="예: 공공 예절별 학생 수의 비율"
+                    style={{flex:1,padding:'10px 14px',borderRadius:8,border:'1px solid #E2E3E5',fontSize:13,fontWeight:400,outline:'none',background:'#fff',fontFamily:'inherit'}}
+                    onFocus={e=>e.target.style.borderColor='#5B41EB'}
+                    onBlur={e=>e.target.style.borderColor='#E2E3E5'}
+                  />
+                  <button
+                    type="button"
+                    onClick={confirmTitle}
+                    style={{padding:'10px 16px',borderRadius:999,background:chartConfig.title?'#8382e2':'#5B41EB',color:'#fff',border:'none',fontSize:13,fontWeight:800,cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap',minHeight:42}}
+                  >{chartConfig.title ? '수정' : '추가'}</button>
+                </div>
                 {chartConfig.title&&(
                   <div style={{fontWeight:700,fontSize:16,textAlign:'center',marginBottom:12,color:'#3D2B1F'}}>{chartConfig.title}</div>
                 )}
@@ -277,7 +303,23 @@ export default function Step3({
                   ))}
                 </div>
                 <Lbl>그래프 제목</Lbl>
-                <Inp value={chartConfig.title} onChange={v=>onChartConfig({title:v})} placeholder="예: 공공 예절별 학생 수의 비율" style={{marginBottom:14}}/>
+                {/* 제목 입력: 로컬 입력 → 엔터/추가 버튼으로 확정 */}
+                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:10}}>
+                  <input
+                    value={titleInput}
+                    onChange={e=>setTitleInput(e.target.value)}
+                    onKeyDown={handleTitleKeyDown}
+                    placeholder="예: 공공 예절별 학생 수의 비율"
+                    style={{flex:1,padding:'10px 14px',borderRadius:8,border:'1px solid #E2E3E5',fontSize:13,fontWeight:400,outline:'none',background:'#fff',fontFamily:'inherit'}}
+                    onFocus={e=>e.target.style.borderColor='#5B41EB'}
+                    onBlur={e=>e.target.style.borderColor='#E2E3E5'}
+                  />
+                  <button
+                    type="button"
+                    onClick={confirmTitle}
+                    style={{padding:'10px 16px',borderRadius:999,background:chartConfig.title?'#8382e2':'#5B41EB',color:'#fff',border:'none',fontSize:13,fontWeight:800,cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap',minHeight:42}}
+                  >{chartConfig.title ? '수정' : '추가'}</button>
+                </div>
                 {chartConfig.title&&(
                   <div style={{fontWeight:700,fontSize:16,textAlign:'center',marginBottom:12,color:'#3D2B1F'}}>{chartConfig.title}</div>
                 )}
