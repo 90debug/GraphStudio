@@ -6,7 +6,7 @@ import { useDevice } from '../../lib/DeviceContext'
 import { CHART_CMPS } from './charts'
 import { addStep4Post, loadCanvasSnapshot } from '../../lib/firestore'
 import { tsNow } from '../../lib/constants'
-import { Heart, MessageCircle, X, ZoomIn } from 'lucide-react'
+import { Heart, MessageCircle, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // ── 이미지 확대 모달 (PC 전용) ─────────────────────────────────────────────────
@@ -293,16 +293,7 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
                 position:'relative',
               }}
             >
-              {!isMobile && (
-                <div style={{
-                  position:'absolute', top:8, right:8, zIndex:2,
-                  background:'rgba(91,65,235,0.85)', borderRadius:'50%',
-                  width:26, height:26, display:'flex', alignItems:'center', justifyContent:'center',
-                  color:'#fff', pointerEvents:'none',
-                }}>
-                  <ZoomIn size={13}/>
-                </div>
-              )}
+
               {chartConfig.type==='pie' ? <ChartComp data={chartData} compact={true}/> : <ChartComp data={chartData}/>}
             </div>
           ) : (
@@ -324,16 +315,7 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
                   display:'block',
                 }}
               />
-              {!isMobile && (
-                <div style={{
-                  position:'absolute', top:8, right:8,
-                  background:'rgba(91,65,235,0.85)', borderRadius:'50%',
-                  width:26, height:26, display:'flex', alignItems:'center', justifyContent:'center',
-                  color:'#fff', pointerEvents:'none',
-                }}>
-                  <ZoomIn size={13}/>
-                </div>
-              )}
+
             </div>
           )}
         </div>
