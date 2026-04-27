@@ -16,18 +16,18 @@ function ImageModal({ src, onClose }) {
       onClick={onClose}
       style={{
         position:'fixed', inset:0, zIndex:99999,
-        background:'rgba(0,0,0,0.75)', backdropFilter:'blur(4px)',
+        background:'rgba(0,0,0,0.80)', backdropFilter:'blur(4px)',
         display:'flex', alignItems:'center', justifyContent:'center',
         cursor:'zoom-out',
       }}
     >
-      <div onClick={e=>e.stopPropagation()} style={{ position:'relative', maxWidth:'88vw', maxHeight:'88vh' }}>
+      <div onClick={e=>e.stopPropagation()} style={{ position:'relative', maxWidth:'95vw', maxHeight:'95vh' }}>
         <img
           src={src}
           alt="확대 이미지"
           style={{
-            maxWidth:'88vw', maxHeight:'88vh',
-            borderRadius:16, boxShadow:'0 24px 80px rgba(0,0,0,0.45)',
+            maxWidth:'95vw', maxHeight:'95vh',
+            borderRadius:16, boxShadow:'0 24px 80px rgba(0,0,0,0.55)',
             objectFit:'contain', display:'block',
           }}
         />
@@ -54,7 +54,7 @@ function ChartModal({ children, title, onClose }) {
       onClick={onClose}
       style={{
         position:'fixed', inset:0, zIndex:99999,
-        background:'rgba(0,0,0,0.65)', backdropFilter:'blur(4px)',
+        background:'rgba(0,0,0,0.72)', backdropFilter:'blur(4px)',
         display:'flex', alignItems:'center', justifyContent:'center',
         cursor:'zoom-out',
       }}
@@ -63,9 +63,9 @@ function ChartModal({ children, title, onClose }) {
         onClick={e=>e.stopPropagation()}
         style={{
           background:'#fff', borderRadius:20,
-          padding:'28px 32px 32px',
-          maxWidth:'80vw', width:640,
-          boxShadow:'0 24px 80px rgba(0,0,0,0.35)',
+          padding:'32px 40px 40px',
+          maxWidth:'90vw', width:860,
+          boxShadow:'0 24px 80px rgba(0,0,0,0.40)',
           cursor:'default', position:'relative',
         }}
       >
@@ -80,7 +80,7 @@ function ChartModal({ children, title, onClose }) {
           }}
         ><X size={15}/></button>
         {title && (
-          <div style={{ fontWeight:800, fontSize:17, color:'#1E293B', textAlign:'center', marginBottom:20 }}>{title}</div>
+          <div style={{ fontWeight:800, fontSize:18, color:'#1E293B', textAlign:'center', marginBottom:24 }}>{title}</div>
         )}
         <div>{children}</div>
       </div>
@@ -213,7 +213,19 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
   // ▼ 개인 로컬 state — 모둠원에게 동기화되지 않음
   const [ps,       setPs]       = useState('')
   const [checks,   setChecks]   = useState({})
-  const [loadedImg,setLoadedImg]= useState(null)
+
+  // 직접 그린 그래프: sessionStorage로 영속화 (다른 step 이동 후 복귀해도 유지)
+  const SESSION_KEY = `step4_canvas_${code}`
+  const [loadedImg, setLoadedImg] = useState(() => {
+    try { return sessionStorage.getItem(SESSION_KEY) || null } catch { return null }
+  })
+  function saveLoadedImg(img) {
+    setLoadedImg(img)
+    try {
+      if (img) sessionStorage.setItem(SESSION_KEY, img)
+      else     sessionStorage.removeItem(SESSION_KEY)
+    } catch {}
+  }
 
   // 이미지 확대 모달 state (PC 전용)
   const [modalImgSrc,    setModalImgSrc]    = useState(null)
@@ -228,7 +240,7 @@ function WorkPanel({ code, user, items, dataTable, chartConfig }) {
   async function doLoadCanvas() {
     setLoadingImg(true)
     const img = await loadCanvasSnapshot(code)
-    if (img) setLoadedImg(img)
+    if (img) saveLoadedImg(img)
     else alert('저장된 그림이 없어요. 3단계에서 직접 그리기 후 저장해 주세요.')
     setLoadingImg(false)
   }
