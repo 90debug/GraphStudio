@@ -307,10 +307,10 @@ export default function ActivityPage() {
       {/* watch 모드: 읽기 전용 배너 */}
       {watchMode && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, background: '#534AB7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, letterSpacing: '-0.2px' }}>
-          <span>👁 교사 관찰 모드 — 읽기 전용</span>
+          <img src="/icon_08.png" alt="" style={{ width:16, height:16, objectFit:'contain', flexShrink:0 }} />
+          <span>모니터링</span>
           <button
             onClick={() => {
-              // 모바일: 뒤로가기 / PC: 탭 닫기
               if (window.history.length > 1) { router.back() }
               else { window.close() }
             }}
@@ -387,7 +387,7 @@ export default function ActivityPage() {
         <AnimatePresence mode="wait">
           <motion.div key={activeStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1 flex flex-col overflow-hidden">
             {/* watch 모드: 쓰기 핸들러 noop, 읽기(스크롤·클릭) 허용 */}
-            {activeStep === 1 && <Step1 user={watchUser} code={activeCode} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={watchMode ? function(){} : handleLike1} onComment={watchMode ? function(){} : handleComment1} onSelectRequest={watchMode ? function(){} : handleSelectRequest} onDelete={watchMode ? function(){} : handleDelete1} onDeleteComment={watchMode ? function(){} : handleDeleteComment1} showModal={false} onShowModal={watchMode ? function(){} : setStep1Modal}/>}
+            {activeStep === 1 && <Step1 user={watchUser} code={activeCode} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={watchMode ? function(){} : handleLike1} onComment={watchMode ? function(){} : handleComment1} onSelectRequest={watchMode ? function(){} : handleSelectRequest} onDelete={watchMode ? function(){} : handleDelete1} onDeleteComment={watchMode ? function(){} : handleDeleteComment1} showModal={watchMode ? false : step1Modal} onShowModal={watchMode ? function(){} : setStep1Modal}/>}
             {activeStep === 2 && <Step2 user={watchUser} code={activeCode} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={watchMode ? function(){} : handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
             {activeStep === 3 && <Step3 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={watchMode ? function(){} : handleChartConfig} strokes={strokes} currentDrawer={watchMode ? null : room.currentDrawer} drawMode={room.drawMode||'draw'} onDrawMode={watchMode ? function(){} : handleDrawMode} livePreview={room.livePreview} selectedPost={room.selectedPost} step3SnapshotImg={room.canvasSnapshot} onStep3SnapshotImg={watchMode ? function(){} : (img)=>updateRoomMeta(userRef.current?.code,{canvasSnapshot:img})}/>}
             {activeStep === 4 && <Step4 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={watchMode ? function(){} : handleStep4State} posts4={step4Posts} onLike4={watchMode ? function(){} : handleLike4} onComment4={watchMode ? function(){} : handleComment4} onDelete4={watchMode ? function(){} : handleDelete4} onDeleteComment4={watchMode ? function(){} : handleDeleteComment4}/>}
@@ -402,7 +402,7 @@ export default function ActivityPage() {
             <Plus size={24} strokeWidth={3} />
           </button>
         )}
-        <BottomNav currentStep={activeStep} onStepChange={watchMode ? function(){} : changeStep} />
+        <BottomNav currentStep={activeStep} onStepChange={changeStep} />
       </main>
 
       {resetConfirmPost && <ConfirmResetModal topicName={room.selectedPost?.topic} onConfirm={handleConfirmReset} onCancel={function() { setResetConfirmPost(null) }}/>}
