@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useDevice } from '../../lib/DeviceContext'
 import {
   getOrCreateRoom, subscribeRoom, subscribeStep1Posts, subscribeStep4Posts,
@@ -10,7 +10,8 @@ import {
   updatePresence, subscribePresence, removePresence,
   subscribeSurvey, subscribeSurveyResponses,
   subscribeStrokes, clearStrokes,
-  updateRoomMeta, clearSelectionVote, resetSurvey, setSelectionVote, agreeSelectionVote
+  updateRoomMeta, clearSelectionVote, resetSurvey, setSelectionVote, agreeSelectionVote,
+  subscribeLastAnnouncement
 } from '../../lib/firestore'
 
 import { motion, AnimatePresence } from 'framer-motion'
@@ -33,7 +34,10 @@ function useDb(fn, delay) {
 }
 
 export default function ActivityPage() {
-  const router = useRouter()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const watchMode    = searchParams.get('mode') === 'watch'
+  const watchRoomId  = searchParams.get('room')
   const device = useDevice()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -48,6 +52,8 @@ export default function ActivityPage() {
   const [freeMode, setFreeMode] = useState(false)
   const [toast, setToast] = useState(null)
   const [voteModal,  setVoteModal]  = useState(false)
+  const [announcement, setAnnouncement] = useState(null)  // 공지사항 토스트
+  const annTimerRef = useRef(null)
   const [step1Modal, setStep1Modal] = useState(false)
   const [resetConfirmPost, setResetConfirmPost] = useState(null)
 
@@ -72,9 +78,35 @@ export default function ActivityPage() {
     let unsubs = []
     async function init() {
       try {
+        // watch 모드: presence 미등록, room 구독만
+        if (watchMode && watchRoomId) {
+          unsubs.push(subscribeRoom(watchRoomId, setRoom))
+          unsubs.push(subscribeStep1Posts(watchRoomId, setStep1Posts))
+          unsubs.push(subscribeStep4Posts(watchRoomId, setStep4Posts))
+          unsubs.push(subscribePresence(watchRoomId, setOnlineUsers))
+          unsubs.push(subscribeSurvey(watchRoomId, setSurvey))
+          unsubs.push(subscribeSurveyResponses(watchRoomId, setSurveyResp))
+          unsubs.push(subscribeStrokes(watchRoomId, setStrokes))
+          setLoading(false)
+          return
+        }
         await getOrCreateRoom(u.code, u.groupName)
         await updatePresence(u.code, u.name)
         presenceT.current = setInterval(function() { updatePresence(u.code, u.name) }, 30000)
+        // 세션 공지사항 실시간 구독 (sessionCode 기반)
+        const sessionCode = u.sessionCode
+        if (sessionCode) {
+          unsubs.push(subscribeLastAnnouncement(sessionCode, function(ann) {
+            if (!ann) return
+            // 새 공지 감지: id 또는 sentAt 변경 시
+            setAnnouncement(prev => {
+              if (prev?.id === ann.id) return prev
+              clearTimeout(annTimerRef.current)
+              annTimerRef.current = setTimeout(() => setAnnouncement(null), 8000)
+              return ann
+            })
+          }))
+        }
         unsubs.push(subscribeRoom(u.code, function(roomData) {
           setRoom(roomData)
           syncLeaderRef.current = roomData.syncLeader || null
@@ -199,15 +231,47 @@ export default function ActivityPage() {
   }
   async function handleDelete4(postId) { try { await deleteStep4Post(userRef.current?.code, postId); setToast('삭제 완료') } catch { setToast('삭제 실패') } }
 
-  if (loading || !user) return (
+  if (loading) return (
+    <div className="w-full h-full flex items-center justify-center bg-slate-50 font-black">연결 중...</div>
+  )
+  // watch 모드에서는 user 없어도 진행 (교사 관찰용)
+  if (!user && !watchMode) return (
+    <div className="w-full h-full flex items-center justify-center bg-slate-50 font-black">연결 중...</div>
+  )
+  // watch 모드에서는 user 없어도 진행 (교사 관찰용)
+  if (!user && !watchMode) return (
     <div className="w-full h-full flex items-center justify-center bg-slate-50 font-black">연결 중...</div>
   )
 
-  const iAmLeader = room.syncLeader === user.name
+  const activeCode  = watchMode ? watchRoomId : (user?.code || '')
+  const iAmLeader = !watchMode && room.syncLeader === user?.name
   const hasSyncLead = !!room.syncLeader
+
+  const watchUser = watchMode ? { name: '교사', code: watchRoomId, groupName: '' } : user
 
   return (
     <div className="flex flex-col w-full h-full overflow-hidden bg-[#FAFBFF]">
+      {/* watch 모드: 읽기 전용 배너 */}
+      {watchMode && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, background: '#534AB7', color: '#fff', textAlign: 'center', padding: '6px', fontSize: '12px', fontWeight: 700, letterSpacing: '-0.2px' }}>
+          👁 교사 관찰 모드 — 읽기 전용 (presence 미등록)
+          <button onClick={() => window.close()} style={{ marginLeft: '12px', padding: '2px 10px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '99px', color: '#fff', fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit' }}>닫기</button>
+        </div>
+      )}
+      {/* 공지사항 토스트 — 타이틀 영역 부근 (헤더 바로 아래) */}
+      {announcement && !watchMode && (
+        <div style={{ position: 'fixed', top: '64px', left: '50%', transform: 'translateX(-50%)', zIndex: 8000, maxWidth: 'calc(100vw - 40px)', width: '360px', background: '#1E293B', color: '#fff', borderRadius: '10px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.25)', animation: 'fadeUp .26s cubic-bezier(.34,1.3,.64,1)', border: '1px solid rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+          <span style={{ fontSize: '16px', flexShrink: 0 }}>📢</span>
+          <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+            <div id="ann-scroll" style={{ whiteSpace: 'nowrap', fontSize: '13px', fontWeight: 600, lineHeight: 1.4, animationDuration: '0s', display: 'inline-block', willChange: 'transform' }}>{announcement.text}</div>
+          </div>
+          <button onClick={() => setAnnouncement(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '14px', flexShrink: 0, padding: '0 4px' }}>✕</button>
+        </div>
+      )}
+      {/* watch 모드 인터랙션 차단 오버레이 */}
+      {watchMode && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998, cursor: 'default' }} onClickCapture={e => e.stopPropagation()} />
+      )}
       {/* ── 상단 헤더 ── */}
       <header className="h-14 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 z-50">
         <div className="flex items-center gap-4">
@@ -231,17 +295,17 @@ export default function ActivityPage() {
             <span className="text-xs font-black tracking-widest">{user.code}</span>
             <button onClick={function() { navigator.clipboard.writeText(user.code); setToast('복사 완료') }} className="ml-1 hover:text-gsp-400 transition-colors"><Copy size={12}/></button>
           </div>
-          <button onClick={function() { sessionStorage.removeItem('gts_user'); router.push('/') }} className="p-2 text-slate-400 hover:text-gsp-600 transition-all hover:bg-gsp-50 rounded-xl"><LogOut size={20}/></button>
+          {!watchMode && <button onClick={function() { sessionStorage.removeItem('gts_user'); router.push('/') }} className="p-2 text-slate-400 hover:text-gsp-600 transition-all hover:bg-gsp-50 rounded-xl"><LogOut size={20}/></button>}
         </div>
       </header>
 
       <main className="flex-1 relative overflow-hidden flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div key={activeStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1 flex flex-col overflow-hidden">
-            {activeStep === 1 && <Step1 user={user} code={user.code} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} onDeleteComment={handleDeleteComment1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
-            {activeStep === 2 && <Step2 user={user} code={user.code} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
-            {activeStep === 3 && <Step3 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={handleChartConfig} strokes={strokes} currentDrawer={room.currentDrawer} drawMode={room.drawMode||'draw'} onDrawMode={handleDrawMode} livePreview={room.livePreview} selectedPost={room.selectedPost} step3SnapshotImg={room.canvasSnapshot} onStep3SnapshotImg={(img)=>updateRoomMeta(userRef.current?.code,{canvasSnapshot:img})}/>}
-            {activeStep === 4 && <Step4 user={user} code={user.code} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4} onDeleteComment4={handleDeleteComment4}/>}
+            {activeStep === 1 && <Step1 user={user} code={activeCode} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={handleLike1} onComment={handleComment1} onSelectRequest={handleSelectRequest} onDelete={handleDelete1} onDeleteComment={handleDeleteComment1} showModal={step1Modal} onShowModal={setStep1Modal}/>}
+            {activeStep === 2 && <Step2 user={user} code={activeCode} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp}/>}
+            {activeStep === 3 && <Step3 user={user} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={handleChartConfig} strokes={strokes} currentDrawer={room.currentDrawer} drawMode={room.drawMode||'draw'} onDrawMode={handleDrawMode} livePreview={room.livePreview} selectedPost={room.selectedPost} step3SnapshotImg={room.canvasSnapshot} onStep3SnapshotImg={(img)=>updateRoomMeta(userRef.current?.code,{canvasSnapshot:img})}/>}
+            {activeStep === 4 && <Step4 user={user} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={handleStep4State} posts4={step4Posts} onLike4={handleLike4} onComment4={handleComment4} onDelete4={handleDelete4} onDeleteComment4={handleDeleteComment4}/>}
           </motion.div>
         </AnimatePresence>
 

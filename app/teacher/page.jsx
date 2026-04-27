@@ -6,26 +6,28 @@ import { useDevice } from '../../lib/DeviceContext'
 import {
   subscribeSession, subscribeSessionRooms, subscribePresence,
   subscribeStep4Posts, resetRoomData, resetAllRoomsInSession,
+  sendAnnouncement, subscribeAnnouncements,
 } from '../../lib/firestore'
 
 // ── 단계 완료 판단 ────────────────────────────────────────────────────────────
-// 4단계: step4Posts에 문서가 하나라도 있으면 완료
-function isStepComplete(room, step, step4Counts) {
-  if (step === 1) return !!room.selectedPost
-  if (step === 2) return Array.isArray(room.dataTable) && room.dataTable.some(r => Object.values(r).some(v => v && String(v).trim()))
-  if (step === 3) return !!(room.canvasSnapshot || (room.chartConfig && room.chartConfig.title))
-  if (step === 4) return (step4Counts?.[room.id] || 0) > 0
-  return false
+function completedStep(room, step4Counts) {
+  if ((step4Counts?.[room.id] || 0) > 0) return 4
+  if (room.canvasSnapshot || (room.chartConfig && room.chartConfig.title)) return 3
+  if (Array.isArray(room.dataTable) && room.dataTable.some(r => Object.values(r).some(v => v && String(v).trim()))) return 2
+  if (room.selectedPost) return 1
+  return 0
+}
+function isStepDone(room, step, step4Counts) {
+  return completedStep(room, step4Counts) >= step
 }
 
-// ── Step Pip ──────────────────────────────────────────────────────────────────
+// ── StepPip ───────────────────────────────────────────────────────────────────
 function StepPip({ step, status }) {
-  const styles = {
+  const s = {
     done:    { bg: 'var(--s1)', color: 'var(--color-white)', border: 'var(--s1)' },
     active:  { bg: 'var(--color-white)', color: 'var(--s1)', border: 'var(--s1)' },
     pending: { bg: 'var(--color-white)', color: 'var(--color-cool-gray-400)', border: 'var(--color-cool-gray-200)' },
-  }
-  const s = styles[status]
+  }[status]
   return (
     <div style={{ width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800, background: s.bg, color: s.color, border: `2px solid ${s.border}`, transition: 'all 0.2s' }}>
       {status === 'done' ? '✓' : step}
@@ -33,47 +35,106 @@ function StepPip({ step, status }) {
   )
 }
 
-// ── 사이드바 (PC 전용) ────────────────────────────────────────────────────────
-function Sidebar({ session, rooms, step4Counts, navTab, setNavTab, onCopied }) {
-  const onlineCount = rooms.filter(r => r._online).length
-  const totalMembers = rooms.reduce((sum, r) => sum + (r._memberCount || 0), 0)
-  // 각 모둠의 '완료된 최고 단계'를 계산하여 평균
-  function completedStep(room) {
-    if ((step4Counts?.[room.id] || 0) > 0) return 4
-    if (room.canvasSnapshot || (room.chartConfig && room.chartConfig.title)) return 3
-    if (Array.isArray(room.dataTable) && room.dataTable.some(r => Object.values(r).some(v => v && String(v).trim()))) return 2
-    if (room.selectedPost) return 1
-    return 0
-  }
-  const validRooms = rooms.filter(r => r.id)
-  const avgStep = validRooms.length > 0
-    ? validRooms.reduce((sum, r) => sum + completedStep(r), 0) / validRooms.length
-    : 0
-  const avgStepRounded = Math.round(avgStep)
-  const progressPct = avgStep > 0 ? Math.round((avgStep / 4) * 100) : 0
+// ── 공지사항 패널 ─────────────────────────────────────────────────────────────
+function AnnouncementPanel({ sessionCode, onAction }) {
+  const [text, setText] = useState('')
+  const [sending, setSending] = useState(false)
+  const [history, setHistory] = useState([])
 
-  function handleCopy() {
-    if (!session?.sessionCode) return
-    navigator.clipboard.writeText(session.sessionCode).then(() => onCopied?.())
+  useEffect(() => {
+    if (!sessionCode) return
+    return subscribeAnnouncements(sessionCode, setHistory)
+  }, [sessionCode])
+
+  async function handleSend(t) {
+    const msg = (t || text).trim()
+    if (!msg) return
+    setSending(true)
+    try {
+      await sendAnnouncement(sessionCode, msg)
+      setText('')
+      onAction('공지 전송 완료')
+    } catch { onAction('전송 실패') }
+    finally { setSending(false) }
+  }
+
+  function fmtTime(ts) {
+    if (!ts) return ''
+    const d = ts.toDate ? ts.toDate() : new Date(ts)
+    return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
   }
 
   return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 'var(--spacing-20)' }}>
+      {/* 입력 영역 */}
+      <div className="edu-card" style={{ marginBottom: 'var(--spacing-16)', padding: 'var(--spacing-16)' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginBottom: '10px' }}>새 공지 작성</p>
+        <textarea
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="모든 모둠에게 공지할 내용을 입력하세요."
+          rows={3}
+          style={{ width: '100%', padding: '9px 11px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'var(--font-body)', fontSize: '13px', outline: 'none', resize: 'none', lineHeight: 1.6, background: 'var(--slate-bg)', color: 'var(--text)' }}
+          onFocus={e => e.target.style.borderColor = 'var(--color-purple-500)'}
+          onBlur={e => e.target.style.borderColor = 'var(--border)'}
+        />
+        <button
+          onClick={() => handleSend()}
+          disabled={sending || !text.trim()}
+          style={{ marginTop: '8px', width: '100%', padding: '9px', borderRadius: '8px', background: (sending || !text.trim()) ? 'var(--color-cool-gray-200)' : 'var(--color-purple-500)', color: (sending || !text.trim()) ? 'var(--color-cool-gray-400)' : 'var(--color-white)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, border: 'none', cursor: (sending || !text.trim()) ? 'not-allowed' : 'pointer' }}
+        >
+          {sending ? '전송 중…' : '📢 전송'}
+        </button>
+      </div>
+
+      {/* 히스토리 */}
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700, color: 'var(--text-2)', marginBottom: '8px' }}>전송 히스토리</p>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {history.length === 0 ? (
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)', textAlign: 'center', paddingTop: '20px' }}>아직 전송된 공지가 없습니다.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {history.map(item => (
+              <div key={item.id} style={{ background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)', borderRadius: '8px', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text)', lineHeight: 1.5, flex: 1 }}>{item.text}</p>
+                  <button
+                    onClick={() => handleSend(item.text)}
+                    style={{ flexShrink: 0, padding: '4px 10px', borderRadius: '6px', background: 'var(--color-purple-500)', color: 'var(--color-white)', fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    다시 전송
+                  </button>
+                </div>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--text-2)', marginTop: '4px' }}>{fmtTime(item.sentAt)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── 사이드바 ─────────────────────────────────────────────────────────────────
+function Sidebar({ session, rooms, navTab, setNavTab, onCopied, step4Counts }) {
+  const onlineCount = rooms.filter(r => r._online).length
+  const totalMembers = rooms.reduce((sum, r) => sum + (r._memberCount || 0), 0)
+  const validRooms = rooms.filter(r => r.id)
+  const avgStep = validRooms.length > 0
+    ? validRooms.reduce((sum, r) => sum + completedStep(r, step4Counts), 0) / validRooms.length
+    : 0
+  const avgStepRounded = Math.round(avgStep)
+  const progressPct = Math.round((avgStep / 4) * 100)
+
+  return (
     <div style={{ width: '220px', flexShrink: 0, background: 'var(--slate-dk)', display: 'flex', flexDirection: 'column', padding: 'var(--spacing-20)', gap: 'var(--spacing-20)', height: '100%', overflow: 'hidden' }}>
-      {/* 세션 코드 + 복사 */}
+      {/* 세션 코드 */}
       <div>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '6px' }}>세션 코드</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '28px', fontWeight: 800, color: 'var(--color-white)', letterSpacing: '6px' }}>
-            {session?.sessionCode || '------'}
-          </p>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '28px', fontWeight: 800, color: 'var(--color-white)', letterSpacing: '6px' }}>{session?.sessionCode || '------'}</p>
           {session?.sessionCode && (
-            <button
-              onClick={handleCopy}
-              title="복사"
-              style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', borderRadius: '6px', flexShrink: 0, transition: 'color 0.15s' }}
-              onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white)'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
-            >
+            <button onClick={() => navigator.clipboard.writeText(session.sessionCode).then(() => onCopied?.())} title="복사" style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', borderRadius: '6px', transition: 'color 0.15s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}>
               <Copy size={14} />
             </button>
           )}
@@ -87,18 +148,15 @@ function Sidebar({ session, rooms, step4Counts, navTab, setNavTab, onCopied }) {
 
       {/* 요약 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-8)' }}>
-        {[
-          { label: '접속 모둠', value: `${onlineCount} / ${rooms.length}` },
-          { label: '접속 학생', value: `${totalMembers}명` },
-        ].map(({ label, value }) => (
-          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>{label}</span>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, color: 'var(--color-white)' }}>{value}</span>
+        {[['접속 모둠', `${onlineCount} / ${rooms.length}`], ['접속 학생', `${totalMembers}명`]].map(([l, v]) => (
+          <div key={l} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>{l}</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, color: 'var(--color-white)' }}>{v}</span>
           </div>
         ))}
       </div>
 
-      {/* 평균 진행도 */}
+      {/* 진행도 */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
           <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>평균 진행 단계</span>
@@ -109,11 +167,12 @@ function Sidebar({ session, rooms, step4Counts, navTab, setNavTab, onCopied }) {
         </div>
       </div>
 
-      {/* 네비 — 아이콘 이미지 사용 */}
+      {/* 네비 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
         {[
-          { key: 'rooms',  label: '모둠 현황', icon: '/icon_03.png' },
-          { key: 'manage', label: '세션 관리', icon: '/icon_05.png' },
+          { key: 'rooms',   label: '모둠 현황', icon: '/icon_03.png' },
+          { key: 'announce',label: '공지사항',  icon: '/icon_06.png' },
+          { key: 'manage',  label: '세션 관리', icon: '/icon_05.png' },
         ].map(({ key, label, icon }) => (
           <button key={key} onClick={() => setNavTab(key)} className="h-step-item" style={{ background: navTab === key ? 'rgba(255,255,255,0.13)' : 'transparent', color: navTab === key ? 'var(--color-white)' : 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: navTab === key ? 700 : 500 }}>
             <img src={icon} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain', opacity: navTab === key ? 1 : 0.6, flexShrink: 0 }} />
@@ -126,8 +185,12 @@ function Sidebar({ session, rooms, step4Counts, navTab, setNavTab, onCopied }) {
 }
 
 // ── 모둠 현황 ─────────────────────────────────────────────────────────────────
-function RoomsTable({ rooms, step4Counts, isMobile }) {
-  // 배경: 1단계 배경색(--s1-bg)
+function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
+  function handleMonitor(room) {
+    const url = `/activity?room=${room.id}&mode=watch&session=${sessionCode}`
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
   const emptyBg = 'var(--s1-bg)'
 
   if (rooms.length === 0) {
@@ -145,7 +208,7 @@ function RoomsTable({ rooms, step4Counts, isMobile }) {
         {rooms.map(room => {
           const isOnline = !!room._online
           const topic = room.selectedPost?.topic || room.selectedPost?.text || '-'
-          const cur = room.currentStep || 1
+          const done = completedStep(room, step4Counts)
           return (
             <div key={room.id} className="edu-card" style={{ opacity: isOnline ? 1 : 0.5, padding: 'var(--spacing-16)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -153,12 +216,18 @@ function RoomsTable({ rooms, step4Counts, isMobile }) {
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnline ? 'var(--state-selected)' : 'var(--color-cool-gray-200)', flexShrink: 0 }} />
                   <span style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{room.teamName || room.groupName || '-'}</span>
                 </div>
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)' }}>{room._memberCount || 0}명</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)' }}>{room._memberCount || 0}명</span>
+                  {isOnline && (
+                    <button onClick={() => handleMonitor(room)} title="화면 모니터링" style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>👁</button>
+                  )}
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', marginBottom: topic !== '-' ? '8px' : 0 }}>
                 {[1, 2, 3, 4].map(step => {
-                  const done = isStepComplete(room, step, step4Counts)
-                  const status = done ? 'done' : cur === step ? 'active' : 'pending'
+                  const isDone = isStepDone(room, step, step4Counts)
+                  const cur = room.currentStep || 1
+                  const status = isDone ? 'done' : cur === step ? 'active' : 'pending'
                   return <StepPip key={step} step={step} status={status} />
                 })}
               </div>
@@ -177,8 +246,8 @@ function RoomsTable({ rooms, step4Counts, isMobile }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-body)' }}>
         <thead>
           <tr style={{ borderBottom: '2px solid var(--border)' }}>
-            {['', '모둠명', '인원', '1단계', '2단계', '3단계', '4단계', '탐구 문제'].map((h, i) => (
-              <th key={i} style={{ padding: '10px 12px', textAlign: i === 0 ? 'center' : i <= 2 ? 'left' : 'center', fontSize: '12px', fontWeight: 700, color: 'var(--text-2)', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{h}</th>
+            {['', '모둠명', '인원', '1단계', '2단계', '3단계', '4단계', '탐구 문제', '모니터링'].map((h, i) => (
+              <th key={i} style={{ padding: '10px 12px', textAlign: i === 0 || i === 8 ? 'center' : i <= 2 ? 'left' : 'center', fontSize: '12px', fontWeight: 700, color: 'var(--text-2)', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -195,8 +264,8 @@ function RoomsTable({ rooms, step4Counts, isMobile }) {
                 <td style={{ padding: '12px', fontSize: '14px', fontWeight: 700, color: 'var(--text)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.teamName || room.groupName || '-'}</td>
                 <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-2)', whiteSpace: 'nowrap' }}>{room._memberCount || 0}명</td>
                 {[1, 2, 3, 4].map(step => {
-                  const done = isStepComplete(room, step, step4Counts)
-                  const status = done ? 'done' : cur === step ? 'active' : 'pending'
+                  const isDone = isStepDone(room, step, step4Counts)
+                  const status = isDone ? 'done' : cur === step ? 'active' : 'pending'
                   return (
                     <td key={step} style={{ padding: '12px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -206,6 +275,19 @@ function RoomsTable({ rooms, step4Counts, isMobile }) {
                   )
                 })}
                 <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-2)', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topic}</td>
+                <td style={{ padding: '12px', textAlign: 'center' }}>
+                  {isOnline ? (
+                    <button
+                      onClick={() => handleMonitor(room)}
+                      title={`${room.teamName || room.groupName} 화면 보기`}
+                      style={{ width: '30px', height: '30px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', transition: 'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-purple-50, #EEEDFE)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'var(--slate-bg)'}
+                    >👁</button>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: 'var(--color-cool-gray-300)' }}>—</span>
+                  )}
+                </td>
               </tr>
             )
           })}
@@ -250,49 +332,83 @@ function ManageTab({ rooms, sessionCode, onAction }) {
           <button onClick={handleResetAll} disabled={loading} style={{ padding: '9px 20px', borderRadius: '8px', background: confirmAll ? 'var(--state-error)' : 'var(--state-error-bg)', color: confirmAll ? 'var(--color-white)' : 'var(--state-error)', border: `1px solid var(--state-error-bd)`, fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
             {loading ? '초기화 중…' : confirmAll ? '확인 — 전체 초기화' : '전체 초기화'}
           </button>
-          {confirmAll && (
-            <button onClick={() => setConfirmAll(false)} style={{ padding: '9px 20px', borderRadius: '8px', background: 'var(--slate-bg)', color: 'var(--text-2)', border: '1px solid var(--slate-bd)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>취소</button>
-          )}
+          {confirmAll && <button onClick={() => setConfirmAll(false)} style={{ padding: '9px 20px', borderRadius: '8px', background: 'var(--slate-bg)', color: 'var(--text-2)', border: '1px solid var(--slate-bd)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>취소</button>}
         </div>
       </div>
       <div className="edu-sec">
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, color: 'var(--text)', marginBottom: '6px' }}>모둠별 초기화</p>
-        {rooms.length === 0
-          ? <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)' }}>아직 참여한 모둠이 없습니다.</p>
-          : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: 'var(--spacing-10)' }}>
-              {rooms.map(room => {
-                const name = room.teamName || room.groupName || room.id
-                const isResetting = resettingId === room.id
-                return (
-                  <div key={room.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 'var(--r-sm)', background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)' }}>
-                    <div>
-                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>{name}</p>
-                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-2)' }}>{room.id} · {room.currentStep || 1}단계 진행 중</p>
-                    </div>
-                    <button onClick={() => handleResetOne(room.id, name)} disabled={isResetting} style={{ padding: '7px 14px', borderRadius: '6px', background: 'var(--state-error-bg)', color: 'var(--state-error)', border: '1px solid var(--state-error-bd)', fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700, cursor: isResetting ? 'not-allowed' : 'pointer', flexShrink: 0, opacity: isResetting ? 0.6 : 1 }}>
-                      {isResetting ? '초기화 중…' : '초기화'}
-                    </button>
+        {rooms.length === 0 ? <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)' }}>아직 참여한 모둠이 없습니다.</p> : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: 'var(--spacing-10)' }}>
+            {rooms.map(room => {
+              const name = room.teamName || room.groupName || room.id
+              const isResetting = resettingId === room.id
+              return (
+                <div key={room.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 'var(--r-sm)', background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)' }}>
+                  <div>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>{name}</p>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-2)' }}>{room.id} · {room.currentStep || 1}단계 진행 중</p>
                   </div>
-                )
-              })}
-            </div>
-          )}
+                  <button onClick={() => handleResetOne(room.id, name)} disabled={isResetting} style={{ padding: '7px 14px', borderRadius: '6px', background: 'var(--state-error-bg)', color: 'var(--state-error)', border: '1px solid var(--state-error-bd)', fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700, cursor: isResetting ? 'not-allowed' : 'pointer', flexShrink: 0, opacity: isResetting ? 0.6 : 1 }}>
+                    {isResetting ? '초기화 중…' : '초기화'}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
+// ── 알림 아이콘 드롭다운 ──────────────────────────────────────────────────────
+function NotifDropdown({ announcements, onClose }) {
+  function fmtTime(ts) {
+    if (!ts) return ''
+    const d = ts.toDate ? ts.toDate() : new Date(ts)
+    return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+  }
+  return (
+    <div style={{ position: 'absolute', top: '44px', right: '0', zIndex: 200, background: 'var(--color-white)', border: '1px solid var(--border)', borderRadius: '12px', padding: 'var(--spacing-16)', width: '260px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: '320px', overflowY: 'auto' }}
+      onClick={e => e.stopPropagation()}
+    >
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700, color: 'var(--text-2)', marginBottom: '10px' }}>공지 내역</p>
+      {announcements.length === 0 ? (
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)' }}>전송된 공지가 없습니다.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {announcements.slice(0, 10).map(a => (
+            <div key={a.id} style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)' }}>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text)', lineHeight: 1.4 }}>{a.text}</p>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--text-2)', marginTop: '3px' }}>{fmtTime(a.sentAt)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── 상단 바 ───────────────────────────────────────────────────────────────────
-function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopied }) {
-  const tabTitles = { rooms: '모둠 현황', manage: '세션 관리' }
+function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopied, announcements, sessionCode }) {
+  const tabTitles = { rooms: '모둠 현황', announce: '공지사항', manage: '세션 관리' }
   const onlineCount = rooms.filter(r => r._online).length
   const totalMembers = rooms.reduce((sum, r) => sum + (r._memberCount || 0), 0)
+  const [showNotif, setShowNotif] = useState(false)
+  const [lastSeenCount, setLastSeenCount] = useState(0)
+  const hasNew = announcements.length > lastSeenCount
 
-  function handleCopy() {
-    if (!session?.sessionCode) return
-    navigator.clipboard.writeText(session.sessionCode).then(() => onCopied?.())
+  function handleNotifClick() {
+    setShowNotif(v => !v)
+    setLastSeenCount(announcements.length)
   }
+
+  useEffect(() => {
+    if (!showNotif) return
+    function handle() { setShowNotif(false) }
+    document.addEventListener('click', handle)
+    return () => document.removeEventListener('click', handle)
+  }, [showNotif])
 
   return (
     <div style={{ flexShrink: 0, background: 'var(--color-white)', borderBottom: '1px solid var(--border)', zIndex: 10 }}>
@@ -306,7 +422,7 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopie
                 <span style={{ fontFamily: 'var(--font-body)', fontSize: '20px', fontWeight: 800, color: 'var(--text)', letterSpacing: '3px', lineHeight: 1 }}>{session?.sessionCode || '------'}</span>
               </div>
               {session?.sessionCode && (
-                <button onClick={handleCopy} title="복사" style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-2)', borderRadius: '6px' }}>
+                <button onClick={() => navigator.clipboard.writeText(session.sessionCode).then(() => onCopied?.())} style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-2)', borderRadius: '6px' }}>
                   <Copy size={14} />
                 </button>
               )}
@@ -320,14 +436,28 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopie
         </div>
 
         {/* 오른쪽 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-10)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-8)' }}>
           {actionMsg && (
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, color: 'var(--state-selected)', animation: 'fadeIn 0.3s ease' }}>✓ {actionMsg}</p>
           )}
+          {/* 알림 아이콘 */}
+          <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+            <button
+              onClick={handleNotifClick}
+              title="공지 내역"
+              style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', position: 'relative', transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--slate-bg)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <img src="/icon_06.png" alt="공지" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+              {hasNew && <div style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--state-error)', border: '2px solid var(--color-white)' }} />}
+            </button>
+            {showNotif && <NotifDropdown announcements={announcements} onClose={() => setShowNotif(false)} />}
+          </div>
+          {/* 나가기 */}
           <button onClick={onGoHome} title="메인 화면으로" style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-2)', transition: 'background 0.15s, color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--slate-bg)'; e.currentTarget.style.color = 'var(--text)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-2)' }}
-          >
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-2)' }}>
             <LogOut size={20} />
           </button>
         </div>
@@ -336,10 +466,7 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopie
       {/* 모바일 요약 스트립 */}
       {isMobile && (
         <div style={{ display: 'flex', borderTop: '1px solid var(--border)' }}>
-          {[
-            { label: '접속 모둠', value: `${onlineCount} / ${rooms.length}` },
-            { label: '접속 학생', value: `${totalMembers}명` },
-          ].map(({ label, value }, i) => (
+          {[['접속 모둠', `${onlineCount} / ${rooms.length}`], ['접속 학생', `${totalMembers}명`]].map(({ 0: label, 1: value }, i) => (
             <div key={label} style={{ flex: 1, padding: '8px 16px', borderRight: i === 0 ? '1px solid var(--border)' : 'none' }}>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--text-2)', marginBottom: '2px' }}>{label}</p>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{value}</p>
@@ -356,8 +483,9 @@ function BottomTabBar({ navTab, setNavTab }) {
   return (
     <div style={{ flexShrink: 0, display: 'flex', background: 'var(--color-white)', borderTop: '1px solid var(--border)', height: '56px' }}>
       {[
-        { key: 'rooms',  label: '모둠 현황', icon: '/icon_03.png' },
-        { key: 'manage', label: '세션 관리', icon: '/icon_05.png' },
+        { key: 'rooms',    label: '모둠 현황', icon: '/icon_03.png' },
+        { key: 'announce', label: '공지사항',  icon: '/icon_06.png' },
+        { key: 'manage',   label: '세션 관리', icon: '/icon_05.png' },
       ].map(({ key, label, icon }) => (
         <button key={key} onClick={() => setNavTab(key)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: navTab === key ? 700 : 400, color: navTab === key ? 'var(--s1)' : 'var(--text-2)' }}>
           <img src={icon} alt="" style={{ width: '22px', height: '22px', objectFit: 'contain', opacity: navTab === key ? 1 : 0.5 }} />
@@ -379,7 +507,8 @@ export default function TeacherPage() {
   const [session, setSession] = useState(null)
   const [rooms, setRooms] = useState([])
   const [presenceCounts, setPresenceCounts] = useState({})
-  const [step4Counts, setStep4Counts] = useState({}) // roomId → post count
+  const [step4Counts, setStep4Counts] = useState({})
+  const [announcements, setAnnouncements] = useState([])
   const [navTab, setNavTab] = useState('rooms')
   const [actionMsg, setActionMsg] = useState('')
   const [loading, setLoading] = useState(true)
@@ -389,20 +518,16 @@ export default function TeacherPage() {
 
   useEffect(() => { if (!sessionCode) router.replace('/') }, [sessionCode, router])
 
-  // 세션 구독
   useEffect(() => {
     if (!sessionCode) return
     const unsub = subscribeSession(sessionCode, s => {
       setSession(s)
       setLoading(false)
-      // '코드로 접속' 경로 포함, 항상 최신 세션 정보를 로컬에 저장
       if (s) {
         try {
           localStorage.setItem('gts_teacher_last', JSON.stringify({
-            sessionCode: s.sessionCode,
-            school: s.school || '',
-            grade: s.grade || '',
-            classNum: s.classNum || '',
+            sessionCode: s.sessionCode, school: s.school || '',
+            grade: s.grade || '', classNum: s.classNum || '',
           }))
         } catch {}
       }
@@ -410,14 +535,19 @@ export default function TeacherPage() {
     return unsub
   }, [sessionCode])
 
-  // 모둠 구독
   useEffect(() => {
     if (!sessionCode) return
     const unsub = subscribeSessionRooms(sessionCode, rs => setRooms(rs))
     return unsub
   }, [sessionCode])
 
-  // presence + step4Posts 구독 관리
+  // 공지사항 구독
+  useEffect(() => {
+    if (!sessionCode) return
+    return subscribeAnnouncements(sessionCode, setAnnouncements)
+  }, [sessionCode])
+
+  // presence + step4 구독
   useEffect(() => {
     const currentIds = new Set(rooms.map(r => r.id))
     const presenceTracked = new Set(Object.keys(presenceUnsubsRef.current))
@@ -447,7 +577,6 @@ export default function TeacherPage() {
     })
   }, [rooms])
 
-  // 언마운트 시 전체 해제
   useEffect(() => {
     return () => {
       Object.values(presenceUnsubsRef.current).forEach(fn => fn?.())
@@ -455,7 +584,6 @@ export default function TeacherPage() {
     }
   }, [])
 
-  // enriched rooms
   const enrichedRooms = rooms.map(r => ({
     ...r,
     _online: (presenceCounts[r.id] ?? 0) > 0,
@@ -463,8 +591,6 @@ export default function TeacherPage() {
   }))
 
   function showAction(msg) { setActionMsg(msg); setTimeout(() => setActionMsg(''), 3000) }
-
-  function handleCopied() { showAction('복사되었습니다') }
 
   if (!sessionCode) return null
 
@@ -488,14 +614,17 @@ export default function TeacherPage() {
   return (
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', background: 'var(--bg)', overflow: 'hidden' }}>
       {!isMobile && (
-        <Sidebar session={session} rooms={enrichedRooms} step4Counts={step4Counts} navTab={navTab} setNavTab={setNavTab} onCopied={handleCopied} />
+        <Sidebar session={session} rooms={enrichedRooms} navTab={navTab} setNavTab={setNavTab}
+          onCopied={() => showAction('복사되었습니다')} step4Counts={step4Counts} />
       )}
-
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        <TopBar session={session} navTab={navTab} actionMsg={actionMsg} onGoHome={() => router.push('/')} isMobile={isMobile} rooms={enrichedRooms} onCopied={handleCopied} />
+        <TopBar session={session} navTab={navTab} actionMsg={actionMsg} onGoHome={() => router.push('/')}
+          isMobile={isMobile} rooms={enrichedRooms} onCopied={() => showAction('복사되었습니다')}
+          announcements={announcements} sessionCode={sessionCode} />
 
-        {navTab === 'rooms' && <RoomsTable rooms={enrichedRooms} step4Counts={step4Counts} isMobile={isMobile} />}
-        {navTab === 'manage' && <ManageTab rooms={enrichedRooms} sessionCode={sessionCode} onAction={showAction} />}
+        {navTab === 'rooms'    && <RoomsTable rooms={enrichedRooms} step4Counts={step4Counts} isMobile={isMobile} sessionCode={sessionCode} />}
+        {navTab === 'announce' && <AnnouncementPanel sessionCode={sessionCode} onAction={showAction} />}
+        {navTab === 'manage'   && <ManageTab rooms={enrichedRooms} sessionCode={sessionCode} onAction={showAction} />}
 
         {isMobile && <BottomTabBar navTab={navTab} setNavTab={setNavTab} />}
       </div>
