@@ -11,7 +11,7 @@ import {
   subscribeSurvey, subscribeSurveyResponses,
   subscribeStrokes, clearStrokes,
   updateRoomMeta, clearSelectionVote, resetSurvey, setSelectionVote, agreeSelectionVote,
-  subscribeLastAnnouncement
+  subscribeLastAnnouncement, subscribeAnnouncements
 } from '../../lib/firestore'
 
 import { motion, AnimatePresence } from 'framer-motion'
@@ -53,6 +53,8 @@ export default function ActivityPage() {
   const [toast, setToast] = useState(null)
   const [voteModal,  setVoteModal]  = useState(false)
   const [announcement, setAnnouncement] = useState(null)  // 공지사항 토스트
+  const [allAnnouncements, setAllAnnouncements] = useState([])  // 히스토리
+  const [showNotifPanel, setShowNotifPanel] = useState(false)
   const annTimerRef = useRef(null)
   const [step1Modal, setStep1Modal] = useState(false)
   const [resetConfirmPost, setResetConfirmPost] = useState(null)
@@ -69,6 +71,22 @@ export default function ActivityPage() {
   const dbMeta  = useDb(function(code, val) { updateRoomMeta(code, val) }, 500)
 
   useEffect(function() {
+    // watch 모드: sessionStorage 불필요, 바로 구독 초기화
+    if (watchMode && watchRoomId) {
+      let unsubs = []
+      const watchUnsubs = [
+        subscribeRoom(watchRoomId, setRoom),
+        subscribeStep1Posts(watchRoomId, setStep1Posts),
+        subscribeStep4Posts(watchRoomId, setStep4Posts),
+        subscribePresence(watchRoomId, setOnlineUsers),
+        subscribeSurvey(watchRoomId, setSurvey),
+        subscribeSurveyResponses(watchRoomId, setSurveyResp),
+        subscribeStrokes(watchRoomId, setStrokes),
+      ]
+      setLoading(false)
+      return () => watchUnsubs.forEach(fn => fn?.())
+    }
+
     const stored = sessionStorage.getItem('gts_user')
     if (!stored) { router.push('/'); return }
     const u = JSON.parse(stored)
@@ -78,8 +96,8 @@ export default function ActivityPage() {
     let unsubs = []
     async function init() {
       try {
-        // watch 모드: presence 미등록, room 구독만
-        if (watchMode && watchRoomId) {
+        // (watch 모드 분기는 위에서 처리됨)
+        if (false) {
           unsubs.push(subscribeRoom(watchRoomId, setRoom))
           unsubs.push(subscribeStep1Posts(watchRoomId, setStep1Posts))
           unsubs.push(subscribeStep4Posts(watchRoomId, setStep4Posts))
@@ -93,12 +111,11 @@ export default function ActivityPage() {
         await getOrCreateRoom(u.code, u.groupName)
         await updatePresence(u.code, u.name)
         presenceT.current = setInterval(function() { updatePresence(u.code, u.name) }, 30000)
-        // 세션 공지사항 실시간 구독 (sessionCode 기반)
-        const sessionCode = u.sessionCode
-        if (sessionCode) {
-          unsubs.push(subscribeLastAnnouncement(sessionCode, function(ann) {
+        // 세션 공지사항 실시간 구독
+        // u.sessionCode 우선, 없으면 room 문서에서 가져옴
+        function subscribeAnn(sc) {
+          unsubs.push(subscribeLastAnnouncement(sc, function(ann) {
             if (!ann) return
-            // 새 공지 감지: id 또는 sentAt 변경 시
             setAnnouncement(prev => {
               if (prev?.id === ann.id) return prev
               clearTimeout(annTimerRef.current)
@@ -106,12 +123,33 @@ export default function ActivityPage() {
               return ann
             })
           }))
+          // 히스토리 구독 (import: subscribeAnnouncements)
+          unsubs.push(subscribeAnnouncements(sc, function(list) {
+            const fmt = list.map(function(a) {
+              const ts = a.sentAt
+              const d = ts && ts.toDate ? ts.toDate() : (ts ? new Date(ts) : new Date())
+              const mm = String(d.getMonth()+1).padStart(2,'0')
+              const dd = String(d.getDate()).padStart(2,'0')
+              const time = d.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })
+              return { id: a.id, text: a.text, time: mm+'.'+dd+' '+time }
+            })
+            setAllAnnouncements(fmt)
+          }))
         }
+        if (u.sessionCode) {
+          subscribeAnn(u.sessionCode)
+        }
+        let annSubbed = !!u.sessionCode  // u.sessionCode가 있으면 이미 구독함
         unsubs.push(subscribeRoom(u.code, function(roomData) {
           setRoom(roomData)
           syncLeaderRef.current = roomData.syncLeader || null
           remoteStep.current = roomData.currentStep || 1
           if (!freeModeRef.current && roomData.syncLeader) setActiveStep(roomData.currentStep || 1)
+          // room.sessionCode에서 세션 코드 획득 후 공지 구독 (u.sessionCode 없을 때)
+          if (!annSubbed && roomData.sessionCode) {
+            annSubbed = true
+            subscribeAnn(roomData.sessionCode)
+          }
         }))
         unsubs.push(subscribeStep1Posts(u.code, setStep1Posts))
         unsubs.push(subscribeStep4Posts(u.code, setStep4Posts))
@@ -245,17 +283,25 @@ export default function ActivityPage() {
 
   const activeCode  = watchMode ? watchRoomId : (user?.code || '')
   const iAmLeader = !watchMode && room.syncLeader === user?.name
+  const recentAnnouncements = allAnnouncements.slice(0, 5)
   const hasSyncLead = !!room.syncLeader
 
   const watchUser = watchMode ? { name: '교사', code: watchRoomId, groupName: '' } : user
 
   return (
-    <div className="flex flex-col w-full h-full overflow-hidden bg-[#FAFBFF]">
+    <div className="flex flex-col w-full h-full overflow-hidden bg-[#FAFBFF]" style={watchMode ? { paddingTop: 32 } : {}}>
       {/* watch 모드: 읽기 전용 배너 */}
       {watchMode && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, background: '#534AB7', color: '#fff', textAlign: 'center', padding: '6px', fontSize: '12px', fontWeight: 700, letterSpacing: '-0.2px' }}>
-          👁 교사 관찰 모드 — 읽기 전용 (presence 미등록)
-          <button onClick={() => window.close()} style={{ marginLeft: '12px', padding: '2px 10px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '99px', color: '#fff', fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit' }}>닫기</button>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, background: '#534AB7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, letterSpacing: '-0.2px' }}>
+          <span>👁 교사 관찰 모드 — 읽기 전용</span>
+          <button
+            onClick={() => {
+              // 모바일: 뒤로가기 / PC: 탭 닫기
+              if (window.history.length > 1) { router.back() }
+              else { window.close() }
+            }}
+            style={{ padding: '3px 10px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '99px', color: '#fff', fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+          >뒤로</button>
         </div>
       )}
       {/* 공지사항 토스트 — 타이틀 영역 부근 (헤더 바로 아래) */}
@@ -292,9 +338,37 @@ export default function ActivityPage() {
           <OnlineUsers users={onlineUsers} />
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-[8px] shadow-lg shadow-slate-200">
             <Key size={12} className="text-gsp-400" />
-            <span className="text-xs font-black tracking-widest">{user.code}</span>
-            <button onClick={function() { navigator.clipboard.writeText(user.code); setToast('복사 완료') }} className="ml-1 hover:text-gsp-400 transition-colors"><Copy size={12}/></button>
+            <span className="text-xs font-black tracking-widest">{user?.code}</span>
+            <button onClick={function() { navigator.clipboard.writeText(user?.code||''); setToast('복사 완료') }} className="ml-1 hover:text-gsp-400 transition-colors"><Copy size={12}/></button>
           </div>
+          {/* 알림 아이콘 */}
+          {!watchMode && (
+            <div style={{ position:'relative' }}>
+              <button
+                onClick={function() { setShowNotifPanel(function(v){return !v}) }}
+                className="p-2 text-slate-400 hover:text-gsp-600 transition-all hover:bg-gsp-50 rounded-xl"
+                style={{ position:'relative' }}
+              >
+                <img src="/icon_06.png" alt="공지" style={{ width:20, height:20, objectFit:'contain' }}/>
+                {announcement && <span style={{ position:'absolute', top:5, right:5, width:7, height:7, borderRadius:'50%', background:'#E24B4A', border:'1.5px solid #fff', display:'block' }}/>}
+              </button>
+              {showNotifPanel && (
+                <div style={{ position:'absolute', top:'40px', right:0, zIndex:8001, background:'#fff', border:'1px solid #e2e3e5', borderRadius:12, padding:'12px 14px', width:240, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', maxHeight:280, overflowY:'auto' }}
+                  onClick={function(e){e.stopPropagation()}}>
+                  <p style={{ fontSize:11, fontWeight:700, color:'#8C7B6E', marginBottom:8 }}>선생님 공지</p>
+                  {recentAnnouncements.length===0
+                    ? <p style={{ fontSize:13, color:'#8C7B6E' }}>공지가 없습니다.</p>
+                    : recentAnnouncements.map(function(a){ return (
+                        <div key={a.id} style={{ padding:'8px 10px', borderRadius:8, background:'#F1F5F9', marginBottom:6 }}>
+                          <p style={{ fontSize:12, color:'#3D2B1F', lineHeight:1.5 }}>{a.text}</p>
+                          <p style={{ fontSize:10, color:'#94A3B8', marginTop:3 }}>{a.time}</p>
+                        </div>
+                      )})
+                  }
+                </div>
+              )}
+            </div>
+          )}
           {!watchMode && <button onClick={function() { sessionStorage.removeItem('gts_user'); router.push('/') }} className="p-2 text-slate-400 hover:text-gsp-600 transition-all hover:bg-gsp-50 rounded-xl"><LogOut size={20}/></button>}
         </div>
       </header>
@@ -323,6 +397,7 @@ export default function ActivityPage() {
       {resetConfirmPost && <ConfirmResetModal topicName={room.selectedPost?.topic} onConfirm={handleConfirmReset} onCancel={function() { setResetConfirmPost(null) }}/>}
       {voteModal && room.selectionVote && <VoteModal vote={room.selectionVote} myName={user.name} onAgree={handleVote} onClose={function() { setVoteModal(false) }} onDecline={handleVoteDecline} isRequester={room.selectionVote?.requestedBy === user.name} />}
       {toast && <Toast msg={toast} onDone={function() { setToast(null) }} />}
+      {showNotifPanel && <div style={{ position:'fixed', inset:0, zIndex:8000 }} onClick={function(){setShowNotifPanel(false)}}/>}
     </div>
   )
 }

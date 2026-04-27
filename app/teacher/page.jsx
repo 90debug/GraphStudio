@@ -61,51 +61,57 @@ function AnnouncementPanel({ sessionCode, onAction }) {
   function fmtTime(ts) {
     if (!ts) return ''
     const d = ts.toDate ? ts.toDate() : new Date(ts)
-    return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+    const mm = String(d.getMonth()+1).padStart(2,'0')
+    const dd = String(d.getDate()).padStart(2,'0')
+    const time = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+    return mm+'.'+dd+' '+time
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 'var(--spacing-20)' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 16 }}>
       {/* 입력 영역 */}
-      <div className="edu-card" style={{ marginBottom: 'var(--spacing-16)', padding: 'var(--spacing-16)' }}>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginBottom: '10px' }}>새 공지 작성</p>
+      <div className="edu-sec">
+        <p className="sec-label">새 공지 작성</p>
         <textarea
           value={text}
           onChange={e => setText(e.target.value)}
           placeholder="모든 모둠에게 공지할 내용을 입력하세요."
           rows={3}
-          style={{ width: '100%', padding: '9px 11px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'var(--font-body)', fontSize: '13px', outline: 'none', resize: 'none', lineHeight: 1.6, background: 'var(--slate-bg)', color: 'var(--text)' }}
-          onFocus={e => e.target.style.borderColor = 'var(--color-purple-500)'}
-          onBlur={e => e.target.style.borderColor = 'var(--border)'}
+          className="edu-input"
+          style={{ width: '100%', padding: '9px 11px', borderRadius: 'var(--r-xs)', border: '2px solid var(--border)', fontFamily: 'var(--font-body)', fontSize: '13px', outline: 'none', resize: 'none', lineHeight: 1.6, background: 'var(--slate-bg)', color: 'var(--text)', display: 'block', marginBottom: 10 }}
         />
         <button
           onClick={() => handleSend()}
           disabled={sending || !text.trim()}
-          style={{ marginTop: '8px', width: '100%', padding: '9px', borderRadius: '8px', background: (sending || !text.trim()) ? 'var(--color-cool-gray-200)' : 'var(--color-purple-500)', color: (sending || !text.trim()) ? 'var(--color-cool-gray-400)' : 'var(--color-white)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, border: 'none', cursor: (sending || !text.trim()) ? 'not-allowed' : 'pointer' }}
+          className="edu-btn"
+          style={{ width: '100%', padding: '10px', borderRadius: 'var(--r-pill)', background: (sending || !text.trim()) ? 'var(--slate-bg)' : 'var(--s1)', color: (sending || !text.trim()) ? 'var(--text-3)' : '#fff', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 800, border: '2.5px solid var(--border)', cursor: (sending || !text.trim()) ? 'not-allowed' : 'pointer', boxShadow: (sending || !text.trim()) ? 'none' : 'var(--shadow-sm)' }}
         >
-          {sending ? '전송 중…' : '📢 전송'}
+          {sending ? '전송 중…' : '전송'}
         </button>
       </div>
 
       {/* 히스토리 */}
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700, color: 'var(--text-2)', marginBottom: '8px' }}>전송 히스토리</p>
+      <p className="sec-label" style={{ marginBottom: 8 }}>전송 히스토리</p>
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {history.length === 0 ? (
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)', textAlign: 'center', paddingTop: '20px' }}>아직 전송된 공지가 없습니다.</p>
+          <div className="edu-card" style={{ textAlign: 'center', padding: 20 }}>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)' }}>아직 전송된 공지가 없습니다.</p>
+          </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {history.map(item => (
-              <div key={item.id} style={{ background: 'var(--slate-bg)', border: '1px solid var(--slate-bd)', borderRadius: '8px', padding: '10px 12px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text)', lineHeight: 1.5, flex: 1 }}>{item.text}</p>
+              <div key={item.id} className="edu-card" style={{ padding: '12px 14px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text)', lineHeight: 1.55, flex: 1 }}>{item.text}</p>
                   <button
                     onClick={() => handleSend(item.text)}
-                    style={{ flexShrink: 0, padding: '4px 10px', borderRadius: '6px', background: 'var(--color-purple-500)', color: 'var(--color-white)', fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    className="edu-btn"
+                    style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 'var(--r-pill)', background: 'var(--s1-bg)', color: 'var(--s1-dk)', fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 800, border: '2px solid var(--s1-bd)', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'var(--shadow-xs)' }}
                   >
                     다시 전송
                   </button>
                 </div>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--text-2)', marginTop: '4px' }}>{fmtTime(item.sentAt)}</p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--text-3)', fontWeight: 700 }}>{fmtTime(item.sentAt)}</p>
               </div>
             ))}
           </div>
@@ -188,7 +194,11 @@ function Sidebar({ session, rooms, navTab, setNavTab, onCopied, step4Counts }) {
 function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
   function handleMonitor(room) {
     const url = `/activity?room=${room.id}&mode=watch&session=${sessionCode}`
-    window.open(url, '_blank', 'noopener,noreferrer')
+    if (isMobile) {
+      window.location.href = url
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
   }
 
   const emptyBg = 'var(--s1-bg)'

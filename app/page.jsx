@@ -202,7 +202,7 @@ function StudentForm({ onChangeRole }) {
 
   function save(user) {
     sessionStorage.setItem('gts_user', JSON.stringify(user))
-    localStorage.setItem('gts_last', JSON.stringify({ name: user.name, groupName: user.groupName, code: user.code }))
+    localStorage.setItem('gts_last', JSON.stringify({ name: user.name, groupName: user.groupName, code: user.code, sessionCode: user.sessionCode }))
     router.push('/activity')
   }
 
@@ -214,7 +214,7 @@ function StudentForm({ onChangeRole }) {
     setLoading(true); setError('')
     try {
       const code = await createRoomInSession(sessionCode.toUpperCase().trim(), groupName.trim(), name.trim())
-      save({ name: name.trim(), groupName: groupName.trim(), code, role: 'leader' })
+      save({ name: name.trim(), groupName: groupName.trim(), code, role: 'leader', sessionCode: sessionCode.toUpperCase().trim() })
     } catch (err) {
       setError(err.message || '모둠 생성에 실패했습니다.')
     } finally { setLoading(false) }
