@@ -218,27 +218,67 @@ export function StripChart({ data }) {
 export function LineChart({ data }) {
   const hasData = data?.some(d => Number(d.value) > 0)
   if (!hasData) return <NoData />
-  const W=320, H=180, pT=24, pL=40, pB=30
-  const values = data.map(d=>Number(d.value)||0)
-  const maxV = Math.max(...values,1)
-  const xs = data.map((_,i)=>pL+(i/(data.length-1||1))*(W-pL-10))
-  const ys = values.map(v=>pT+H*(1-v/maxV))
-  const polyline = xs.map((x,i)=>`${x},${ys[i]}`).join(' ')
+
+  // BarChart 와 동일한 뷰박스·패딩 사용
+  const W = 560, H = 160, pL = 40, pT = 24, pB = 32
+  const values = data.map(d => Number(d.value) || 0)
+  const maxV   = Math.max(...values, 1)
+  const step   = data.length > 1 ? (W - pL - 10) / (data.length - 1) : 0
+  const xs     = data.map((_, i) => pL + i * step)
+  const ys     = values.map(v => pT + H * (1 - v / maxV))
+  const polyline = xs.map((x, i) => `${x},${ys[i]}`).join(' ')
+
   return (
-    <svg viewBox={`0 0 ${W} ${H+pB}`} style={{width:'100%',maxHeight:220,overflow:'visible'}}>
-      {[0,.25,.5,.75,1].map(p=>(
-        <line key={p} x1={pL} y1={pT+H*(1-p)} x2={W-10} y2={pT+H*(1-p)}
-          stroke='#f1f5f9' strokeWidth={1}/>
-      ))}
-      <polyline points={polyline} fill="none" stroke={CHART_COLORS[0]} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round"/>
-      {xs.map((x,i)=>(
-        <g key={i}>
-          <circle cx={x} cy={ys[i]} r={5} fill={CHART_COLORS[i%CHART_COLORS.length]} stroke='#fff' strokeWidth={2}/>
-          <text x={x} y={ys[i]-10} textAnchor="middle" fontSize={10} fill='#64748B' fontWeight={700}>{values[i]}</text>
-          <text x={x} y={H+pT+pB-4} textAnchor="middle" fontSize={10} fill='#94A3B8' fontWeight={600}>{data[i].label}</text>
-        </g>
-      ))}
-    </svg>
+    <div className="bg-white/50 backdrop-blur-md p-4 rounded-bento border border-white/60 shadow-glass">
+      <svg width="100%" viewBox={`0 0 ${W} ${H + pT + pB}`} className="overflow-visible">
+        {/* 격자선 — BarChart 와 동일 */}
+        {[0.25, 0.5, 0.75, 1].map(p => (
+          <line key={p} x1={pL} y1={pT + H * (1 - p)} x2={W - 10} y2={pT + H * (1 - p)}
+            stroke="#E2E8F0" strokeWidth="1" strokeDasharray="5 5" />
+        ))}
+
+        {/* 꺾은선 */}
+        <motion.polyline
+          points={polyline}
+          fill="none"
+          stroke={CHART_COLORS[0]}
+          strokeWidth={2.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        />
+
+        {/* 점 + 값 + 레이블 */}
+        {xs.map((x, i) => {
+          const lbl = data[i].label?.length > 6 ? data[i].label.slice(0, 5) + '..' : data[i].label
+          return (
+            <motion.g
+              key={i}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: i * 0.08 + 0.3 }}
+            >
+              <circle cx={x} cy={ys[i]} r={5}
+                fill={CHART_COLORS[i % CHART_COLORS.length]}
+                stroke="#fff" strokeWidth={2} />
+              {values[i] > 0 && (
+                <text x={x} y={ys[i] - 10}
+                  textAnchor="middle" fontSize="12" fontWeight="900"
+                  fill={CHART_COLORS[i % CHART_COLORS.length]}>
+                  {values[i]}
+                </text>
+              )}
+              <text x={x} y={pT + H + 20}
+                textAnchor="middle" fontSize="11" fontWeight="700" fill="#64748B">
+                {lbl}
+              </text>
+            </motion.g>
+          )
+        })}
+      </svg>
+    </div>
   )
 }
 

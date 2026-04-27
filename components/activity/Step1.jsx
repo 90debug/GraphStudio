@@ -348,7 +348,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
                 <input
                   value={form.question}
                   onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
-                  placeholder="반려동물을 키우면서 실천하고 있는 공공 예절은 무엇인가요?"
+                  placeholder="예: 반려동물을 키우면서 실천하고 있는 공공 예절은 무엇인가요?"
                   className="w-full px-4 py-3 bg-slate-50 border border-[#E2E3E5] rounded-[8px] text-sm font-bold text-black outline-none bg-white focus:border-gsp-500 transition-all placeholder:text-[#8A949E] placeholder:font-medium"
                 />
               </div>
@@ -364,7 +364,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
                     onChange={e => setItemInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && addItem()}
                     placeholder="예: 배변 봉투 챙기기"
-                    style={{flex:1, minWidth:0, padding:'10px 14px', borderRadius:8, border:'1px solid #E2E3E5', fontSize:13, fontWeight:700, outline:'none', background:'#fff', fontFamily:'inherit'}}
+                    style={{flex:1, minWidth:0, padding:'10px 14px', borderRadius:8, border:'1px solid #E2E3E5', fontSize:13, fontWeight:400, outline:'none', background:'#fff', fontFamily:'inherit'}}
                   />
                   <button
                     onClick={addItem}
