@@ -74,9 +74,14 @@ export default function ActivityPage() {
   useEffect(function() {
     // watch 모드: sessionStorage 불필요, 바로 구독 초기화
     if (watchMode && watchRoomId) {
-      let unsubs = []
       const watchUnsubs = [
-        subscribeRoom(watchRoomId, setRoom),
+        // room 구독: currentStep을 activeStep에 동기화
+        subscribeRoom(watchRoomId, function(roomData) {
+          setRoom(roomData)
+          if (typeof roomData.currentStep === 'number') {
+            setActiveStep(roomData.currentStep)
+          }
+        }),
         subscribeStep1Posts(watchRoomId, setStep1Posts),
         subscribeStep4Posts(watchRoomId, setStep4Posts),
         subscribePresence(watchRoomId, setOnlineUsers),

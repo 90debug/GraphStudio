@@ -224,7 +224,10 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnline ? 'var(--state-selected)' : 'var(--color-cool-gray-200)', flexShrink: 0 }} />
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{room.teamName || room.groupName || '-'}</span>
+                  <div>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, color: 'var(--text)', display: 'block' }}>{room.teamName || room.groupName || '-'}</span>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--text-2)', letterSpacing: '1px' }}>{room.id}</span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-2)' }}>{room._memberCount || 0}명</span>
@@ -271,7 +274,10 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
                 <td style={{ padding: '12px', textAlign: 'center', width: '32px' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnline ? 'var(--state-selected)' : 'var(--color-cool-gray-200)', margin: '0 auto', transition: 'background 0.3s' }} />
                 </td>
-                <td style={{ padding: '12px', fontSize: '14px', fontWeight: 700, color: 'var(--text)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.teamName || room.groupName || '-'}</td>
+                <td style={{ padding: '12px', maxWidth: '140px' }}>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.teamName || room.groupName || '-'}</p>
+                  <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-2)', letterSpacing: '1px', marginTop: '1px' }}>{room.id}</p>
+                </td>
                 <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-2)', whiteSpace: 'nowrap' }}>{room._memberCount || 0}명</td>
                 {[1, 2, 3, 4].map(step => {
                   const isDone = isStepDone(room, step, step4Counts)

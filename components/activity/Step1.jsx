@@ -300,7 +300,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
           ))}
           {posts.length === 0 && (
             <div className="col-span-full py-20 text-center space-y-3">
-              <p className="text-sm font-medium text-[#8A949E]">첫 번째 아이디어를 기다리고 있어요!</p>
+              <p className="text-sm font-medium text-[#8A949E]">첫 번째 탐구 문제를 기다리고 있어요!</p>
             </div>
           )}
         </div>
