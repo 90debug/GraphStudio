@@ -1,8 +1,11 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDevice } from '../lib/DeviceContext'
 import { createSession, createRoomInSession } from '../lib/firestore'
+
+// ▼ 시연 당일 실제 모둠 코드로 교체 (빈 문자열이면 버튼 자동 숨김)
+const DEMO_ROOM_CODE = ""
 
 // ── 탭 버튼 공용 스타일 (교사/학생 동일) ──────────────────────────────────────
 const TAB_WRAP = { display: 'flex', background: 'var(--color-cool-gray-100)', borderRadius: '8px', height: '48px', overflow: 'hidden' }
@@ -201,6 +204,29 @@ function StudentForm({ onChangeRole }) {
   const [joinCode, setJoinCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  // 시연용 자동 입력 state
+  const [animating, setAnimating] = useState(false)
+  const [autofillDone, setAutofillDone] = useState(false)
+  const joinInputRef = useRef(null)
+
+  function handleAutoFill() {
+    if (animating || !DEMO_ROOM_CODE) return
+    setAnimating(true)
+    setAutofillDone(false)
+    setJoinCode('')
+    setError('')
+    let i = 0
+    const interval = setInterval(function() {
+      i++
+      setJoinCode(DEMO_ROOM_CODE.slice(0, i))
+      if (i >= DEMO_ROOM_CODE.length) {
+        clearInterval(interval)
+        setAnimating(false)
+        setAutofillDone(true)
+        if (joinInputRef.current) joinInputRef.current.focus()
+      }
+    }, 90)
+  }
 
   function save(user) {
     sessionStorage.setItem('gts_user', JSON.stringify(user))
@@ -244,7 +270,50 @@ function StudentForm({ onChangeRole }) {
         <TextInput label="이름" placeholder="예: 김민준" value={name} onChange={e => { setName(e.target.value); setError('') }} />
         {mode === 'new'
           ? <TextInput label="모둠 이름" placeholder="예: 2모둠" value={groupName} onChange={e => { setGroupName(e.target.value); setError('') }} />
-          : <TextInput label="참여 코드" placeholder="예: ABC123" value={joinCode} maxLength={6} onChange={e => { setJoinCode(e.target.value.toUpperCase()); setError('') }} />
+          : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-8)', width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-17-size)', fontWeight: 400, color: 'var(--color-cool-gray-400)', lineHeight: 1.5 }}>
+                  참여 코드
+                </label>
+                {DEMO_ROOM_CODE && (
+                  <button
+                    onClick={handleAutoFill}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      padding: '3px 9px 3px 7px', borderRadius: 20,
+                      background: autofillDone ? '#EDE9FE' : '#F5F3FF',
+                      border: `1.5px solid ${autofillDone ? '#C4B8F8' : '#DDD6FE'}`,
+                      cursor: animating ? 'default' : 'pointer',
+                      fontSize: 11, fontWeight: 700,
+                      color: autofillDone ? '#5B41EB' : '#7C6FCD',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <span style={{ fontSize: 12 }}>⚡</span>
+                    {animating ? '입력 중…' : autofillDone ? '완료' : '시연용'}
+                  </button>
+                )}
+              </div>
+              <input
+                ref={joinInputRef}
+                maxLength={6}
+                placeholder="예: ABC123"
+                value={joinCode}
+                onChange={e => { setJoinCode(e.target.value.toUpperCase()); setError(''); setAutofillDone(false) }}
+                style={{
+                  width: '100%', height: '48px', padding: '0 var(--spacing-16)',
+                  border: `1px solid ${autofillDone ? '#C4B8F8' : 'var(--color-cool-gray-200)'}`,
+                  borderRadius: '8px', fontFamily: 'var(--font-body)', fontSize: '16px',
+                  fontWeight: 400,
+                  color: autofillDone ? '#5B41EB' : 'var(--color-black)',
+                  background: autofillDone ? '#F5F3FF' : 'var(--color-white)',
+                  outline: 'none', letterSpacing: 'normal',
+                  transition: 'border-color 0.18s, background 0.18s, color 0.18s',
+                }}
+              />
+            </div>
+          )
         }
         {error && <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-17-size)', fontWeight: 500, color: 'var(--state-error)', textAlign: 'center' }}>{error}</p>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-16)', marginTop: 'var(--spacing-8)' }}>

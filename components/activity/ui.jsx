@@ -176,11 +176,20 @@ export function Modal({ children, onClose }) {
   )
 }
 
-export function OnlineUsers({ users }) {
+export function OnlineUsers({ users, onClick, isOpen }) {
   if (!users.length) return null
   const vis = users.slice(0, 4), extra = users.length - 4
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 4,
+        cursor: onClick ? 'pointer' : 'default',
+        padding: '3px 6px', borderRadius: 8,
+        background: isOpen ? 'rgba(91,65,235,0.08)' : 'transparent',
+        transition: 'background .15s',
+      }}
+    >
       <div style={{ display: 'flex' }}>
         {vis.map((u, i) => (
           <div key={i} title={u.name} style={{ marginLeft: i ? -7 : 0, zIndex: 10 - i, position: 'relative' }}>

@@ -13,6 +13,7 @@ import {
   updateRoomMeta, clearSelectionVote, resetSurvey, setSelectionVote, agreeSelectionVote,
   subscribeLastAnnouncement, subscribeAnnouncements,
   addTeacherMemo,
+  addStamp, subscribeStamps,
 } from '../../lib/firestore'
 
 import { motion, AnimatePresence } from 'framer-motion'
@@ -24,6 +25,33 @@ import Step1 from '../../components/activity/Step1'
 import Step2 from '../../components/activity/Step2'
 import Step3 from '../../components/activity/Step3'
 import Step4 from '../../components/activity/Step4'
+
+function StampOverlay({ x, y, onDone }) {
+  const [phase, setPhase] = useState('enter')  // enter → hold → exit
+  useEffect(function() {
+    const t1 = setTimeout(function() { setPhase('exit') }, 2880)
+    const t2 = setTimeout(function() { onDone() }, 3330)
+    return function() { clearTimeout(t1); clearTimeout(t2) }
+  }, []) // eslint-disable-line
+  const anim = phase === 'enter'
+    ? { animation: 'stampEnter 380ms cubic-bezier(0.34,1.56,0.64,1) forwards' }
+    : { animation: 'stampExit 450ms ease forwards' }
+  return (
+    <>
+      <style>{`
+        @keyframes stampEnter { from { transform: translate(-50%,-50%) scale(0.2) rotate(-20deg); opacity:0 } to { transform: translate(-50%,-50%) scale(1) rotate(-4deg); opacity:0.88 } }
+        @keyframes stampExit  { from { transform: translate(-50%,-50%) scale(1) rotate(-4deg); opacity:0.88 } to { transform: translate(-50%,-50%) scale(0.88) rotate(-4deg); opacity:0 } }
+      `}</style>
+      <div style={{
+        position: 'absolute', left: x + '%', top: y + '%',
+        width: 80, pointerEvents: 'none', zIndex: 500,
+        ...anim,
+      }}>
+        <img src="/stamp_01.png" alt="" style={{ width: 80, height: 'auto' }} />
+      </div>
+    </>
+  )
+}
 
 function useDb(fn, delay) {
   const t = useRef(null)
@@ -57,6 +85,9 @@ export default function ActivityPage() {
   const [announcement, setAnnouncement] = useState(null)  // 공지사항 토스트
   const [allAnnouncements, setAllAnnouncements] = useState([])  // 히스토리
   const [showNotifPanel, setShowNotifPanel] = useState(false)
+  const [showMembersPanel, setShowMembersPanel] = useState(false)  // 접속 모둠원 패널
+  const [stampMode, setStampMode] = useState(false)               // 스탬프 모드 (watch 전용)
+  const [incomingStamps, setIncomingStamps] = useState([])        // 학생 수신 스탬프
   const annTimerRef = useRef(null)
   const mountTimeRef = useRef(Date.now())  // 마운트 시각 기록 → 이후 공지만 토스트
   const [step1Modal, setStep1Modal] = useState(false)
@@ -297,6 +328,14 @@ export default function ActivityPage() {
   }
   async function handleDelete4(postId) { try { await deleteStep4Post(userRef.current?.code, postId); setToast('삭제 완료') } catch { setToast('삭제 실패') } }
 
+  // ── 학생 스탬프 구독 ────────────────────────────────────────────────────────
+  useEffect(function() {
+    if (watchMode || !user?.sessionCode || !user?.code) return
+    return subscribeStamps(user.sessionCode, user.code, function(stamp) {
+      setIncomingStamps(function(prev) { return [...prev, { ...stamp, uid: Date.now() + Math.random() }] })
+    })
+  }, [watchMode, user?.sessionCode, user?.code]) // eslint-disable-line
+
   if (loading) return (
     <div className="w-full h-full flex items-center justify-center bg-slate-50 font-black">연결 중...</div>
   )
@@ -399,7 +438,60 @@ export default function ActivityPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <OnlineUsers users={onlineUsers} />
+          <div
+            style={{ position: 'relative' }}
+            onBlur={function(e) { if (!e.currentTarget.contains(e.relatedTarget)) setShowMembersPanel(false) }}
+            tabIndex={-1}
+          >
+            <OnlineUsers
+              users={onlineUsers}
+              onClick={function() { setShowMembersPanel(function(v) { return !v }) }}
+              isOpen={showMembersPanel}
+            />
+            {showMembersPanel && (
+              <div style={{
+                position: 'absolute', top: 36, left: 0, zIndex: 8001,
+                background: '#fff', border: '1px solid #E2E3E5',
+                borderRadius: 12, padding: '12px 14px',
+                minWidth: 170, maxHeight: 260, overflowY: 'auto',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                WebkitOverflowScrolling: 'touch',
+              }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#8C7B6E', marginBottom: 8 }}>
+                  접속 중인 모둠원
+                </p>
+                {onlineUsers.length === 0
+                  ? <p style={{ fontSize: 13, color: '#8C7B6E' }}>접속자가 없습니다.</p>
+                  : onlineUsers.map(function(u, i) {
+                      const isMe = u.name === user?.name
+                      return (
+                        <div key={i} style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '6px 8px', borderRadius: 8,
+                          background: isMe ? '#F5F3FF' : '#F8F9FA',
+                          marginBottom: 5,
+                        }}>
+                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#10B981', flexShrink: 0 }}/>
+                          <span style={{ fontSize: 13, fontWeight: isMe ? 800 : 600, color: isMe ? '#5B41EB' : '#3D2B1F' }}>
+                            {u.name}
+                          </span>
+                          {isMe && (
+                            <span style={{
+                              marginLeft: 'auto', fontSize: 9, fontWeight: 800,
+                              color: '#5B41EB', background: '#EDE9FE',
+                              padding: '1px 6px', borderRadius: 4,
+                            }}>나</span>
+                          )}
+                        </div>
+                      )
+                    })
+                }
+                <p style={{ fontSize: 10, color: '#B0ACCC', marginTop: 4, textAlign: 'right', fontWeight: 600 }}>
+                  총 {onlineUsers.length}명 접속 중
+                </p>
+              </div>
+            )}
+          </div>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-[8px] shadow-lg shadow-slate-200">
             <Key size={12} className="text-gsp-400" />
             <span className="text-xs font-black tracking-widest">{user?.code}</span>
@@ -436,7 +528,18 @@ export default function ActivityPage() {
         </div>
       </header>
 
-      <main className="flex-1 relative overflow-hidden flex flex-col">
+      <main
+        className="flex-1 relative overflow-hidden flex flex-col"
+        style={watchMode && stampMode ? { cursor: 'crosshair', outline: '2px dashed rgba(91,65,235,0.53)' } : {}}
+        onClick={watchMode && stampMode && watchSessionCode ? function(e) {
+          const rect = e.currentTarget.getBoundingClientRect()
+          const x = ((e.clientX - rect.left) / rect.width) * 100
+          const y = ((e.clientY - rect.top) / rect.height) * 100
+          addStamp(watchSessionCode, { roomCode: watchRoomId, x, y })
+          // 교사 로컬에도 즉시 표시
+          setIncomingStamps(function(prev) { return [...prev, { x, y, uid: Date.now() + Math.random() }] })
+        } : undefined}
+      >
         <AnimatePresence mode="wait">
           <motion.div key={activeStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1 flex flex-col overflow-hidden">
             {/* watch 모드: 쓰기 핸들러 noop, 읽기(스크롤·클릭) 허용 */}
@@ -455,6 +558,17 @@ export default function ActivityPage() {
             <Plus size={24} strokeWidth={3} />
           </button>
         )}
+        {/* 스탬프 오버레이 렌더링 */}
+        {incomingStamps.map(function(s) {
+          return (
+            <StampOverlay
+              key={s.uid}
+              x={s.x}
+              y={s.y}
+              onDone={function() { setIncomingStamps(function(prev) { return prev.filter(function(p) { return p.uid !== s.uid }) }) }}
+            />
+          )
+        })}
         <BottomNav currentStep={activeStep} onStepChange={changeStep} />
       </main>
 
@@ -462,10 +576,49 @@ export default function ActivityPage() {
       {!watchMode && voteModal && room.selectionVote && <VoteModal vote={room.selectionVote} myName={user?.name||''} onAgree={handleVote} onClose={function() { setVoteModal(false) }} onDecline={handleVoteDecline} isRequester={room.selectionVote?.requestedBy === user?.name} />}
       {toast && <Toast msg={toast} onDone={function() { setToast(null) }} />}
       {showNotifPanel && <div style={{ position:'fixed', inset:0, zIndex:8000, pointerEvents:'none' }} />}
+      {showMembersPanel && (
+        <div
+          onClick={function() { setShowMembersPanel(false) }}
+          style={{ position: 'fixed', inset: 0, zIndex: 8000, background: 'transparent' }}
+        />
+      )}
 
-      {/* ── watch 모드 전용: 관찰 메모 플로팅 버튼 + 인라인 모달 ── */}
+      {/* ── watch 모드 전용: 관찰 메모 + 스탬프 플로팅 버튼 ── */}
       {watchMode && watchSessionCode && (
         <>
+          {/* 스탬프 버튼 (위) */}
+          <button
+            onClick={() => setStampMode(function(v) { return !v })}
+            title="스탬프 찍기"
+            style={{
+              position:'fixed', bottom:134, right:20, zIndex:9500,
+              width:52, height:52, borderRadius:'50%',
+              background: stampMode ? '#5B41EB' : '#fff',
+              border: stampMode ? 'none' : '1.5px solid #5B41EB',
+              cursor:'pointer',
+              boxShadow: stampMode ? '0 4px 20px rgba(91,65,235,0.45)' : '0 2px 10px rgba(0,0,0,0.12)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              transition:'background .2s, box-shadow .2s',
+            }}
+          >
+            {stampMode
+              ? <span style={{ fontSize:18, color:'#fff', fontWeight:700, lineHeight:1 }}>✕</span>
+              : <img src="/stamp_01.png" alt="스탬프" style={{ width:26, height:26, objectFit:'contain', opacity:0.6 }}/>
+            }
+          </button>
+
+          {/* 스탬프 모드 ON 배너 */}
+          {stampMode && (
+            <div style={{
+              position:'fixed', top:40, left:'50%', transform:'translateX(-50%)',
+              zIndex:9600, background:'rgba(91,65,235,0.9)', color:'#fff',
+              borderRadius:8, padding:'6px 18px', fontSize:12, fontWeight:800,
+              animation:'fadeUp .2s ease', whiteSpace:'nowrap',
+              boxShadow:'0 4px 16px rgba(91,65,235,0.4)',
+            }}>
+              🖊 스탬프 모드 ON
+            </div>
+          )}
           <button
             onClick={() => setShowMemoPanel(true)}
             title="관찰 기록 작성"
