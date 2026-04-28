@@ -100,6 +100,8 @@ function nameColor(name) {
 function PadletStep4Card({ post, myName, onLike, onComment, onDeleteComment, onDelete }) {
   const [showCmt, setShowCmt] = useState(false)
   const [cmtText, setCmtText] = useState('')
+  const device   = useDevice()
+  const isMobile = device === 'mobile'
   const isMyPost = post.name === myName
   const isLiked  = post.likedBy?.includes(myName)
   const doneCount = post.doneCount ?? (post.checks ? Object.values(post.checks).filter(Boolean).length : 0)
