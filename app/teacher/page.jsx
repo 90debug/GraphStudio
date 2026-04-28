@@ -37,7 +37,7 @@ function StepPip({ step, status }) {
     pending: { bg: 'var(--color-white)', color: 'var(--color-cool-gray-400)', border: 'var(--color-cool-gray-200)' },
   }[status]
   return (
-    <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, background: s.bg, color: s.color, border: `2px solid ${s.border}`, transition: 'all .2s' }}>
+    <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, background: s.bg, color: s.color, border: `2px solid ${s.border}`, transition: 'all .2s' }}>
       {status === 'done' ? '✓' : step}
     </div>
   )
@@ -104,7 +104,7 @@ function MemoViewModal({ room, memos, onClose }) {
               <p style={{ fontSize:16, fontWeight:800, color:'var(--color-cool-gray-500)' }}>
                 {room.teamName || room.groupName || room.id} 관찰 기록
               </p>
-              <p style={{ fontSize:11, color:'var(--color-cool-gray-400)', marginTop:1 }}>
+              <p style={{ fontSize:12, color:'var(--color-cool-gray-400)', marginTop:1 }}>
                 총 {roomMemos.length}건
               </p>
             </div>
@@ -123,9 +123,9 @@ function MemoViewModal({ room, memos, onClose }) {
         {/* 목록 */}
         <div style={{ flex:1, overflowY:'auto', padding:16, display:'flex', flexDirection:'column', gap:10 }}>
           {roomMemos.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'40px 0', color:'var(--color-cool-gray-400)', fontSize:13 }}>
+            <div style={{ textAlign:'center', padding:'40px 0', color:'var(--color-cool-gray-400)', fontSize:14 }}>
               아직 관찰 기록이 없습니다.<br/>
-              <span style={{ fontSize:12 }}>모니터링 화면에서 메모를 추가해 주세요.</span>
+              <span style={{ fontSize:13 }}>모니터링 화면에서 메모를 추가해 주세요.</span>
             </div>
           ) : roomMemos.map(m => (
             <div key={m.id} style={{
@@ -135,7 +135,7 @@ function MemoViewModal({ room, memos, onClose }) {
               <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
                 {m.step && (
                   <span style={{
-                    fontSize:10, fontWeight:800, padding:'2px 8px', borderRadius:99,
+                    fontSize:11, fontWeight:800, padding:'2px 8px', borderRadius:99,
                     background: (STEP_COLORS[m.step]||'#999') + '22',
                     color: STEP_COLORS[m.step]||'#999',
                     border:`1px solid ${(STEP_COLORS[m.step]||'#999')}44`,
@@ -143,11 +143,11 @@ function MemoViewModal({ room, memos, onClose }) {
                     {STEP_LABELS[m.step]||''}
                   </span>
                 )}
-                <span style={{ fontSize:10, color:'var(--color-cool-gray-400)', marginLeft:'auto', fontWeight:600 }}>
+                <span style={{ fontSize:11, color:'var(--color-cool-gray-400)', marginLeft:'auto', fontWeight:600 }}>
                   {fmtMemoTime(m.createdAt, m.clientTs)}
                 </span>
               </div>
-              <p style={{ fontSize:13, color:'var(--color-cool-gray-500)', lineHeight:1.65 }}>{m.text}</p>
+              <p style={{ fontSize:14, color:'var(--color-cool-gray-500)', lineHeight:1.65 }}>{m.text}</p>
             </div>
           ))}
         </div>
@@ -157,7 +157,7 @@ function MemoViewModal({ room, memos, onClose }) {
           padding:'12px 20px', borderTop:'1.5px solid var(--color-cool-gray-200)',
           background:'var(--color-cool-gray-100)', flexShrink:0,
         }}>
-          <p style={{ fontSize:11, color:'var(--color-cool-gray-400)', textAlign:'center' }}>
+          <p style={{ fontSize:12, color:'var(--color-cool-gray-400)', textAlign:'center' }}>
             기록 추가는 모니터링 화면(👁) 진입 후<br/>
             우측 하단 버튼으로 할 수 있어요.
           </p>
@@ -178,7 +178,7 @@ function Sidebar({ session, rooms, navTab, setNavTab, onCopied, step4Counts }) {
     <div style={{ width: 220, flexShrink: 0, background: '#1E293B', display: 'flex', flexDirection: 'column', padding: 16, gap: 16, height: '100%', overflow: 'hidden' }}>
       {/* 세션 코드 */}
       <div>
-        <p style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,.4)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 5 }}>세션 코드</p>
+        <p style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.4)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 5 }}>세션 코드</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <p style={{ fontSize: 26, fontWeight: 800, color: 'var(--color-white)', letterSpacing: 5 }}>{session?.sessionCode || '------'}</p>
           {session?.sessionCode && (
@@ -186,12 +186,12 @@ function Sidebar({ session, rooms, navTab, setNavTab, onCopied, step4Counts }) {
               style={{ width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.4)', borderRadius: 6, transition: 'color .15s' }}
               onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white)'}
               onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,.4)'}>
-              <Copy size={13} />
+              <Copy size={15} />
             </button>
           )}
         </div>
         {session && (
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,.55)', marginTop: 3 }}>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,.55)', marginTop: 3 }}>
             {[session.school, session.grade && `${session.grade}학년`, session.classNum && `${session.classNum}반`].filter(Boolean).join(' ') || '학교 정보 없음'}
           </p>
         )}
@@ -201,8 +201,8 @@ function Sidebar({ session, rooms, navTab, setNavTab, onCopied, step4Counts }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {[['접속 모둠', `${onlineCount} / ${rooms.length}`], ['접속 학생', `${totalMembers}명`]].map(([l, v]) => (
           <div key={l} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,.55)' }}>{l}</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-white)' }}>{v}</span>
+            <span style={{ fontSize: 13, color: 'rgba(255,255,255,.55)' }}>{l}</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-white)' }}>{v}</span>
           </div>
         ))}
       </div>
@@ -210,8 +210,8 @@ function Sidebar({ session, rooms, navTab, setNavTab, onCopied, step4Counts }) {
       {/* 진행도 */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,.55)' }}>평균 진행 단계</span>
-          <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-white)' }}>{Math.round(avgStep)} / 4단계</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,.55)' }}>평균 진행 단계</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-white)' }}>{Math.round(avgStep)} / 4단계</span>
         </div>
         <div style={{ height: 5, borderRadius: 99, background: 'rgba(255,255,255,.15)', overflow: 'hidden' }}>
           <div style={{ height: '100%', borderRadius: 99, width: `${pct}%`, background: 'var(--color-purple-500)', transition: 'width .4s ease' }} />
@@ -226,8 +226,8 @@ function Sidebar({ session, rooms, navTab, setNavTab, onCopied, step4Counts }) {
           { key: 'manage',   label: '세션 관리', icon: '/icon_05.png' },
         ].map(({ key, label, icon }) => (
           <button key={key} onClick={() => setNavTab(key)} className="h-step-item"
-            style={{ background: navTab === key ? 'rgba(255,255,255,.13)' : 'transparent', color: navTab === key ? 'var(--color-white)' : 'rgba(255,255,255,.55)', fontSize: 13, fontWeight: navTab === key ? 700 : 500 }}>
-            <img src={icon} alt="" style={{ width: 18, height: 18, objectFit: 'contain', opacity: navTab === key ? 1 : 0.55, flexShrink: 0 }} />
+            style={{ background: navTab === key ? 'rgba(255,255,255,.13)' : 'transparent', color: navTab === key ? 'var(--color-white)' : 'rgba(255,255,255,.55)', fontSize: 14, fontWeight: navTab === key ? 700 : 500 }}>
+            <img src={icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain', opacity: navTab === key ? 1 : 0.55, flexShrink: 0 }} />
             <span>{label}</span>
           </button>
         ))}
@@ -256,8 +256,8 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
   if (rooms.length === 0) {
     return (
       <div style={{ flex: 1, background: 'var(--color-cool-gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10, opacity: 0.6 }}>
-        <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-cool-gray-500)' }}>아직 참여한 모둠이 없어요.</p>
-        <p style={{ fontSize: 13, color: 'var(--color-cool-gray-400)' }}>세션 코드를 학생에게 공유해 주세요.</p>
+        <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-cool-gray-500)' }}>아직 참여한 모둠이 없어요.</p>
+        <p style={{ fontSize: 14, color: 'var(--color-cool-gray-400)' }}>세션 코드를 학생에게 공유해 주세요.</p>
       </div>
     )
   }
@@ -277,12 +277,12 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                   <div style={{ width: 7, height: 7, borderRadius: '50%', background: isOnline ? '#10B981' : 'var(--color-cool-gray-200)', flexShrink: 0, marginTop: 5 }} />
                   <div>
-                    <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-cool-gray-500)' }}>{room.teamName || room.groupName || '-'}</p>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-cool-gray-400)', letterSpacing: '1px' }}>{room.id}</p>
+                    <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-cool-gray-500)' }}>{room.teamName || room.groupName || '-'}</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-cool-gray-400)', letterSpacing: '1px' }}>{room.id}</p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 12, color: 'var(--color-cool-gray-400)' }}>{room._memberCount || 0}명</span>
+                  <span style={{ fontSize: 13, color: 'var(--color-cool-gray-400)' }}>{room._memberCount || 0}명</span>
                   {/* 모니터링 아이콘 — 항상 같은 위치, 오프라인 시 비활성 */}
                   <button
                     onClick={() => isOnline && handleMonitor(room)}
@@ -318,7 +318,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                         position: 'absolute', top: -3, right: -3,
                         width: 15, height: 15, borderRadius: '50%',
                         background: 'var(--color-purple-500)', border: '2px solid var(--color-white)',
-                        fontSize: 8, fontWeight: 800, color: 'var(--color-white)',
+                        fontSize: 9, fontWeight: 800, color: 'var(--color-white)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         pointerEvents: 'none',
                       }}>
@@ -333,7 +333,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                   <StepPip key={step} step={step} status={isStepDone(room, step, step4Counts) ? 'done' : cur === step ? 'active' : 'pending'} />
                 ))}
               </div>
-              {topic !== '-' && <p style={{ fontSize: 11, color: 'var(--color-cool-gray-400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>탐구: {topic}</p>}
+              {topic !== '-' && <p style={{ fontSize: 12, color: 'var(--color-cool-gray-400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>탐구: {topic}</p>}
             </Card>
           )
         })}
@@ -352,7 +352,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
           <thead>
             <tr style={{ borderBottom: `1.5px solid var(--color-cool-gray-200)` }}>
               {['', '모둠', '인원', '1단계', '2단계', '3단계', '4단계', '탐구 문제', '관찰'].map((h, i) => (
-                <th key={i} style={{ padding: '10px 12px', textAlign: i <= 2 ? 'left' : 'center', fontSize: 11, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.4px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                <th key={i} style={{ padding: '10px 12px', textAlign: i <= 2 ? 'left' : 'center', fontSize: 12, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.4px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -368,10 +368,10 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                     <div style={{ width: 7, height: 7, borderRadius: '50%', background: isOnline ? '#10B981' : 'var(--color-cool-gray-200)', margin: '0 auto' }} />
                   </td>
                   <td style={{ padding: '11px 12px' }}>
-                    <p style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-cool-gray-500)', whiteSpace: 'nowrap' }}>{room.teamName || room.groupName || '-'}</p>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-cool-gray-400)', letterSpacing: '1px', marginTop: 1 }}>{room.id}</p>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-cool-gray-500)', whiteSpace: 'nowrap' }}>{room.teamName || room.groupName || '-'}</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-cool-gray-400)', letterSpacing: '1px', marginTop: 1 }}>{room.id}</p>
                   </td>
-                  <td style={{ padding: '11px 12px', fontSize: 12, color: 'var(--color-cool-gray-400)' }}>{room._memberCount || 0}명</td>
+                  <td style={{ padding: '11px 12px', fontSize: 13, color: 'var(--color-cool-gray-400)' }}>{room._memberCount || 0}명</td>
                   {[1, 2, 3, 4].map(step => (
                     <td key={step} style={{ padding: '11px 12px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -379,7 +379,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                       </div>
                     </td>
                   ))}
-                  <td style={{ padding: '11px 12px', fontSize: 12, color: 'var(--color-cool-gray-400)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topic}</td>
+                  <td style={{ padding: '11px 12px', fontSize: 13, color: 'var(--color-cool-gray-400)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topic}</td>
                   {/* 관찰 컬럼: 모니터링(icon_08) + 메모(icon_09) 항상 고정 */}
                   <td style={{ padding: '11px 12px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
@@ -418,7 +418,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                             position: 'absolute', top: -3, right: -3,
                             width: 16, height: 16, borderRadius: '50%',
                             background: 'var(--color-purple-500)', border: '2px solid var(--color-white)',
-                            fontSize: 8, fontWeight: 800, color: 'var(--color-white)',
+                            fontSize: 9, fontWeight: 800, color: 'var(--color-white)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             pointerEvents: 'none',
                           }}>
@@ -473,7 +473,7 @@ function AnnouncementPanel({ sessionCode, onAction }) {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 16, background: 'var(--color-cool-gray-100)', gap: 10 }}>
       {/* 입력 카드 */}
       <Card>
-        <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 10 }}>새 공지 작성</p>
+        <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 10 }}>새 공지 작성</p>
         {/* input — 이미지3 스타일: 흰 배경 + cool-gray 테두리 */}
         <textarea
           value={text}
@@ -513,16 +513,16 @@ function AnnouncementPanel({ sessionCode, onAction }) {
       </Card>
 
       {/* 히스토리 */}
-      <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 0 }}>전송 히스토리</p>
+      <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 0 }}>전송 히스토리</p>
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {history.length === 0 ? (
           <Card>
-            <p style={{ fontSize: 13, color: 'var(--color-cool-gray-400)', textAlign: 'center', padding: '8px 0' }}>아직 전송된 공지가 없습니다.</p>
+            <p style={{ fontSize: 14, color: 'var(--color-cool-gray-400)', textAlign: 'center', padding: '8px 0' }}>아직 전송된 공지가 없습니다.</p>
           </Card>
         ) : history.map(item => (
           <Card key={item.id}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
-              <p style={{ fontSize: 14, color: 'var(--color-cool-gray-500)', lineHeight: 1.55, flex: 1 }}>{item.text}</p>
+              <p style={{ fontSize: 15, color: 'var(--color-cool-gray-500)', lineHeight: 1.55, flex: 1 }}>{item.text}</p>
               {/* 다시 전송 버튼 — 이미지3 보조버튼 스타일 */}
               <button onClick={() => handleSend(item.text)}
                 style={{
@@ -530,14 +530,14 @@ function AnnouncementPanel({ sessionCode, onAction }) {
                   borderRadius: 100,
                   background: 'var(--color-cool-gray-100)',
                   color: 'var(--color-purple-500)',
-                  fontSize: 12, fontWeight: 700,
+                  fontSize: 13, fontWeight: 700,
                   border: `1.5px solid var(--color-cool-gray-200)`,
                   cursor: 'pointer', whiteSpace: 'nowrap',
                 }}>
                 다시 전송
               </button>
             </div>
-            <p style={{ fontSize: 11, color: 'var(--color-cool-gray-400)', fontWeight: 600 }}>{fmtTime(item.sentAt)}</p>
+            <p style={{ fontSize: 12, color: 'var(--color-cool-gray-400)', fontWeight: 600 }}>{fmtTime(item.sentAt)}</p>
           </Card>
         ))}
       </div>
@@ -573,21 +573,21 @@ function ManageTab({ rooms, sessionCode, onAction }) {
     <div style={{ flex: 1, overflow: 'auto', padding: 16, background: 'var(--color-cool-gray-100)', display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* 전체 초기화 */}
       <Card>
-        <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 8 }}>전체 초기화</p>
-        <p style={{ fontSize: 13, color: 'var(--color-cool-gray-400)', lineHeight: 1.6, marginBottom: 14 }}>세션 내 모든 모둠의 활동 데이터를 초기화합니다. 모둠 자체(코드)는 유지됩니다.</p>
+        <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 8 }}>전체 초기화</p>
+        <p style={{ fontSize: 14, color: 'var(--color-cool-gray-400)', lineHeight: 1.6, marginBottom: 14 }}>세션 내 모든 모둠의 활동 데이터를 초기화합니다. 모둠 자체(코드)는 유지됩니다.</p>
         {confirmAll && (
           <div style={{ background: errBg, border: `1.5px solid ${errBd}`, borderRadius: 8, padding: '10px 14px', marginBottom: 10 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: errTx }}>⚠️ 정말 전체 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: errTx }}>⚠️ 정말 전체 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
           </div>
         )}
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={handleResetAll} disabled={loading}
-            style={{ padding: '9px 20px', borderRadius: 100, background: confirmAll ? errTx : errBg, color: confirmAll ? 'var(--color-white)' : errTx, fontSize: 13, fontWeight: 700, border: `1.5px solid ${errBd}`, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? .6 : 1 }}>
+            style={{ padding: '9px 20px', borderRadius: 100, background: confirmAll ? errTx : errBg, color: confirmAll ? 'var(--color-white)' : errTx, fontSize: 14, fontWeight: 700, border: `1.5px solid ${errBd}`, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? .6 : 1 }}>
             {loading ? '초기화 중…' : confirmAll ? '확인 — 전체 초기화' : '전체 초기화'}
           </button>
           {confirmAll && (
             <button onClick={() => setConfirmAll(false)}
-              style={{ padding: '9px 20px', borderRadius: 100, background: 'var(--color-cool-gray-100)', color: 'var(--color-cool-gray-500)', fontSize: 13, fontWeight: 600, border: `1.5px solid var(--color-cool-gray-200)`, cursor: 'pointer' }}>
+              style={{ padding: '9px 20px', borderRadius: 100, background: 'var(--color-cool-gray-100)', color: 'var(--color-cool-gray-500)', fontSize: 14, fontWeight: 600, border: `1.5px solid var(--color-cool-gray-200)`, cursor: 'pointer' }}>
               취소
             </button>
           )}
@@ -596,9 +596,9 @@ function ManageTab({ rooms, sessionCode, onAction }) {
 
       {/* 모둠별 초기화 */}
       <Card>
-        <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 12 }}>모둠별 초기화</p>
+        <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 12 }}>모둠별 초기화</p>
         {rooms.length === 0
-          ? <p style={{ fontSize: 13, color: 'var(--color-cool-gray-400)' }}>아직 참여한 모둠이 없습니다.</p>
+          ? <p style={{ fontSize: 14, color: 'var(--color-cool-gray-400)' }}>아직 참여한 모둠이 없습니다.</p>
           : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {rooms.map(room => {
@@ -607,11 +607,11 @@ function ManageTab({ rooms, sessionCode, onAction }) {
                 return (
                   <div key={room.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 8, background: 'var(--color-cool-gray-100)', border: `1.5px solid var(--color-cool-gray-200)` }}>
                     <div>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-cool-gray-500)' }}>{name}</p>
-                      <p style={{ fontSize: 11, color: 'var(--color-cool-gray-400)', marginTop: 1 }}>{room.id} · {room.currentStep || 1}단계 진행 중</p>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-cool-gray-500)' }}>{name}</p>
+                      <p style={{ fontSize: 12, color: 'var(--color-cool-gray-400)', marginTop: 1 }}>{room.id} · {room.currentStep || 1}단계 진행 중</p>
                     </div>
                     <button onClick={() => handleResetOne(room.id, name)} disabled={isResetting}
-                      style={{ padding: '7px 14px', borderRadius: 100, background: errBg, color: errTx, fontSize: 12, fontWeight: 700, border: `1.5px solid ${errBd}`, cursor: isResetting ? 'not-allowed' : 'pointer', flexShrink: 0, opacity: isResetting ? .6 : 1 }}>
+                      style={{ padding: '7px 14px', borderRadius: 100, background: errBg, color: errTx, fontSize: 13, fontWeight: 700, border: `1.5px solid ${errBd}`, cursor: isResetting ? 'not-allowed' : 'pointer', flexShrink: 0, opacity: isResetting ? .6 : 1 }}>
                       {isResetting ? '초기화 중…' : '초기화'}
                     </button>
                   </div>
@@ -634,13 +634,13 @@ function NotifDropdown({ announcements }) {
   return (
     <div onClick={e => e.stopPropagation()}
       style={{ position: 'absolute', top: 42, right: 0, zIndex: 200, background: 'var(--color-white)', border: `1.5px solid var(--color-cool-gray-200)`, borderRadius: 12, padding: 14, width: 260, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,.10)' }}>
-      <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 10 }}>공지 내역</p>
+      <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 10 }}>공지 내역</p>
       {announcements.length === 0
-        ? <p style={{ fontSize: 13, color: 'var(--color-cool-gray-400)' }}>전송된 공지가 없습니다.</p>
+        ? <p style={{ fontSize: 14, color: 'var(--color-cool-gray-400)' }}>전송된 공지가 없습니다.</p>
         : announcements.slice(0, 10).map(a => (
           <div key={a.id} style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--color-cool-gray-100)', border: `1px solid var(--color-cool-gray-200)`, marginBottom: 6 }}>
-            <p style={{ fontSize: 13, color: 'var(--color-cool-gray-500)', lineHeight: 1.5 }}>{a.text}</p>
-            <p style={{ fontSize: 10, color: 'var(--color-cool-gray-400)', marginTop: 3, fontWeight: 600 }}>{fmtTime(a.sentAt)}</p>
+            <p style={{ fontSize: 14, color: 'var(--color-cool-gray-500)', lineHeight: 1.5 }}>{a.text}</p>
+            <p style={{ fontSize: 11, color: 'var(--color-cool-gray-400)', marginTop: 3, fontWeight: 600 }}>{fmtTime(a.sentAt)}</p>
           </div>
         ))}
     </div>
@@ -679,7 +679,7 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopie
           {isMobile ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div>
-                <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', display: 'block' }}>세션</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.5px', textTransform: 'uppercase', display: 'block' }}>세션</span>
                 <span style={{ fontSize: 19, fontWeight: 800, color: 'var(--color-cool-gray-500)', letterSpacing: 3, lineHeight: 1 }}>{session?.sessionCode || '------'}</span>
               </div>
               {session?.sessionCode && (
@@ -687,22 +687,22 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopie
                   style={{ width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-cool-gray-400)', borderRadius: 6, transition: 'color .15s' }}
                   onMouseEnter={e => e.currentTarget.style.color = 'var(--color-purple-500)'}
                   onMouseLeave={e => e.currentTarget.style.color = 'var(--color-cool-gray-400)'}>
-                  <Copy size={13} />
+                  <Copy size={15} />
                 </button>
               )}
             </div>
           ) : (
-            <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-cool-gray-500)', letterSpacing: '-.2px' }}>{tabTitles[navTab]}</h1>
+            <h1 style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-cool-gray-500)', letterSpacing: '-.2px' }}>{tabTitles[navTab]}</h1>
           )}
           {session && !session.active && (
-            <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF2F2', color: '#DC2626', fontSize: 11, fontWeight: 700, border: '1px solid #FECACA' }}>종료됨</span>
+            <span style={{ padding: '3px 10px', borderRadius: 99, background: '#FEF2F2', color: '#DC2626', fontSize: 12, fontWeight: 700, border: '1px solid #FECACA' }}>종료됨</span>
           )}
         </div>
 
         {/* 오른쪽 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {actionMsg && (
-            <p style={{ fontSize: 12, fontWeight: 700, color: '#10B981', animation: 'fadeIn .3s ease' }}>✓ {actionMsg}</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#10B981', animation: 'fadeIn .3s ease' }}>✓ {actionMsg}</p>
           )}
           <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
             <button onClick={handleNotifClick}
@@ -718,7 +718,7 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopie
             style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-cool-gray-400)', transition: 'background .15s, color .15s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-cool-gray-100)'; e.currentTarget.style.color = 'var(--color-cool-gray-500)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-cool-gray-400)' }}>
-            <LogOut size={17} />
+            <LogOut size={19} />
           </button>
         </div>
       </div>
@@ -728,8 +728,8 @@ function TopBar({ session, navTab, actionMsg, onGoHome, isMobile, rooms, onCopie
         <div style={{ display: 'flex', borderTop: `1.5px solid var(--color-cool-gray-200)` }}>
           {[['접속 모둠', `${onlineCount} / ${rooms.length}`], ['접속 학생', `${totalMembers}명`]].map(([l, v], i) => (
             <div key={l} style={{ flex: 1, padding: '8px 14px', borderRight: i === 0 ? `1.5px solid var(--color-cool-gray-200)` : 'none', background: 'var(--color-white)' }}>
-              <p style={{ fontSize: 10, color: 'var(--color-cool-gray-400)', marginBottom: 2 }}>{l}</p>
-              <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-cool-gray-500)' }}>{v}</p>
+              <p style={{ fontSize: 11, color: 'var(--color-cool-gray-400)', marginBottom: 2 }}>{l}</p>
+              <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-cool-gray-500)' }}>{v}</p>
             </div>
           ))}
         </div>
@@ -750,7 +750,7 @@ function BottomTabBar({ navTab, setNavTab }) {
         <button key={key} onClick={() => setNavTab(key)} style={{
           flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
           border: 'none', background: navTab === key ? 'var(--color-cool-gray-100)' : 'var(--color-white)',
-          cursor: 'pointer', fontSize: 10, fontWeight: navTab === key ? 800 : 500,
+          cursor: 'pointer', fontSize: 11, fontWeight: navTab === key ? 800 : 500,
           color: navTab === key ? 'var(--color-purple-500)' : 'var(--color-cool-gray-400)',
           borderTop: navTab === key ? `2px solid var(--color-purple-500)` : '2px solid transparent',
           transition: 'all .15s', marginTop: -2,
@@ -839,7 +839,7 @@ export default function TeacherPage() {
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: 'var(--color-cool-gray-100)' }}>
-      <p style={{ fontSize: 15, color: 'var(--color-cool-gray-400)' }}>로딩 중…</p>
+      <p style={{ fontSize: 16, color: 'var(--color-cool-gray-400)' }}>로딩 중…</p>
     </div>
   )
 
