@@ -49,11 +49,21 @@ function SurveyModal({ survey, userName, surveyCode, onClose }) {
   )
 }
 
-export default function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, survey, surveyResponses, activeStep = 2 }) {
+export default function Step2({ user, code, selectedPost, dataTable, onChange, surveyActive, survey, surveyResponses, activeStep = 2, syncTab, onTabChange }) {
   const device   = useDevice()
   const isMobile = device === 'mobile'
 
-  const [tab,         setTab]         = useState('create')
+  const [tab, setTab] = useState('create')
+
+  // 화면 공유 팔로워: 리더의 탭 변경 수신
+  useEffect(() => {
+    if (syncTab && syncTab !== tab) setTab(syncTab)
+  }, [syncTab])
+
+  function handleSetTab(id) {
+    setTab(id)
+    if (onTabChange) onTabChange(id)   // 리더일 때만 Firestore 기록
+  }
   const [lookupCode,  setLookupCode]  = useState('')
   const [surveyModal, setSurveyModal] = useState(null)
   const prevPostIdRef = useRef(null)
@@ -89,7 +99,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
   async function doCreateSurvey() {
     if (!selectedPost) return alert('탐구 문제를 먼저 선정해 주세요.')
     await createSurvey(code, { groupName: user.groupName, topic: selectedPost.topic, question: selectedPost.question, items: selectedPost.items, roomCode: code })
-    setTab('results')
+    handleSetTab('results')
   }
 
   async function doLookupSurvey() {
@@ -131,7 +141,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
       {/* 탭바 */}
       <div style={{display:'flex',gap:0,overflowX:'auto',flexShrink:0,background:'#fff'}}>
         {TABS.map(t=>(
-          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+          <button key={t.id} onClick={()=>handleSetTab(t.id)} style={{
             padding: isMobile ? '10px 14px' : '10px 16px',
             fontSize: isMobile ? 13 : 15,
             fontWeight:tab===t.id?700:400,
@@ -191,7 +201,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                   {surveyResponses.length>0&&(
                     <div style={{marginTop:10,fontSize: isMobile ? 12 : 14,fontWeight:700,color:'#5B41EB'}}>
                       {surveyResponses.length}명 참여 완료 →{' '}
-                      <button onClick={()=>setTab('results')} style={{color:'#5B41EB',textDecoration:'underline',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontSize: isMobile ? 12 : 14}}>응답 확인하기</button>
+                      <button onClick={()=>handleSetTab('results')} style={{color:'#5B41EB',textDecoration:'underline',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontSize: isMobile ? 12 : 14}}>응답 확인하기</button>
                     </div>
                   )}
                 </Sec>

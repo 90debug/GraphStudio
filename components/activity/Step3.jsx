@@ -18,14 +18,21 @@ export default function Step3({
   strokes, currentDrawer, drawMode: _drawModeProp, onDrawMode, livePreview,
   selectedPost, step3SnapshotImg, onStep3SnapshotImg, activeStep = 3,
   readOnly = false,
+  syncDrawMode, onDrawModeChange,
 }) {
   const device   = useDevice()
   const isMobile = device === 'mobile'
   // drawMode를 로컬 state로 관리 → Firestore 동기화 없이 개인별 독립 탭
   const [drawMode, setLocalDrawMode] = useState('draw')
+
+  // 화면 공유 팔로워: 리더의 탭 변경 수신
+  useEffect(() => {
+    if (syncDrawMode && syncDrawMode !== drawMode) setLocalDrawMode(syncDrawMode)
+  }, [syncDrawMode])
+
   function handleTabClick(mode) {
     setLocalDrawMode(mode)
-    // onDrawMode는 외부에서 noop으로 전달되어도 로컬은 정상 동작
+    if (onDrawModeChange) onDrawModeChange(mode)  // 리더일 때만 Firestore 기록
   }
   const [isFullscreen, setIsFullscreen] = useState(false)
   // 제목 입력: 로컬 state에서 관리 → 추가/엔터 확정 시 onChartConfig 호출

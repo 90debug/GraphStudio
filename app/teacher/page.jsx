@@ -147,7 +147,7 @@ function MemoViewModal({ room, memos, onClose }) {
                   {fmtMemoTime(m.createdAt, m.clientTs)}
                 </span>
               </div>
-              <p style={{ fontSize:14, color:'var(--color-cool-gray-500)', lineHeight:1.65 }}>{m.text}</p>
+              <p style={{ fontSize:14, color:'var(--color-cool-gray-500)', lineHeight:1.65, whiteSpace:'pre-line' }}>{m.text}</p>
             </div>
           ))}
         </div>
