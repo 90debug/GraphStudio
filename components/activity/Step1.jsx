@@ -16,6 +16,8 @@ function nameColor(name) {
 function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDeleteComment, onSelectRequest, onDelete }) {
   const [showCmt, setShowCmt] = useState(false)
   const [cmtText, setCmtText] = useState('')
+  const device   = useDevice()
+  const isMobile = device === 'mobile'
   const isMyPost   = post.name === myName
   const isLiked    = post.likedBy?.includes(myName)
   const isSelected = selectedPost?.postId === post.id || !!post.selected
@@ -83,8 +85,8 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
             {(post.name?.[0] ?? '?')}
           </div>
           <div>
-            <p className="text-[11px] font-bold text-slate-800 leading-none">{post.name} {isMyPost && <span className="text-gsp-500 text-[9px] font-black ml-0.5">MY</span>}</p>
-            <p className="text-[9px] text-slate-400 mt-1 font-medium">{post.time}</p>
+            <p style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, color: '#1e293b', lineHeight: 1 }}>{post.name} {isMyPost && <span style={{ fontSize: isMobile ? 9 : 10, fontWeight: 900, color: '#5B41EB', marginLeft: 2 }}>MY</span>}</p>
+            <p style={{ fontSize: isMobile ? 9 : 11, color: '#94a3b8', marginTop: 4, fontWeight: 500 }}>{post.time}</p>
           </div>
         </div>
 
@@ -94,7 +96,7 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
 
         {post.question && (
           <div className="bg-slate-50/80 rounded-xl p-3 mb-4 border border-slate-100">
-            <p className="text-[12px] text-slate-600 leading-relaxed">
+            <p style={{ fontSize: isMobile ? 12 : 14, color: '#475569', lineHeight: 1.6 }}>
               <span className="text-gsp-500 font-black mr-1.5">Q.</span>
               {post.question}
             </p>
@@ -105,7 +107,7 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
         {post.items?.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {post.items.map((item, i) => (
-              <span key={i} className="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-bold border border-slate-200/50">
+              <span key={i} style={{ padding: '2px 8px', borderRadius: 4, background: '#f1f5f9', color: '#64748b', fontSize: isMobile ? 10 : 12, fontWeight: 700, border: '1px solid rgba(226,232,240,0.5)' }}>
                 {item}
               </span>
             ))}
@@ -118,15 +120,15 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
         <div className="flex gap-4">
           <button onClick={() => onLike(post.id, !isLiked)} className="flex items-center gap-1.5 group">
             <Heart className={`w-4 h-4 transition-all ${isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-300 group-hover:text-slate-400'}`} />
-            <span className="text-[11px] font-extrabold text-slate-400">{post.likes || 0}</span>
+            <span style={{ fontSize: isMobile ? 11 : 13, fontWeight: 800, color: '#94a3b8' }}>{post.likes || 0}</span>
           </button>
           <button onClick={() => setShowCmt(s => !s)} className="flex items-center gap-1.5 group">
             <MessageCircle className={`w-4 h-4 transition-colors ${showCmt ? 'text-gsp-500' : 'text-slate-300 group-hover:text-slate-400'}`} />
-            <span className="text-[11px] font-extrabold text-slate-400">{post.comments?.length || 0}</span>
+            <span style={{ fontSize: isMobile ? 11 : 13, fontWeight: 800, color: '#94a3b8' }}>{post.comments?.length || 0}</span>
           </button>
         </div>
         {onSelectRequest && !isSelected && (
-          <button onClick={() => onSelectRequest(post)} style={{ fontSize:11, fontWeight:900, color:'#5B41EB', padding:'6px 12px', borderRadius:999, background:'#fff', border:'1px solid #5B41EB', cursor:'pointer', fontFamily:'inherit', transition:'background .15s' }} onMouseEnter={e=>e.currentTarget.style.background='#EEEEF3'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
+          <button onClick={() => onSelectRequest(post)} style={{ fontSize: isMobile ? 11 : 13, fontWeight:900, color:'#5B41EB', padding:'6px 12px', borderRadius:999, background:'#fff', border:'1px solid #5B41EB', cursor:'pointer', fontFamily:'inherit', transition:'background .15s' }} onMouseEnter={e=>e.currentTarget.style.background='#EEEEF3'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
             주제 선정
           </button>
         )}
@@ -150,7 +152,7 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
                   const author = isObj ? cmt.author : null
                   const isMyComment = isObj && cmt.author === myName
                   return (
-                    <div key={i} className="bg-white px-3 py-2 rounded-xl text-[11px] text-slate-600 border border-slate-100 flex items-start justify-between gap-1">
+                    <div key={i} style={{ background:'#fff', padding:'8px 12px', borderRadius:12, fontSize: isMobile ? 11 : 13, color:'#475569', border:'1px solid #f1f5f9', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:4 }}>
                       <span>
                         {author && <span className="font-black text-gsp-500 mr-1">{author}</span>}
                         {text}
@@ -169,11 +171,11 @@ function PadletStep1Card({ post, myName, selectedPost, onLike, onComment, onDele
                     onChange={e => setCmtText(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !e.nativeEvent.isComposing && submitCmt()}
                     placeholder="의견을 남겨 주세요."
-                    style={{flex:1, padding:'8px 12px', borderRadius:999, border:'1px solid #E2E3E5', fontSize:11, outline:'none', fontFamily:'inherit', minWidth:0, background:'#fff'}}
+                    style={{flex:1, padding:'8px 12px', borderRadius:999, border:'1px solid #E2E3E5', fontSize: isMobile ? 11 : 13, outline:'none', fontFamily:'inherit', minWidth:0, background:'#fff'}}
                   />
                   <button
                     onClick={submitCmt}
-                    style={{padding:'8px 14px', borderRadius:999, background:'#5B41EB', color:'#fff', border:'none', fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', flexShrink:0, minHeight:36}}
+                    style={{padding:'8px 14px', borderRadius:999, background:'#5B41EB', color:'#fff', border:'none', fontSize: isMobile ? 11 : 13, fontWeight:700, cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', flexShrink:0, minHeight:36}}
                   >등록</button>
                 </div>
               </div>
@@ -231,7 +233,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
           <img src="/icon_01.png" alt="탐구 문제 정하기" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div>
             <h1 className="text-sm font-black text-slate-800 leading-none tracking-tight">1단계</h1>
-            <p className="text-[12px] text-slate-400 font-bold mt-1">탐구 문제 정하기</p>
+            <p style={{ fontSize: isMobile ? 12 : 14, color:'#8A949E', fontWeight:700, marginTop:4 }}>탐구 문제 정하기</p>
           </div>
         </div>
         <div className="flex gap-1.5">
@@ -334,7 +336,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
 
               {/* 주제 */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">탐구 문제</label>
+                <label style={{ fontSize: isMobile ? 10 : 12, fontWeight:900, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.5px' }}>탐구 문제</label>
                 <input
                   value={form.topic}
                   onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
@@ -345,7 +347,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
 
               {/* 질문 */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">조사 질문</label>
+                <label style={{ fontSize: isMobile ? 10 : 12, fontWeight:900, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.5px' }}>조사 질문</label>
                 <input
                   value={form.question}
                   onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
@@ -356,9 +358,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
 
               {/* 조사 항목 */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                  조사 항목 <span className="normal-case font-medium text-slate-300">({form.items.length}/8)</span>
-                </label>
+                <label style={{ fontSize: isMobile ? 10 : 12, fontWeight:900, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'.5px' }}>조사 항목 <span style={{ textTransform:'none', fontWeight:400, color:'#cbd5e1' }}>({form.items.length}/8)</span></label>
                 <div style={{display:'flex',gap:8,alignItems:'center'}}>
                   <input
                     value={itemInput}
@@ -375,7 +375,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
                 {form.items.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {form.items.map((item, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-gsp-50 text-gsp-700 border border-gsp-100 rounded-full text-[11px] font-bold">
+                      <span key={i} style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'4px 10px', background:'#EDE9FE', color:'#5B21B6', border:'1px solid #DDD6FE', borderRadius:999, fontSize: isMobile ? 11 : 13, fontWeight:700 }}>
                         {item}
                         <button onClick={() => removeItem(i)} className="text-gsp-400 hover:text-gsp-700 transition-colors">
                           <X size={10} strokeWidth={3} />
@@ -397,7 +397,7 @@ export default function Step1({ user, code, posts, selectedPost, onToast, onLike
               >
                 {sharing ? '올리는 중...' : '보드에 올리기'}
               </button>
-              <p className="text-center text-[11px] text-slate-400 font-medium">올리면 모든 모둠원에게 바로 보여요.</p>
+              <p style={{ textAlign:'center', fontSize: isMobile ? 11 : 13, color:'#94a3b8', fontWeight:500 }}>올리면 모든 모둠원에게 바로 보여요.</p>
             </motion.div>
           </motion.div>
         )}

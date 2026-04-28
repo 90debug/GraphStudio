@@ -65,7 +65,7 @@ export default function Step3({
         width:30, height:30, borderRadius:8,
         background:'rgba(255,255,255,0.95)', border:'1px solid #e2e3e5',
         display:'flex', alignItems:'center', justifyContent:'center',
-        cursor:'pointer', fontSize:13, color:'#5B41EB',
+        cursor:'pointer', fontSize: isMobile ? 13 : 15, color:'#5B41EB',
         fontFamily:'inherit', boxShadow:'0 2px 6px rgba(0,0,0,0.08)',
         transition:'all .15s', fontWeight:700, lineHeight:1,
       }}
@@ -80,7 +80,7 @@ export default function Step3({
       {[['draw','직접 그리기','#5B41EB'],['auto','자동 그래프','#5B41EB']].map(([mode,label,clr])=>(
         <button key={mode} type="button" onClick={()=>handleTabClick(mode)} style={{
           flex:1, padding:isMobile?'10px 8px':'9px 20px', minHeight:44, borderRadius:999,
-          fontSize:isMobile?13:14, fontWeight:700, cursor:'pointer', border:'1px solid',
+          fontSize:isMobile?13:15, fontWeight:700, cursor:'pointer', border:'1px solid',
           fontFamily:'inherit', transition:'all .15s',
           background:drawMode===mode?clr:'#ffffff',
           color:drawMode===mode?'#fff':'#8C7B6E',
@@ -99,7 +99,7 @@ export default function Step3({
           <img src="/icon_03.png" alt="그래프로 나타내기" style={{width:36,height:36,objectFit:'contain',flexShrink:0}}/>
           <div>
             <h1 className="text-sm font-black text-slate-800 leading-none tracking-tight">3단계</h1>
-            <p className="text-[12px] text-slate-400 font-bold mt-1">그래프로 나타내기</p>
+            <p style={{ fontSize: isMobile ? 12 : 14, color:'#8A949E', fontWeight:700, marginTop:4 }}>그래프로 나타내기</p>
           </div>
         </div>
         <div className="flex gap-1.5">
@@ -124,13 +124,13 @@ export default function Step3({
             display:'flex', alignItems:'center', justifyContent:'flex-end',
             borderBottom:'1px solid #eee', background:'#fafafa', gap:8,
           }}>
-            <span style={{flex:1,fontSize:11,color:'#94A3B8'}}>ESC 또는 닫기 버튼으로 종료</span>
+            <span style={{flex:1,fontSize: isMobile ? 11 : 13,color:'#94A3B8'}}>ESC 또는 닫기 버튼으로 종료</span>
             <button
               onClick={exitFullscreen}
               style={{
                 padding:'5px 16px', borderRadius:999,
                 background:'#5B41EB', color:'#fff',
-                border:'none', fontSize:12, fontWeight:700,
+                border:'none', fontSize: isMobile ? 12 : 14, fontWeight:700,
                 cursor:'pointer', fontFamily:'inherit',
                 whiteSpace:'nowrap', flexShrink:0,
               }}
@@ -162,10 +162,10 @@ export default function Step3({
             borderRight:'1px solid #E2E8F2', background:'#fff',
             overflowY:'auto', WebkitOverflowScrolling:'touch', padding:14,
           }}>
-            <div style={{fontWeight:700,fontSize:13,color:'#5B41EB',marginBottom:9}}>
+            <div style={{fontWeight:700,fontSize: isMobile ? 13 : 15,color:'#5B41EB',marginBottom:9}}>
               {selectedPost?.question||'항목별 조사 결과'}
             </div>
-            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize: isMobile ? 13 : 15}}>
               <thead>
                 <tr style={{borderBottom:'1px solid #e2e3e5'}}>
                   {['항목','수','%'].map(h=>(
@@ -254,10 +254,10 @@ export default function Step3({
           {hasData && (
             <div style={{padding:isMobile?'10px 12px 0':'12px 14px 0'}}>
               <div style={{background:'#EEEEF3',border:'1px solid #e2e3e5',borderRadius:12,padding:'12px 16px'}}>
-                <div style={{fontWeight:700,fontSize:13,color:'#5B41EB',marginBottom:9}}>
+                <div style={{fontWeight:700,fontSize: isMobile ? 13 : 15,color:'#5B41EB',marginBottom:9}}>
                   {selectedPost?.question||'항목별 조사 결과'}
                 </div>
-                <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize: isMobile ? 13 : 15}}>
                   <thead>
                     <tr style={{borderBottom:'1px solid #e2e3e5'}}>
                       {['항목','수','%'].map(h=>(

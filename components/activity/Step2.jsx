@@ -118,7 +118,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
           <img src="/icon_02.png" alt="자료 수집하기" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div>
             <h1 className="text-sm font-black text-slate-800 leading-none tracking-tight">2단계</h1>
-            <p className="text-[12px] text-slate-400 font-bold mt-1">자료 수집하기</p>
+            <p style={{ fontSize: isMobile ? 12 : 14, color:'#8A949E', fontWeight:700, marginTop:4 }}>자료 수집하기</p>
           </div>
         </div>
         <div className="flex gap-1.5">
@@ -133,7 +133,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
         {TABS.map(t=>(
           <button key={t.id} onClick={()=>setTab(t.id)} style={{
             padding: isMobile ? '10px 14px' : '10px 16px',
-            fontSize: isMobile ? 13 : 14,
+            fontSize: isMobile ? 13 : 15,
             fontWeight:tab===t.id?700:400,
             color:tab===t.id?'#1E293B':'#94A3B8',
             borderTop:'none', borderLeft:'none', borderRight:'none',
@@ -153,12 +153,12 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
             <div style={{flex:1,display:'flex',flexDirection:'column'}}>
               {selectedPost?(
                 <Sec style={{background:'#fff',border:'1px solid #5B41EB',marginBottom:0,flex:1}}>
-                  <div style={{fontWeight:700,fontSize:13,color:'#5B41EB',marginBottom:8}}>선정된 탐구 문제</div>
+                  <div style={{fontWeight:700,fontSize: isMobile ? 13 : 15,color:'#5B41EB',marginBottom:8}}>선정된 탐구 문제</div>
                   <div style={{fontSize:15,fontWeight:700,color:'#1E293B'}}>{selectedPost.topic}</div>
-                  <div style={{fontSize:13,color:'#64748B',marginTop:5,marginBottom:11,lineHeight:1.6}}>{selectedPost.question}</div>
+                  <div style={{fontSize: isMobile ? 13 : 15,color:'#64748B',marginTop:5,marginBottom:11,lineHeight:1.6}}>{selectedPost.question}</div>
                   <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
                     {selectedPost.items?.map((item,i)=>(
-                      <span key={i} style={{padding:'2px 10px',borderRadius:6,background:'#F1F5F9',color:'#64748B',fontSize:12,fontWeight:700,border:'1px solid rgba(203,213,225,0.5)'}}>
+                      <span key={i} style={{padding:'2px 10px',borderRadius:6,background:'#F1F5F9',color:'#64748B',fontSize: isMobile ? 12 : 14,fontWeight:700,border:'1px solid rgba(203,213,225,0.5)'}}>
                         {item}
                       </span>
                     ))}
@@ -174,7 +174,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
               {!surveyActive?(
                 <Sec style={{marginBottom:0, border:'1px solid #F1F5F9', flex:1}}>
                   <div style={{fontWeight:700,fontSize:15,marginBottom:10,color:'#1E293B'}}>설문조사 만들기</div>
-                  <div style={{fontSize:14,color:'#64748B',marginBottom:14,lineHeight:1.75}}>
+                  <div style={{fontSize: isMobile ? 14 : 15,color:'#64748B',marginBottom:14,lineHeight:1.75}}>
                     선정된 탐구 문제로 설문조사를 만들어요. 모둠 코드 <b style={{color:'#5B41EB',letterSpacing:1}}>{code}</b>를 친구들에게 알려주세요!
                   </div>
                   <Btn onClick={doCreateSurvey} color="orange" disabled={!selectedPost} full={isMobile} pill sm>만들기</Btn>
@@ -184,14 +184,14 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                   <div style={{display:'flex',alignItems:'center',gap:12}}>
                     <div style={{fontSize:28}}>📊</div>
                     <div>
-                      <div style={{fontSize:14,color:'#5B41EB',fontWeight:700}}>설문조사 진행 중!</div>
-                      <div style={{fontSize:13,marginTop:3}}>코드 <b style={{color:'#5B41EB',fontSize:16,letterSpacing:2}}>{code}</b>를 친구들에게 알려주세요!</div>
+                      <div style={{fontSize: isMobile ? 14 : 15,color:'#5B41EB',fontWeight:700}}>설문조사 진행 중!</div>
+                      <div style={{fontSize: isMobile ? 13 : 15,marginTop:3}}>코드 <b style={{color:'#5B41EB',fontSize:16,letterSpacing:2}}>{code}</b>를 친구들에게 알려주세요!</div>
                     </div>
                   </div>
                   {surveyResponses.length>0&&(
-                    <div style={{marginTop:10,fontSize:12,fontWeight:700,color:'#5B41EB'}}>
+                    <div style={{marginTop:10,fontSize: isMobile ? 12 : 14,fontWeight:700,color:'#5B41EB'}}>
                       {surveyResponses.length}명 참여 완료 →{' '}
-                      <button onClick={()=>setTab('results')} style={{color:'#5B41EB',textDecoration:'underline',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:12}}>응답 확인하기</button>
+                      <button onClick={()=>setTab('results')} style={{color:'#5B41EB',textDecoration:'underline',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontSize: isMobile ? 12 : 14}}>응답 확인하기</button>
                     </div>
                   )}
                 </Sec>
@@ -223,21 +223,21 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                 <div style={{display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:12, alignItems: isMobile ? 'stretch' : 'flex-start'}}>
                   {/* 좌측: 항목별 조사 결과 (입력) */}
                   <Sec style={{flex:1, marginBottom:0, width: isMobile ? '100%' : undefined, boxSizing:'border-box'}}>
-                    <div style={{fontWeight:700,fontSize:15,marginBottom:12}}>항목별 조사 결과</div>
+                    <div style={{fontWeight:700,fontSize: isMobile ? 15 : 16,marginBottom:12}}>항목별 조사 결과</div>
                     <div style={{display:'grid',gridTemplateColumns:'repeat(2, 1fr)',gap:8}}>
                       {items.map((item,i)=>{
                         const surveyCount = surveyCountsRef.current[item] || 0
                         return (
                           <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6,padding:'10px 12px',borderRadius:12,background:'#EEEEF3',border:'1px solid #e2e3e5'}}>
                             <div style={{width:28,height:28,borderRadius:'50%',flexShrink:0,background:'#5B41EB',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800}}>{i+1}</div>
-                            <span style={{fontSize:13,fontWeight:700,color:'#334155',textAlign:'center',lineHeight:1.3}}>{item}</span>
+                            <span style={{fontSize: isMobile ? 13 : 15,fontWeight:700,color:'#334155',textAlign:'center',lineHeight:1.3}}>{item}</span>
                             <div style={{display:'flex',alignItems:'center',gap:4}}>
                               <input type="number" min="0" max="999" value={dataTable[i]?.value||''} onChange={e=>updateValue(i,e.target.value)} placeholder="0"
                                 style={{width:60,padding:'7px 6px',borderRadius:8,border:'1px solid #F1F5F9',fontSize:18,fontWeight:800,textAlign:'center',fontFamily:'inherit',outline:'none',background:'#fff'}}/>
-                              <span style={{fontSize:12,color:'#8C7B6E'}}>명</span>
+                              <span style={{fontSize: isMobile ? 12 : 14,color:'#8C7B6E'}}>명</span>
                             </div>
                             {surveyCount > 0 && (
-                              <div style={{fontSize:10,color:'#9395ff',fontWeight:700}}>실시간 {surveyCount}명</div>
+                              <div style={{fontSize: isMobile ? 10 : 12,color:'#9395ff',fontWeight:700}}>실시간 {surveyCount}명</div>
                             )}
                           </div>
                         )
@@ -248,9 +248,9 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                   {/* 우측: 집계 표 */}
                   {total > 0 ? (
                     <Sec style={{flex:1, marginBottom:0}}>
-                      <div style={{fontWeight:700,fontSize:15,marginBottom:10}}>집계 표</div>
+                      <div style={{fontWeight:700,fontSize: isMobile ? 15 : 16,marginBottom:10}}>집계 표</div>
                       <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
-                      <table style={{width:'100%',minWidth:200,borderCollapse:'collapse',fontSize:12}}>
+                      <table style={{width:'100%',minWidth:200,borderCollapse:'collapse',fontSize: isMobile ? 12 : 14}}>
                         <thead><tr style={{borderBottom:'1px solid #e2e3e5'}}>{['항목','수','%'].map(h=><th key={h} style={{padding:'5px 6px',textAlign:h==='항목'?'left':'right',color:'#5B41EB',fontWeight:700}}>{h}</th>)}</tr></thead>
                         <tbody>
                           {items.map((item,i)=>{const v=Number(dataTable[i]?.value)||0;const pct=total?Math.round(v/total*100):0;return(
@@ -267,7 +267,7 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                     </Sec>
                   ) : (
                     <Sec style={{flex:1, marginBottom:0}}>
-                      <div style={{fontSize:13,color:'#94A3B8',textAlign:'center',padding:'20px 0'}}>항목별 인원수를 입력하면 집계 표가 나타나요.</div>
+                      <div style={{fontSize: isMobile ? 13 : 15,color:'#94A3B8',textAlign:'center',padding:'20px 0'}}>항목별 인원수를 입력하면 집계 표가 나타나요.</div>
                     </Sec>
                   )}
                 </div>
@@ -279,8 +279,8 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
         {/* 설문조사 참여하기 탭 */}
         {tab==='join'&&(
           <Sec>
-            <div style={{fontWeight:700,fontSize:15,marginBottom:9,color:'#1E293B'}}>설문조사 참여하기</div>
-            <div style={{fontSize:14,color:'#64748B',marginBottom:14,lineHeight:1.75}}>
+            <div style={{fontWeight:700,fontSize: isMobile ? 15 : 16,marginBottom:9,color:'#1E293B'}}>설문조사 참여하기</div>
+            <div style={{fontSize: isMobile ? 14 : 15,color:'#64748B',marginBottom:14,lineHeight:1.75}}>
               다른 모둠에서 공유한 <b style={{color:'#1E293B'}}>6자리 코드</b>를 입력하면 해당 설문에 참여할 수 있어요.
             </div>
             <input value={lookupCode} onChange={e=>setLookupCode(e.target.value.toUpperCase())} onKeyDown={e=>e.key==='Enter'&&doLookupSurvey()}
