@@ -311,7 +311,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-cool-gray-100)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <img src="/icon_09.png" alt="관찰 기록" style={{ width: 29, height: 29, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.4 }} />
+                      <img src="/icon_09.png" alt="관찰 기록" style={{ width: 29, height: 29, objectFit: 'contain' }} />
                     </button>
                     {memoCount > 0 && (
                       <div style={{
@@ -411,7 +411,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                           onMouseEnter={e => e.currentTarget.style.background = 'var(--color-cool-gray-100)'}
                           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                         >
-                          <img src="/icon_09.png" alt="관찰 기록" style={{ width: 30, height: 30, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.35 }} />
+                          <img src="/icon_09.png" alt="관찰 기록" style={{ width: 30, height: 30, objectFit: 'contain' }} />
                         </button>
                         {memoCount > 0 && (
                           <div style={{
