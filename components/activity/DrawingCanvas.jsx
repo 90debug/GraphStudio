@@ -23,6 +23,7 @@ export default function DrawingCanvas({
   const canvasRef  = useRef(null)
   const overlayRef = useRef(null)
   const fsWrapRef  = useRef(null)
+  const strokeCanvasRef = useRef(null)   // 오프스크린: 획 전용 (지우개 destination-out 격리)
   const drawing    = useRef(false)
   const startPt    = useRef(null)
   const curStroke  = useRef([])
@@ -48,6 +49,13 @@ export default function DrawingCanvas({
   function setColor(v) { colorRef.current = v; setColorUI(v) }
   function setWidth(v) { widthRef.current = v; setWidthUI(v) }
   const isEraser = tool === 'eraser'
+
+  // 오프스크린 캔버스 초기화 (마운트 시 1회)
+  useEffect(() => {
+    const sc = document.createElement('canvas')
+    sc.width = 800; sc.height = 480
+    strokeCanvasRef.current = sc
+  }, [])
 
   // ── 전체화면 크기 계산 (ResizeObserver) ──────────────────────────────
   useLayoutEffect(() => {
@@ -140,15 +148,36 @@ export default function DrawingCanvas({
   }
 
   function redrawStrokes(stks) {
-    const canvas=canvasRef.current; if(!canvas) return
-    const ctx=canvas.getContext('2d')
-    ctx.clearRect(0,0,canvas.width,canvas.height)
-    ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,canvas.width,canvas.height)
-    drawGrid(ctx,canvas.width,canvas.height)
-    if (snapshotImg) {
-      const img=new Image(); img.src=snapshotImg
-      img.onload=()=>{ctx.globalAlpha=.5;ctx.drawImage(img,0,0,canvas.width,canvas.height);ctx.globalAlpha=1;drawStrokes(ctx,stks)}
-    } else { drawStrokes(ctx,stks) }
+    const canvas = canvasRef.current; if (!canvas) return
+    const ctx = canvas.getContext('2d')
+
+    // 1. 오프스크린 캔버스에 획만 그리기 (지우개 destination-out 포함)
+    const sc = strokeCanvasRef.current
+    if (sc) {
+      const sctx = sc.getContext('2d')
+      sctx.clearRect(0, 0, 800, 480)
+      if (snapshotImg) {
+        const img = new Image(); img.src = snapshotImg
+        img.onload = () => {
+          sctx.globalAlpha = .5; sctx.drawImage(img, 0, 0, 800, 480); sctx.globalAlpha = 1
+          drawStrokes(sctx, stks)
+          _compositeToMain(ctx, sc, canvas)
+        }
+        return
+      } else {
+        drawStrokes(sctx, stks)
+      }
+    }
+
+    // 2. 메인 캔버스: 흰 배경 + 모눈종이 + 오프스크린 합성
+    _compositeToMain(ctx, sc, canvas)
+  }
+
+  function _compositeToMain(ctx, sc, canvas) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height)
+    drawGrid(ctx, canvas.width, canvas.height)
+    if (sc) ctx.drawImage(sc, 0, 0, canvas.width, canvas.height)
   }
 
   function clearOverlay() {
@@ -251,13 +280,44 @@ export default function DrawingCanvas({
     }
     const er=t==='eraser'
     curStroke.current.push(p)
+
+    if (er) {
+      // 지우개: 오프스크린에서 destination-out → 메인 캔버스 합성
+      const sc = strokeCanvasRef.current
+      if (sc && curStroke.current.length >= 2) {
+        const sctx = sc.getContext('2d')
+        const pts = curStroke.current
+        sctx.beginPath()
+        sctx.strokeStyle = 'rgba(0,0,0,1)'
+        sctx.lineWidth = w * 3
+        sctx.lineCap = 'round'; sctx.lineJoin = 'round'
+        sctx.globalCompositeOperation = 'destination-out'
+        sctx.moveTo(pts[pts.length-2].x, pts[pts.length-2].y)
+        sctx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y)
+        sctx.stroke()
+        sctx.globalCompositeOperation = 'source-over'
+        const canvas = canvasRef.current
+        _compositeToMain(canvas.getContext('2d'), sc, canvas)
+      }
+      return
+    }
+
     const ctx=canvasRef.current.getContext('2d'),pts=curStroke.current
     if(pts.length<2) return
-    ctx.beginPath();ctx.strokeStyle=er?'#fff':cl;ctx.lineWidth=er?w*3:w
+    ctx.beginPath();ctx.strokeStyle=cl;ctx.lineWidth=w
     ctx.lineCap='round';ctx.lineJoin='round'
-    ctx.globalCompositeOperation=er?'destination-out':'source-over'
-    ctx.moveTo(pts[pts.length-2].x,pts[pts.length-2].y);ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);ctx.stroke()
     ctx.globalCompositeOperation='source-over'
+    ctx.moveTo(pts[pts.length-2].x,pts[pts.length-2].y);ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);ctx.stroke()
+
+    // 일반 획도 오프스크린에 동기화 (redrawStrokes 시 일관성)
+    const sc = strokeCanvasRef.current
+    if (sc) {
+      const sctx = sc.getContext('2d')
+      sctx.beginPath();sctx.strokeStyle=cl;sctx.lineWidth=w
+      sctx.lineCap='round';sctx.lineJoin='round'
+      sctx.globalCompositeOperation='source-over'
+      sctx.moveTo(pts[pts.length-2].x,pts[pts.length-2].y);sctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);sctx.stroke()
+    }
   }
 
   async function processEnd(e) {
