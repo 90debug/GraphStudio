@@ -158,7 +158,8 @@ function MemoViewModal({ room, memos, onClose }) {
           background:'var(--color-cool-gray-100)', flexShrink:0,
         }}>
           <p style={{ fontSize:11, color:'var(--color-cool-gray-400)', textAlign:'center' }}>
-            기록 추가는 모니터링 화면(👁) 진입 후 우측 하단 버튼으로 할 수 있어요.
+            기록 추가는 모니터링 화면(👁) 진입 후<br/>
+            우측 하단 버튼으로 할 수 있어요.
           </p>
         </div>
       </div>
@@ -295,22 +296,22 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                     onMouseEnter={e => { if (isOnline) e.currentTarget.style.background = 'var(--color-cool-gray-100)' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                   >
-                    <img src="/icon_08.png" alt="모니터링" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                    <img src="/icon_08.png" alt="모니터링" style={{ width: 18, height: 18, objectFit: 'contain' }} />
                   </button>
-                  {/* 메모 아이콘 — 항상 같은 위치 */}
+                  {/* 메모 아이콘 — 항상 같은 위치, 배경색 없음 */}
                   <div style={{ position: 'relative' }}>
                     <button
                       onClick={() => setMemoTarget(room)}
                       title="관찰 기록 보기"
                       style={{
                         width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: memoCount > 0 ? 'var(--color-purple-100,#EDE9FE)' : 'transparent',
+                        background: 'transparent',
                         border: 'none', borderRadius: 8, cursor: 'pointer', transition: 'background .15s',
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-purple-100,#EDE9FE)'}
-                      onMouseLeave={e => e.currentTarget.style.background = memoCount > 0 ? 'var(--color-purple-100,#EDE9FE)' : 'transparent'}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-cool-gray-100)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <img src="/icon_09.png" alt="관찰 기록" style={{ width: 14, height: 14, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.4 }} />
+                      <img src="/icon_09.png" alt="관찰 기록" style={{ width: 18, height: 18, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.4 }} />
                     </button>
                     {memoCount > 0 && (
                       <div style={{
@@ -395,22 +396,22 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                         onMouseEnter={e => { if (isOnline) e.currentTarget.style.background = 'var(--color-cool-gray-100)' }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                       >
-                        <img src="/icon_08.png" alt="모니터링" style={{ width: 15, height: 15, objectFit: 'contain' }} />
+                        <img src="/icon_08.png" alt="모니터링" style={{ width: 19, height: 19, objectFit: 'contain' }} />
                       </button>
-                      {/* 메모 아이콘 — 항상 존재 */}
+                      {/* 메모 아이콘 — 항상 존재, 배경색 없음 */}
                       <div style={{ position: 'relative' }}>
                         <button
                           onClick={() => setMemoTarget(room)}
                           title="관찰 기록 보기"
                           style={{
                             width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            background: memoCount > 0 ? 'var(--color-purple-100,#EDE9FE)' : 'transparent',
+                            background: 'transparent',
                             border: 'none', borderRadius: 8, cursor: 'pointer', transition: 'background .15s',
                           }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'var(--color-purple-100,#EDE9FE)'}
-                          onMouseLeave={e => e.currentTarget.style.background = memoCount > 0 ? 'var(--color-purple-100,#EDE9FE)' : 'transparent'}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--color-cool-gray-100)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                         >
-                          <img src="/icon_09.png" alt="관찰 기록" style={{ width: 15, height: 15, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.35 }} />
+                          <img src="/icon_09.png" alt="관찰 기록" style={{ width: 19, height: 19, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.35 }} />
                         </button>
                         {memoCount > 0 && (
                           <div style={{
