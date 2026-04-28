@@ -7,6 +7,7 @@ import {
   subscribeSession, subscribeSessionRooms, subscribePresence,
   subscribeStep4Posts, resetRoomData, resetAllRoomsInSession,
   sendAnnouncement, subscribeAnnouncements,
+  subscribeAllTeacherMemos,
 } from '../../lib/firestore'
 
 // ── 디자인 토큰 (activity 화면 기준) ─────────────────────────────────────────
@@ -47,6 +48,120 @@ function Card({ children, style, ...rest }) {
   return (
     <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-cool-gray-200)', borderRadius: 12, padding: 16, ...style }} {...rest}>
       {children}
+    </div>
+  )
+}
+
+// ── 시간 포맷 헬퍼 (mm.dd HH:MM) ─────────────────────────────────────────────
+function fmtMemoTime(ts, clientTs) {
+  try {
+    const d = ts?.toDate ? ts.toDate() : (clientTs ? new Date(clientTs) : new Date())
+    const mm   = String(d.getMonth()+1).padStart(2,'0')
+    const dd   = String(d.getDate()).padStart(2,'0')
+    const time = d.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })
+    return `${mm}.${dd} ${time}`
+  } catch { return '' }
+}
+
+const STEP_LABELS = ['','1단계 탐구문제','2단계 자료수집','3단계 그래프','4단계 해석']
+const STEP_COLORS = ['','#FF8C42','#4EACD9','#5BBF7A','#C97DE8']
+
+// ── 메모 열람 모달 (대시보드용) ───────────────────────────────────────────────
+function MemoViewModal({ room, memos, onClose }) {
+  const roomMemos = memos.filter(m => m.roomCode === room.id)
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position:'fixed', inset:0, zIndex:9999,
+        background:'rgba(15,23,42,0.5)', backdropFilter:'blur(3px)',
+        display:'flex', alignItems:'center', justifyContent:'center', padding:'0 16px',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background:'var(--color-white)', borderRadius:20,
+          width:'100%', maxWidth:480,
+          boxShadow:'0 24px 64px rgba(0,0,0,0.18)',
+          display:'flex', flexDirection:'column', maxHeight:'80vh', overflow:'hidden',
+        }}
+      >
+        {/* 헤더 */}
+        <div style={{
+          padding:'20px 22px 16px', borderBottom:'1.5px solid var(--color-cool-gray-200)',
+          display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0,
+        }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{
+              width:36, height:36, borderRadius:10,
+              background:'var(--color-purple-100,#EDE9FE)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}>
+              <img src="/icon_09.png" alt="" style={{ width:18, height:18, objectFit:'contain' }}/>
+            </div>
+            <div>
+              <p style={{ fontSize:16, fontWeight:800, color:'var(--color-cool-gray-500)' }}>
+                {room.teamName || room.groupName || room.id} 관찰 기록
+              </p>
+              <p style={{ fontSize:11, color:'var(--color-cool-gray-400)', marginTop:1 }}>
+                총 {roomMemos.length}건
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width:30, height:30, borderRadius:8, border:'none',
+              background:'var(--color-cool-gray-100)', cursor:'pointer',
+              fontSize:15, color:'var(--color-cool-gray-400)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}
+          >✕</button>
+        </div>
+
+        {/* 목록 */}
+        <div style={{ flex:1, overflowY:'auto', padding:16, display:'flex', flexDirection:'column', gap:10 }}>
+          {roomMemos.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'40px 0', color:'var(--color-cool-gray-400)', fontSize:13 }}>
+              아직 관찰 기록이 없습니다.<br/>
+              <span style={{ fontSize:12 }}>모니터링 화면에서 메모를 추가해 주세요.</span>
+            </div>
+          ) : roomMemos.map(m => (
+            <div key={m.id} style={{
+              background:'var(--color-cool-gray-100)', borderRadius:12,
+              border:'1px solid var(--color-cool-gray-200)', padding:'12px 14px',
+            }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
+                {m.step && (
+                  <span style={{
+                    fontSize:10, fontWeight:800, padding:'2px 8px', borderRadius:99,
+                    background: (STEP_COLORS[m.step]||'#999') + '22',
+                    color: STEP_COLORS[m.step]||'#999',
+                    border:`1px solid ${(STEP_COLORS[m.step]||'#999')}44`,
+                  }}>
+                    {STEP_LABELS[m.step]||''}
+                  </span>
+                )}
+                <span style={{ fontSize:10, color:'var(--color-cool-gray-400)', marginLeft:'auto', fontWeight:600 }}>
+                  {fmtMemoTime(m.createdAt, m.clientTs)}
+                </span>
+              </div>
+              <p style={{ fontSize:13, color:'var(--color-cool-gray-500)', lineHeight:1.65 }}>{m.text}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* 푸터 */}
+        <div style={{
+          padding:'12px 20px', borderTop:'1.5px solid var(--color-cool-gray-200)',
+          background:'var(--color-cool-gray-100)', flexShrink:0,
+        }}>
+          <p style={{ fontSize:11, color:'var(--color-cool-gray-400)', textAlign:'center' }}>
+            기록 추가는 모니터링 화면(👁) 진입 후 우측 하단 버튼으로 할 수 있어요.
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
@@ -121,12 +236,20 @@ function Sidebar({ session, rooms, navTab, setNavTab, onCopied, step4Counts }) {
 }
 
 // ── 모둠 현황 ─────────────────────────────────────────────────────────────────
-function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
+function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
+  const [memoTarget, setMemoTarget] = useState(null)
+
   function handleMonitor(room) {
     const url = `/activity?room=${room.id}&mode=watch&session=${sessionCode}`
     if (isMobile) window.location.href = url
     else window.open(url, '_blank', 'noopener,noreferrer')
   }
+
+  // 모둠별 메모 개수 맵
+  const memoCounts = {}
+  allMemos.forEach(m => {
+    if (m.roomCode) memoCounts[m.roomCode] = (memoCounts[m.roomCode] || 0) + 1
+  })
 
   // 전체 배경: --color-cool-gray-100 (#eeeef3)
   if (rooms.length === 0) {
@@ -138,6 +261,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
     )
   }
 
+  // ── 모바일 카드 레이아웃 ─────────────────────────────────────────────────
   if (isMobile) {
     return (
       <div style={{ flex: 1, overflow: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--color-cool-gray-100)' }}>
@@ -145,6 +269,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
           const isOnline = !!room._online
           const topic = room.selectedPost?.topic || room.selectedPost?.text || '-'
           const cur = room.currentStep || 1
+          const memoCount = memoCounts[room.id] || 0
           return (
             <Card key={room.id} style={{ opacity: isOnline ? 1 : 0.5, padding: 14 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -155,15 +280,51 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
                     <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-cool-gray-400)', letterSpacing: '1px' }}>{room.id}</p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ fontSize: 12, color: 'var(--color-cool-gray-400)' }}>{room._memberCount || 0}명</span>
-                  {isOnline && (
-                    <button onClick={() => handleMonitor(room)} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', borderRadius: 8, cursor: 'pointer', transition: 'background .15s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-cool-gray-100)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      <img src="/icon_07.png" alt="모니터링" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                  {/* 모니터링 아이콘 — 항상 같은 위치, 오프라인 시 비활성 */}
+                  <button
+                    onClick={() => isOnline && handleMonitor(room)}
+                    title={isOnline ? '관찰 모드' : '오프라인'}
+                    style={{
+                      width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'transparent', border: 'none', borderRadius: 8,
+                      cursor: isOnline ? 'pointer' : 'default',
+                      opacity: isOnline ? 1 : 0.3, transition: 'background .15s',
+                    }}
+                    onMouseEnter={e => { if (isOnline) e.currentTarget.style.background = 'var(--color-cool-gray-100)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <img src="/icon_08.png" alt="모니터링" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                  </button>
+                  {/* 메모 아이콘 — 항상 같은 위치 */}
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      onClick={() => setMemoTarget(room)}
+                      title="관찰 기록 보기"
+                      style={{
+                        width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: memoCount > 0 ? 'var(--color-purple-100,#EDE9FE)' : 'transparent',
+                        border: 'none', borderRadius: 8, cursor: 'pointer', transition: 'background .15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-purple-100,#EDE9FE)'}
+                      onMouseLeave={e => e.currentTarget.style.background = memoCount > 0 ? 'var(--color-purple-100,#EDE9FE)' : 'transparent'}
+                    >
+                      <img src="/icon_09.png" alt="관찰 기록" style={{ width: 14, height: 14, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.4 }} />
                     </button>
-                  )}
+                    {memoCount > 0 && (
+                      <div style={{
+                        position: 'absolute', top: -3, right: -3,
+                        width: 15, height: 15, borderRadius: '50%',
+                        background: 'var(--color-purple-500)', border: '2px solid var(--color-white)',
+                        fontSize: 8, fontWeight: 800, color: 'var(--color-white)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        pointerEvents: 'none',
+                      }}>
+                        {memoCount > 9 ? '9+' : memoCount}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 6, marginBottom: topic !== '-' ? 8 : 0 }}>
@@ -175,17 +336,21 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
             </Card>
           )
         })}
+        {memoTarget && (
+          <MemoViewModal room={memoTarget} memos={allMemos} onClose={() => setMemoTarget(null)} />
+        )}
       </div>
     )
   }
 
+  // ── PC 테이블 레이아웃 ───────────────────────────────────────────────────
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 16, background: 'var(--color-cool-gray-100)' }}>
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: `1.5px solid var(--color-cool-gray-200)` }}>
-              {['', '모둠', '인원', '1단계', '2단계', '3단계', '4단계', '탐구 문제', '모니터링'].map((h, i) => (
+              {['', '모둠', '인원', '1단계', '2단계', '3단계', '4단계', '탐구 문제', '관찰'].map((h, i) => (
                 <th key={i} style={{ padding: '10px 12px', textAlign: i <= 2 ? 'left' : 'center', fontSize: 11, fontWeight: 800, color: 'var(--color-cool-gray-400)', letterSpacing: '.4px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
@@ -195,6 +360,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
               const isOnline = !!room._online
               const topic = room.selectedPost?.topic || room.selectedPost?.text || '-'
               const cur = room.currentStep || 1
+              const memoCount = memoCounts[room.id] || 0
               return (
                 <tr key={room.id} style={{ borderBottom: `1px solid var(--color-cool-gray-100)`, opacity: isOnline ? 1 : .45 }}>
                   <td style={{ padding: '11px 12px', width: 28 }}>
@@ -213,15 +379,53 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
                     </td>
                   ))}
                   <td style={{ padding: '11px 12px', fontSize: 12, color: 'var(--color-cool-gray-400)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topic}</td>
+                  {/* 관찰 컬럼: 모니터링(icon_08) + 메모(icon_09) 항상 고정 */}
                   <td style={{ padding: '11px 12px', textAlign: 'center' }}>
-                    {isOnline ? (
-                      <button onClick={() => handleMonitor(room)}
-                        style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', borderRadius: 8, cursor: 'pointer', transition: 'background .15s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--color-cool-gray-100)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <img src="/icon_07.png" alt="모니터링" style={{ width: 14, height: 14, objectFit: 'contain' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                      {/* 모니터링 아이콘 — 항상 존재, 오프라인 시 비활성 */}
+                      <button
+                        onClick={() => isOnline && handleMonitor(room)}
+                        title={isOnline ? '관찰 모드' : '오프라인'}
+                        style={{
+                          width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          background: 'transparent', border: 'none', borderRadius: 8,
+                          cursor: isOnline ? 'pointer' : 'default',
+                          opacity: isOnline ? 1 : 0.25, transition: 'background .15s',
+                        }}
+                        onMouseEnter={e => { if (isOnline) e.currentTarget.style.background = 'var(--color-cool-gray-100)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                      >
+                        <img src="/icon_08.png" alt="모니터링" style={{ width: 15, height: 15, objectFit: 'contain' }} />
                       </button>
-                    ) : <span style={{ fontSize: 11, color: 'var(--color-cool-gray-400)' }}>—</span>}
+                      {/* 메모 아이콘 — 항상 존재 */}
+                      <div style={{ position: 'relative' }}>
+                        <button
+                          onClick={() => setMemoTarget(room)}
+                          title="관찰 기록 보기"
+                          style={{
+                            width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            background: memoCount > 0 ? 'var(--color-purple-100,#EDE9FE)' : 'transparent',
+                            border: 'none', borderRadius: 8, cursor: 'pointer', transition: 'background .15s',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--color-purple-100,#EDE9FE)'}
+                          onMouseLeave={e => e.currentTarget.style.background = memoCount > 0 ? 'var(--color-purple-100,#EDE9FE)' : 'transparent'}
+                        >
+                          <img src="/icon_09.png" alt="관찰 기록" style={{ width: 15, height: 15, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.35 }} />
+                        </button>
+                        {memoCount > 0 && (
+                          <div style={{
+                            position: 'absolute', top: -3, right: -3,
+                            width: 16, height: 16, borderRadius: '50%',
+                            background: 'var(--color-purple-500)', border: '2px solid var(--color-white)',
+                            fontSize: 8, fontWeight: 800, color: 'var(--color-white)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            pointerEvents: 'none',
+                          }}>
+                            {memoCount > 9 ? '9+' : memoCount}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </td>
                 </tr>
               )
@@ -229,6 +433,9 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode }) {
           </tbody>
         </table>
       </Card>
+      {memoTarget && (
+        <MemoViewModal room={memoTarget} memos={allMemos} onClose={() => setMemoTarget(null)} />
+      )}
     </div>
   )
 }
@@ -568,6 +775,7 @@ export default function TeacherPage() {
   const [presenceCounts, setPresenceCounts] = useState({})
   const [step4Counts, setStep4Counts] = useState({})
   const [announcements, setAnnouncements] = useState([])
+  const [allMemos, setAllMemos] = useState([])
   const [navTab, setNavTab] = useState('rooms')
   const [actionMsg, setActionMsg] = useState('')
   const [loading, setLoading] = useState(true)
@@ -593,6 +801,12 @@ export default function TeacherPage() {
   useEffect(() => {
     if (!sessionCode) return
     return subscribeAnnouncements(sessionCode, setAnnouncements)
+  }, [sessionCode])
+
+  // 관찰 메모 실시간 구독
+  useEffect(() => {
+    if (!sessionCode) return
+    return subscribeAllTeacherMemos(sessionCode, setAllMemos)
   }, [sessionCode])
 
   useEffect(() => {
@@ -648,7 +862,7 @@ export default function TeacherPage() {
         <TopBar session={session} navTab={navTab} actionMsg={actionMsg}
           onGoHome={() => router.push('/')} isMobile={isMobile} rooms={enrichedRooms}
           onCopied={() => showAction('복사되었습니다')} announcements={announcements} />
-        {navTab === 'rooms'    && <RoomsTable rooms={enrichedRooms} step4Counts={step4Counts} isMobile={isMobile} sessionCode={sessionCode} />}
+        {navTab === 'rooms'    && <RoomsTable rooms={enrichedRooms} step4Counts={step4Counts} isMobile={isMobile} sessionCode={sessionCode} allMemos={allMemos} />}
         {navTab === 'announce' && <AnnouncementPanel sessionCode={sessionCode} onAction={showAction} />}
         {navTab === 'manage'   && <ManageTab rooms={enrichedRooms} sessionCode={sessionCode} onAction={showAction} />}
         {isMobile && <BottomTabBar navTab={navTab} setNavTab={setNavTab} />}

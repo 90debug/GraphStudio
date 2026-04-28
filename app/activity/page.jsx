@@ -11,7 +11,8 @@ import {
   subscribeSurvey, subscribeSurveyResponses,
   subscribeStrokes, clearStrokes,
   updateRoomMeta, clearSelectionVote, resetSurvey, setSelectionVote, agreeSelectionVote,
-  subscribeLastAnnouncement, subscribeAnnouncements
+  subscribeLastAnnouncement, subscribeAnnouncements,
+  addTeacherMemo,
 } from '../../lib/firestore'
 
 import { motion, AnimatePresence } from 'framer-motion'
@@ -38,6 +39,7 @@ export default function ActivityPage() {
   const searchParams = useSearchParams()
   const watchMode    = searchParams.get('mode') === 'watch'
   const watchRoomId  = searchParams.get('room')
+  const watchSessionCode = searchParams.get('session') // 관찰 메모용 세션 코드
   const device = useDevice()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -59,6 +61,10 @@ export default function ActivityPage() {
   const mountTimeRef = useRef(Date.now())  // 마운트 시각 기록 → 이후 공지만 토스트
   const [step1Modal, setStep1Modal] = useState(false)
   const [resetConfirmPost, setResetConfirmPost] = useState(null)
+  // watch 모드 전용: 관찰 메모
+  const [showMemoPanel, setShowMemoPanel] = useState(false)
+  const [memoText, setMemoText]     = useState('')
+  const [memoSaving, setMemoSaving] = useState(false)
 
   const freeModeRef = useRef(false)
   const userRef = useRef(null)
@@ -314,6 +320,136 @@ export default function ActivityPage() {
   const recentAnnouncements = allAnnouncements.slice(0, 5)
   const hasSyncLead = !!room.syncLeader
 
+  // ── watch 모드 메모 저장 핸들러 ────────────────────────────────────────────
+  async function handleSaveMemo() {
+    if (!memoText.trim() || !watchSessionCode) return
+    setMemoSaving(true)
+    try {
+      const stepLabel = ['1단계','2단계','3단계','4단계'][activeStep - 1] || ''
+      await addTeacherMemo(watchSessionCode, {
+        roomCode: watchRoomId,
+        roomName: room.teamName || room.groupName || watchRoomId,
+        step: activeStep,
+        text: memoText.trim(),
+      })
+      setMemoText('')
+      setShowMemoPanel(false)
+      setToast('관찰 메모가 저장되었어요.')
+    } catch {
+      setToast('저장에 실패했어요. 다시 시도해 주세요.')
+    } finally {
+      setMemoSaving(false)
+    }
+  }
+
+  // ── watch 모드 메모 모달 (탐구 문제 작성 모달 스타일) ────────────────────
+  const STEP_COLORS = ['#FF8C42','#4EACD9','#5BBF7A','#C97DE8']
+  function WatchMemoModal() {
+    const stepLabel = ['1단계 탐구문제','2단계 자료수집','3단계 그래프','4단계 해석'][activeStep - 1] || ''
+    const roomLabel = room.teamName || room.groupName || watchRoomId
+    return (
+      <div
+        onClick={() => setShowMemoPanel(false)}
+        style={{
+          position:'fixed', inset:0, zIndex:10000,
+          background:'rgba(0,0,0,0.45)', backdropFilter:'blur(2px)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          padding:'0 16px',
+        }}
+      >
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            background:'#fff', borderRadius:20, padding:24,
+            width:'100%', maxWidth:480,
+            boxShadow:'0 24px 64px rgba(0,0,0,0.18)',
+            display:'flex', flexDirection:'column', gap:16,
+          }}
+        >
+          {/* 헤더 */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <h2 style={{ fontSize:18, fontWeight:800, color:'#3D2B1F', letterSpacing:'-0.3px' }}>
+              관찰 메모 작성
+            </h2>
+            <button
+              onClick={() => setShowMemoPanel(false)}
+              style={{ background:'none', border:'none', fontSize:18, color:'#8A949E', cursor:'pointer', lineHeight:1, padding:'2px 4px' }}
+            >✕</button>
+          </div>
+
+          {/* 관찰 대상 (읽기 전용) */}
+          <div>
+            <p style={{ fontSize:11, fontWeight:800, color:'#8A949E', letterSpacing:'.5px', textTransform:'uppercase', marginBottom:6 }}>
+              관찰 대상
+            </p>
+            <div style={{
+              display:'flex', alignItems:'center', gap:8,
+              padding:'10px 14px', borderRadius:10,
+              border:'1.5px solid #E2E3E5', background:'#F8F9FA',
+            }}>
+              <span style={{ fontSize:14, fontWeight:700, color:'#555' }}>{roomLabel}</span>
+              <span style={{
+                fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:99,
+                background: STEP_COLORS[activeStep-1] + '22',
+                color: STEP_COLORS[activeStep-1],
+                border:`1px solid ${STEP_COLORS[activeStep-1]}44`,
+              }}>{stepLabel}</span>
+            </div>
+          </div>
+
+          {/* 관찰 내용 */}
+          <div>
+            <p style={{ fontSize:11, fontWeight:800, color:'#8A949E', letterSpacing:'.5px', textTransform:'uppercase', marginBottom:6 }}>
+              관찰 내용
+            </p>
+            <textarea
+              value={memoText}
+              onChange={e => setMemoText(e.target.value)}
+              placeholder="이 모둠의 활동 상황, 특이사항, 피드백 내용을 기록하세요."
+              rows={4}
+              autoFocus
+              style={{
+                width:'100%', padding:'12px 14px',
+                borderRadius:10, border:'1.5px solid #E2E3E5',
+                fontSize:14, color:'#3D2B1F',
+                background:'#fff', outline:'none', resize:'none',
+                lineHeight:1.65, display:'block',
+                fontFamily:'inherit', boxSizing:'border-box',
+                transition:'border-color .15s',
+              }}
+              onFocus={e => e.target.style.borderColor='#5B41EB'}
+              onBlur={e => e.target.style.borderColor='#E2E3E5'}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSaveMemo()
+              }}
+            />
+          </div>
+
+          {/* 저장 버튼 */}
+          <button
+            onClick={handleSaveMemo}
+            disabled={!memoText.trim() || memoSaving}
+            style={{
+              width:'100%', height:50, borderRadius:100,
+              background: memoText.trim() && !memoSaving ? '#5B41EB' : '#E2E3E5',
+              color: memoText.trim() && !memoSaving ? '#fff' : '#8A949E',
+              fontSize:16, fontWeight:800, border:'none',
+              cursor: memoText.trim() && !memoSaving ? 'pointer' : 'not-allowed',
+              transition:'background .15s, color .15s',
+              fontFamily:'inherit', letterSpacing:'-0.3px',
+            }}
+          >
+            {memoSaving ? '저장 중…' : '기록 저장'}
+          </button>
+
+          <p style={{ fontSize:12, color:'#8A949E', textAlign:'center', marginTop:-8 }}>
+            기록은 교사 대시보드에서 모아볼 수 있어요.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const watchUser = watchMode ? { name: '선생님', code: watchRoomId, groupName: '' } : user
 
   return (
@@ -423,6 +559,29 @@ export default function ActivityPage() {
       {!watchMode && voteModal && room.selectionVote && <VoteModal vote={room.selectionVote} myName={user?.name||''} onAgree={handleVote} onClose={function() { setVoteModal(false) }} onDecline={handleVoteDecline} isRequester={room.selectionVote?.requestedBy === user?.name} />}
       {toast && <Toast msg={toast} onDone={function() { setToast(null) }} />}
       {showNotifPanel && <div style={{ position:'fixed', inset:0, zIndex:8000, pointerEvents:'none' }} />}
+
+      {/* ── watch 모드 전용: 관찰 메모 플로팅 버튼 ── */}
+      {watchMode && watchSessionCode && (
+        <>
+          <button
+            onClick={() => setShowMemoPanel(true)}
+            title="관찰 메모 작성"
+            style={{
+              position:'fixed', bottom:72, right:20, zIndex:9500,
+              width:52, height:52, borderRadius:'50%',
+              background:'#5B41EB', border:'none', cursor:'pointer',
+              boxShadow:'0 4px 20px rgba(91,65,235,0.45)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              transition:'transform .2s, box-shadow .2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 6px 28px rgba(91,65,235,0.55)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 4px 20px rgba(91,65,235,0.45)' }}
+          >
+            <img src="/icon_09.png" alt="관찰 메모" style={{ width:26, height:26, objectFit:'contain', filter:'brightness(0) invert(1)' }}/>
+          </button>
+          {showMemoPanel && <WatchMemoModal />}
+        </>
+      )}
     </div>
   )
 }
