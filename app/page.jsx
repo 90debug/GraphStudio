@@ -20,10 +20,11 @@ function tabBtn(active) {
 // ── TextInput ──────────────────────────────────────────────────────────────────
 function TextInput({ label, placeholder, value, onChange, maxLength }) {
   const [focused, setFocused] = useState(false)
+  const isMobile = useDevice() === 'mobile'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-8)', width: '100%' }}>
       {label && (
-        <label style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-17-size)', fontWeight: 400, color: 'var(--color-cool-gray-400)', lineHeight: 1.5 }}>
+        <label style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body-medium-17-size)', fontWeight: 400, color: isMobile ? '#1E293B' : 'var(--color-cool-gray-400)', lineHeight: 1.5 }}>
           {label}
         </label>
       )}
@@ -78,8 +79,9 @@ function RoleModal({ onSelect }) {
   )
 }
 function ChangeRoleBtn({ onClick }) {
+  const isMobile = useDevice() === 'mobile'
   return (
-    <button onClick={onClick} style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500, color: 'var(--color-cool-gray-400)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px', padding: 0 }}>
+    <button onClick={onClick} style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500, color: isMobile ? 'var(--color-purple-500)' : 'var(--color-cool-gray-400)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '3px', padding: 0 }}>
       역할 바꾸기
     </button>
   )
@@ -258,9 +260,9 @@ function StudentForm({ onChangeRole }) {
 }
 
 // ── 공통 하단 카드 ─────────────────────────────────────────────────────────────
-function BottomCard({ label, line1, line2, btnLabel, onBtn }) {
+function BottomCard({ label, line1, line2, btnLabel, onBtn, isMobile }) {
   return (
-    <div style={{ background: 'var(--color-purple-400)', borderRadius: '12px', padding: 'var(--spacing-16) var(--spacing-20)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-10)', boxShadow: '0 4px 16px rgba(91,65,235,0.25)' }}>
+    <div style={{ background: 'var(--color-purple-400)', borderRadius: '12px', padding: isMobile ? '10px var(--spacing-20)' : 'var(--spacing-16) var(--spacing-20)', display: 'flex', flexDirection: 'column', gap: isMobile ? 'var(--spacing-8)' : 'var(--spacing-10)', boxShadow: '0 4px 16px rgba(91,65,235,0.25)' }}>
       <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>{label}</p>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-10)' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -387,12 +389,12 @@ export default function JoinPage() {
           {/* 모바일 하단 카드: 일반 흐름 */}
           {showTeacherCard && isMobile && (
             <div style={{ width: '100%', maxWidth: '320px', marginTop: 'var(--spacing-32)', position: 'relative', zIndex: 2 }}>
-              <BottomCard label="이전 세션" line1={teacherLine1} line2={lastSession.sessionCode} btnLabel="대시보드 열기" onBtn={() => router.push(`/teacher?session=${lastSession.sessionCode}`)} />
+              <BottomCard isMobile label="이전 세션" line1={teacherLine1} line2={lastSession.sessionCode} btnLabel="대시보드 열기" onBtn={() => router.push(`/teacher?session=${lastSession.sessionCode}`)} />
             </div>
           )}
           {showStudentCard && isMobile && (
             <div style={{ width: '100%', maxWidth: '320px', marginTop: 'var(--spacing-32)', position: 'relative', zIndex: 2 }}>
-              <BottomCard label="이전 모둠" line1={lastGroup.name} line2={lastGroup.code} btnLabel="이어서 활동하기" onBtn={() => { sessionStorage.setItem('gts_user', JSON.stringify({ ...lastGroup, role: 'member' })); router.push('/activity') }} />
+              <BottomCard isMobile label="이전 모둠" line1={lastGroup.name} line2={lastGroup.code} btnLabel="이어서 활동하기" onBtn={() => { sessionStorage.setItem('gts_user', JSON.stringify({ ...lastGroup, role: 'member' })); router.push('/activity') }} />
             </div>
           )}
         </div>
