@@ -360,7 +360,7 @@ export default function JoinPage() {
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }}
               />
               {/* 동영상 위 반투명 오버레이 — 짧아도 흰 여백 없이 보라 계열 */}
-              <div style={{ position: 'absolute', inset: 0, background: 'rgba(245,243,255,0.82)', zIndex: 1 }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(245,243,255,0.50)', zIndex: 1 }} />
             </>
           )}
 
