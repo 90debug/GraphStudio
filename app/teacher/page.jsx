@@ -296,7 +296,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                     onMouseEnter={e => { if (isOnline) e.currentTarget.style.background = 'var(--color-cool-gray-100)' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                   >
-                    <img src="/icon_08.png" alt="모니터링" style={{ width: 18, height: 18, objectFit: 'contain' }} />
+                    <img src="/icon_08.png" alt="모니터링" style={{ width: 29, height: 29, objectFit: 'contain' }} />
                   </button>
                   {/* 메모 아이콘 — 항상 같은 위치, 배경색 없음 */}
                   <div style={{ position: 'relative' }}>
@@ -311,7 +311,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-cool-gray-100)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <img src="/icon_09.png" alt="관찰 기록" style={{ width: 18, height: 18, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.4 }} />
+                      <img src="/icon_09.png" alt="관찰 기록" style={{ width: 29, height: 29, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.4 }} />
                     </button>
                     {memoCount > 0 && (
                       <div style={{
@@ -396,7 +396,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                         onMouseEnter={e => { if (isOnline) e.currentTarget.style.background = 'var(--color-cool-gray-100)' }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                       >
-                        <img src="/icon_08.png" alt="모니터링" style={{ width: 19, height: 19, objectFit: 'contain' }} />
+                        <img src="/icon_08.png" alt="모니터링" style={{ width: 30, height: 30, objectFit: 'contain' }} />
                       </button>
                       {/* 메모 아이콘 — 항상 존재, 배경색 없음 */}
                       <div style={{ position: 'relative' }}>
@@ -411,7 +411,7 @@ function RoomsTable({ rooms, step4Counts, isMobile, sessionCode, allMemos }) {
                           onMouseEnter={e => e.currentTarget.style.background = 'var(--color-cool-gray-100)'}
                           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                         >
-                          <img src="/icon_09.png" alt="관찰 기록" style={{ width: 19, height: 19, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.35 }} />
+                          <img src="/icon_09.png" alt="관찰 기록" style={{ width: 30, height: 30, objectFit: 'contain', opacity: memoCount > 0 ? 1 : 0.35 }} />
                         </button>
                         {memoCount > 0 && (
                           <div style={{
