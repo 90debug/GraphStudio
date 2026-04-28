@@ -8,9 +8,9 @@ import { CHART_CMPS } from './charts'
 
 const CHART_TYPES = [
   { type:'bar',   label:'막대그래프' },
+  { type:'line',  label:'꺾은선그래프' },
   { type:'pie',   label:'원그래프'   },
   { type:'strip', label:'띠그래프'   },
-  { type:'line',  label:'꺾은선그래프' },
 ]
 
 export default function Step3({
