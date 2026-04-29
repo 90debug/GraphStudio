@@ -5,7 +5,7 @@ import { useDevice } from '../lib/DeviceContext'
 import { createSession, createRoomInSession } from '../lib/firestore'
 
 // ▼ 시연 당일 실제 모둠 코드로 교체 (빈 문자열이면 버튼 자동 숨김)
-const DEMO_ROOM_CODE = "DVBL3T"
+const DEMO_ROOM_CODE = ""
 
 // ── 탭 버튼 공용 스타일 (교사/학생 동일) ──────────────────────────────────────
 const TAB_WRAP = { display: 'flex', background: 'var(--color-cool-gray-100)', borderRadius: '8px', height: '48px', overflow: 'hidden' }
@@ -279,18 +279,19 @@ function StudentForm({ onChangeRole }) {
                 {DEMO_ROOM_CODE && (
                   <button
                     onClick={handleAutoFill}
+                    disabled={animating || autofillDone}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 4,
-                      padding: '3px 9px 3px 7px', borderRadius: 20,
+                      padding: '3px 9px', borderRadius: 20,
                       background: autofillDone ? '#EDE9FE' : '#F5F3FF',
                       border: `1.5px solid ${autofillDone ? '#C4B8F8' : '#DDD6FE'}`,
-                      cursor: animating ? 'default' : 'pointer',
+                      cursor: (animating || autofillDone) ? 'default' : 'pointer',
                       fontSize: 11, fontWeight: 700,
                       color: autofillDone ? '#5B41EB' : '#7C6FCD',
                       fontFamily: 'inherit',
+                      opacity: autofillDone ? 0.75 : 1,
                     }}
                   >
-                    <span style={{ fontSize: 12 }}>⚡</span>
                     {animating ? '입력 중…' : autofillDone ? '완료' : '시연용'}
                   </button>
                 )}

@@ -329,12 +329,16 @@ export default function ActivityPage() {
   async function handleDelete4(postId) { try { await deleteStep4Post(userRef.current?.code, postId); setToast('삭제 완료') } catch { setToast('삭제 실패') } }
 
   // ── 학생 스탬프 구독 ────────────────────────────────────────────────────────
+  // user.sessionCode(새 모둠 생성) 또는 room.sessionCode(코드로 참여한 학생) 중 하나로 구독
   useEffect(function() {
-    if (watchMode || !user?.sessionCode || !user?.code) return
-    return subscribeStamps(user.sessionCode, user.code, function(stamp) {
+    if (watchMode) return
+    const sessionCode = user?.sessionCode || room?.sessionCode
+    const roomCode = user?.code
+    if (!sessionCode || !roomCode) return
+    return subscribeStamps(sessionCode, roomCode, function(stamp) {
       setIncomingStamps(function(prev) { return [...prev, { ...stamp, uid: Date.now() + Math.random() }] })
     })
-  }, [watchMode, user?.sessionCode, user?.code]) // eslint-disable-line
+  }, [watchMode, user?.sessionCode, user?.code, room?.sessionCode]) // eslint-disable-line
 
   if (loading) return (
     <div className="w-full h-full flex items-center justify-center bg-slate-50 font-black">연결 중...</div>
@@ -450,7 +454,7 @@ export default function ActivityPage() {
             />
             {showMembersPanel && (
               <div style={{
-                position: 'absolute', top: 36, left: 0, zIndex: 8001,
+                position: 'absolute', top: 36, right: 0, zIndex: 8001,
                 background: '#fff', border: '1px solid #E2E3E5',
                 borderRadius: 12, padding: '12px 14px',
                 minWidth: 170, maxHeight: 260, overflowY: 'auto',
@@ -530,12 +534,14 @@ export default function ActivityPage() {
 
       <main
         className="flex-1 relative overflow-hidden flex flex-col"
-        style={watchMode && stampMode ? { cursor: 'crosshair', outline: '2px dashed rgba(91,65,235,0.53)' } : {}}
-        onClick={watchMode && stampMode && watchSessionCode ? function(e) {
+        style={watchMode && stampMode ? { cursor: 'crosshair', outline: '2px dashed rgba(229,62,62,0.45)' } : {}}
+        onClick={watchMode && stampMode ? function(e) {
+          const effectiveSessionCode = watchSessionCode || room?.sessionCode
+          if (!effectiveSessionCode || !watchRoomId) return
           const rect = e.currentTarget.getBoundingClientRect()
           const x = ((e.clientX - rect.left) / rect.width) * 100
           const y = ((e.clientY - rect.top) / rect.height) * 100
-          addStamp(watchSessionCode, { roomCode: watchRoomId, x, y })
+          addStamp(effectiveSessionCode, { roomCode: watchRoomId, x, y })
           // 교사 로컬에도 즉시 표시
           setIncomingStamps(function(prev) { return [...prev, { x, y, uid: Date.now() + Math.random() }] })
         } : undefined}
@@ -593,17 +599,17 @@ export default function ActivityPage() {
             style={{
               position:'fixed', bottom:134, right:20, zIndex:9500,
               width:52, height:52, borderRadius:'50%',
-              background: stampMode ? '#5B41EB' : '#fff',
+              background: stampMode ? '#E53E3E' : '#fff',
               border: stampMode ? 'none' : '1.5px solid #5B41EB',
               cursor:'pointer',
-              boxShadow: stampMode ? '0 4px 20px rgba(91,65,235,0.45)' : '0 2px 10px rgba(0,0,0,0.12)',
+              boxShadow: stampMode ? '0 4px 20px rgba(229,62,62,0.45)' : '0 2px 10px rgba(0,0,0,0.12)',
               display:'flex', alignItems:'center', justifyContent:'center',
               transition:'background .2s, box-shadow .2s',
             }}
           >
             {stampMode
               ? <span style={{ fontSize:18, color:'#fff', fontWeight:700, lineHeight:1 }}>✕</span>
-              : <img src="/stamp_01.png" alt="스탬프" style={{ width:26, height:26, objectFit:'contain', opacity:0.6 }}/>
+              : <img src="/icon_10.png" alt="스탬프" style={{ width:26, height:26, objectFit:'contain', opacity:0.6 }}/>
             }
           </button>
 
@@ -611,12 +617,12 @@ export default function ActivityPage() {
           {stampMode && (
             <div style={{
               position:'fixed', top:40, left:'50%', transform:'translateX(-50%)',
-              zIndex:9600, background:'rgba(91,65,235,0.9)', color:'#fff',
+              zIndex:9600, background:'rgba(229,62,62,0.9)', color:'#fff',
               borderRadius:8, padding:'6px 18px', fontSize:12, fontWeight:800,
               animation:'fadeUp .2s ease', whiteSpace:'nowrap',
-              boxShadow:'0 4px 16px rgba(91,65,235,0.4)',
+              boxShadow:'0 4px 16px rgba(229,62,62,0.4)',
             }}>
-              🖊 스탬프 모드 ON
+              스탬프 모드 ON
             </div>
           )}
           <button
