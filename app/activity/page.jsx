@@ -44,10 +44,10 @@ function StampOverlay({ x, y, onDone }) {
       `}</style>
       <div style={{
         position: 'absolute', left: x + '%', top: y + '%',
-        width: 96, pointerEvents: 'none', zIndex: 500,
+        width: 115, pointerEvents: 'none', zIndex: 500,
         ...anim,
       }}>
-        <img src="/stamp_01.png" alt="" style={{ width: 96, height: 'auto' }} />
+        <img src="/stamp_01.png" alt="" style={{ width: 115, height: 'auto' }} />
       </div>
     </>
   )
@@ -374,6 +374,8 @@ export default function ActivityPage() {
     const { deleteComment4: dc4 } = await import('../../lib/firestore')
     await dc4(activeCode, postId, comment)
   }
+  async function handleWatchLike1(postId, nowLiking) { await toggleLike1(activeCode, postId, '선생님', nowLiking) }
+  async function handleWatchLike4(postId, nowLiking) { await toggleLike4(activeCode, postId, '선생님', nowLiking) }
   const recentAnnouncements = allAnnouncements.slice(0, 5)
   const hasSyncLead = !!room.syncLeader
 
@@ -552,10 +554,10 @@ export default function ActivityPage() {
         <AnimatePresence mode="wait">
           <motion.div key={activeStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1 flex flex-col overflow-hidden">
             {/* watch 모드: 쓰기 핸들러 noop, 읽기(스크롤·클릭) 허용 */}
-            {activeStep === 1 && <Step1 user={watchUser} code={activeCode} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={watchMode ? function(){} : handleLike1} onComment={watchMode ? handleWatchComment1 : handleComment1} onSelectRequest={watchMode ? function(){} : handleSelectRequest} onDelete={watchMode ? function(){} : handleDelete1} onDeleteComment={watchMode ? handleWatchDeleteComment1 : handleDeleteComment1} showModal={watchMode ? false : step1Modal} onShowModal={watchMode ? function(){} : setStep1Modal}/>}
+            {activeStep === 1 && <Step1 user={watchUser} code={activeCode} posts={step1Posts} selectedPost={room.selectedPost} onToast={setToast} onLike={watchMode ? handleWatchLike1 : handleLike1} onComment={watchMode ? handleWatchComment1 : handleComment1} onSelectRequest={watchMode ? function(){} : handleSelectRequest} onDelete={watchMode ? function(){} : handleDelete1} onDeleteComment={watchMode ? handleWatchDeleteComment1 : handleDeleteComment1} showModal={watchMode ? false : step1Modal} onShowModal={watchMode ? function(){} : setStep1Modal}/>}
             {activeStep === 2 && <Step2 user={watchUser} code={activeCode} selectedPost={room.selectedPost} dataTable={room.dataTable || []} onChange={watchMode ? function(){} : handleDataTable} surveyActive={room.surveyActive} survey={survey} surveyResponses={surveyResp} syncTab={hasSyncLead && !iAmLeader ? (room.step2Tab || 'create') : undefined} onTabChange={iAmLeader ? handleStep2TabChange : undefined}/>}
             {activeStep === 3 && <Step3 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} onChartConfig={watchMode ? function(){} : handleChartConfig} strokes={strokes} currentDrawer={watchMode ? null : room.currentDrawer} drawMode={room.drawMode||'draw'} onDrawMode={watchMode ? function(){} : handleDrawMode} livePreview={room.livePreview} selectedPost={room.selectedPost} step3SnapshotImg={room.canvasSnapshot} onStep3SnapshotImg={watchMode ? function(){} : (img)=>updateRoomMeta(userRef.current?.code,{canvasSnapshot:img})} readOnly={watchMode} syncDrawMode={hasSyncLead && !iAmLeader ? (room.step3Tab || 'draw') : undefined} onDrawModeChange={iAmLeader ? handleStep3DrawModeChange : undefined}/>}
-            {activeStep === 4 && <Step4 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={watchMode ? function(){} : handleStep4State} posts4={step4Posts} onLike4={watchMode ? function(){} : handleLike4} onComment4={watchMode ? handleWatchComment4 : handleComment4} onDelete4={watchMode ? function(){} : handleDelete4} onDeleteComment4={watchMode ? handleWatchDeleteComment4 : handleDeleteComment4}/>}
+            {activeStep === 4 && <Step4 user={watchUser} code={activeCode} items={room.selectedPost?.items || []} dataTable={room.dataTable || []} chartConfig={room.chartConfig || {type:'bar'}} step4State={room.step4State || {}} onStep4State={watchMode ? function(){} : handleStep4State} posts4={step4Posts} onLike4={watchMode ? handleWatchLike4 : handleLike4} onComment4={watchMode ? handleWatchComment4 : handleComment4} onDelete4={watchMode ? function(){} : handleDelete4} onDeleteComment4={watchMode ? handleWatchDeleteComment4 : handleDeleteComment4}/>}
           </motion.div>
         </AnimatePresence>
 

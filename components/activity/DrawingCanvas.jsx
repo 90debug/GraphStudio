@@ -494,7 +494,7 @@ export default function DrawingCanvas({
       }}>
         {fsDim ? (
           <div style={{width:fsDim.w,display:'flex',flexDirection:'column',flexShrink:0}}>
-            <ToolRows compact={true}/>
+            {ToolRows({compact:true})}
             {/* 캔버스 */}
             <div style={{position:'relative',width:fsDim.w,height:fsDim.h,flexShrink:0}}>
               <canvas ref={canvasRef} width={800} height={480}
@@ -506,7 +506,7 @@ export default function DrawingCanvas({
                 style={{...canvasCommonStyle,borderRadius:6,pointerEvents:'none',background:'transparent'}}
               />
               {/* 커서 뱃지 */}
-              <CursorBadges localPos={myCursor.current}/>
+              {CursorBadges({localPos:myCursor.current})}
             </div>
           </div>
         ) : (
@@ -523,7 +523,7 @@ export default function DrawingCanvas({
   // ── 일반 모드 레이아웃 ───────────────────────────────────────────
   return (
     <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
-      <ToolRows compact={false}/>
+      {ToolRows({compact:false})}
 
       {/* 그리는 사람 표시 (일반모드) */}
       <div style={{height:22,display:'flex',alignItems:'center',gap:8,marginBottom:4,fontSize:12,color:'#8C7B6E',flexShrink:0}}>
@@ -552,7 +552,7 @@ export default function DrawingCanvas({
           style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',borderRadius:10,pointerEvents:'none',background:'transparent'}}
         />
         {/* 커서 뱃지 */}
-        <CursorBadges localPos={myCursor.current}/>
+        {CursorBadges({localPos:myCursor.current})}
       </div>
 
       <div style={{fontSize:12,color:'#8C7B6E',marginTop:6,lineHeight:1.6,flexShrink:0}}>
