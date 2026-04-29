@@ -44,10 +44,10 @@ function StampOverlay({ x, y, onDone }) {
       `}</style>
       <div style={{
         position: 'absolute', left: x + '%', top: y + '%',
-        width: 80, pointerEvents: 'none', zIndex: 500,
+        width: 96, pointerEvents: 'none', zIndex: 500,
         ...anim,
       }}>
-        <img src="/stamp_01.png" alt="" style={{ width: 80, height: 'auto' }} />
+        <img src="/stamp_01.png" alt="" style={{ width: 96, height: 'auto' }} />
       </div>
     </>
   )
@@ -112,11 +112,7 @@ export default function ActivityPage() {
     // watch 모드: sessionStorage 불필요, 바로 구독 초기화
     if (watchMode && watchRoomId) {
       const watchUnsubs = [
-        // room 구독: currentStep을 activeStep에 동기화
-        subscribeRoom(watchRoomId, function(roomData) {
-          setRoom(roomData)
-          // watch 모드: activeStep 자동 동기화 제거 → 교사가 BottomNav로 수동 탐색
-        }),
+        subscribeRoom(watchRoomId, function(roomData) { setRoom(roomData) }),
         subscribeStep1Posts(watchRoomId, setStep1Posts),
         subscribeStep4Posts(watchRoomId, setStep4Posts),
         subscribePresence(watchRoomId, setOnlineUsers),
@@ -124,6 +120,14 @@ export default function ActivityPage() {
         subscribeSurveyResponses(watchRoomId, setSurveyResp),
         subscribeStrokes(watchRoomId, setStrokes),
       ]
+      // 교사도 Firestore 스탬프 구독 → PC↔모바일 기기 간 동기화
+      if (watchSessionCode) {
+        watchUnsubs.push(
+          subscribeStamps(watchSessionCode, watchRoomId, function(stamp) {
+            setIncomingStamps(function(prev) { return [...prev, { ...stamp, uid: Date.now() + Math.random() }] })
+          })
+        )
+      }
       setLoading(false)
       return () => watchUnsubs.forEach(fn => fn?.())
     }
@@ -542,8 +546,7 @@ export default function ActivityPage() {
           const x = ((e.clientX - rect.left) / rect.width) * 100
           const y = ((e.clientY - rect.top) / rect.height) * 100
           addStamp(effectiveSessionCode, { roomCode: watchRoomId, x, y })
-          // 교사 로컬에도 즉시 표시
-          setIncomingStamps(function(prev) { return [...prev, { x, y, uid: Date.now() + Math.random() }] })
+          // Firestore 구독이 모든 기기에 반영 (로컬 직접 추가 불필요)
         } : undefined}
       >
         <AnimatePresence mode="wait">
