@@ -114,6 +114,12 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
     onChange(items.map((label, idx) => ({ label, value: idx === i ? v : (dataTable[idx]?.value || '') })))
   }
 
+  function stepValue(i, delta) {
+    const current = Number(dataTable[i]?.value) || 0
+    const next = Math.max(0, Math.min(999, current + delta))
+    updateValue(i, String(next))
+  }
+
   const TABS = [
     { id: 'create',  label: '설문 만들기' },
     { id: 'results', label: '결과 확인' },
@@ -241,11 +247,31 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                           <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6,padding:'10px 12px',borderRadius:12,background:'#EEEEF3',border:'1px solid #e2e3e5'}}>
                             <div style={{width:28,height:28,borderRadius:'50%',flexShrink:0,background:'#5B41EB',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800}}>{i+1}</div>
                             <span style={{fontSize: isMobile ? 13 : 15,fontWeight:700,color:'#334155',textAlign:'center',lineHeight:1.3}}>{item}</span>
-                            <div style={{display:'flex',alignItems:'center',gap:4}}>
-                              <input type="number" min="0" max="999" value={dataTable[i]?.value||''} onChange={e=>updateValue(i,e.target.value)} placeholder="0"
-                                style={{width:60,padding:'7px 6px',borderRadius:8,border:'1px solid #F1F5F9',fontSize:18,fontWeight:800,textAlign:'center',fontFamily:'inherit',outline:'none',background:'#fff'}}/>
-                              <span style={{fontSize: isMobile ? 12 : 14,color:'#8C7B6E'}}>명</span>
-                            </div>
+                            {isMobile ? (
+                              <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,width:'100%'}}>
+                                <button
+                                  onPointerDown={e=>{e.preventDefault();stepValue(i,1)}}
+                                  style={{width:44,height:30,borderRadius:8,border:'1px solid #5B41EB',background:'#EEEEF3',color:'#5B41EB',fontSize:16,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',WebkitTapHighlightColor:'transparent',userSelect:'none'}}
+                                  aria-label="올리기"
+                                >▲</button>
+                                <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                  <input type="number" min="0" max="999" value={dataTable[i]?.value||''} onChange={e=>updateValue(i,e.target.value)} placeholder="0"
+                                    style={{width:60,padding:'7px 6px',borderRadius:8,border:'1px solid #F1F5F9',fontSize:18,fontWeight:800,textAlign:'center',fontFamily:'inherit',outline:'none',background:'#fff'}}/>
+                                  <span style={{fontSize:12,color:'#8C7B6E'}}>명</span>
+                                </div>
+                                <button
+                                  onPointerDown={e=>{e.preventDefault();stepValue(i,-1)}}
+                                  style={{width:44,height:30,borderRadius:8,border:'1px solid #5B41EB',background:'#EEEEF3',color:'#5B41EB',fontSize:16,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',WebkitTapHighlightColor:'transparent',userSelect:'none'}}
+                                  aria-label="내리기"
+                                >▼</button>
+                              </div>
+                            ) : (
+                              <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                <input type="number" min="0" max="999" value={dataTable[i]?.value||''} onChange={e=>updateValue(i,e.target.value)} placeholder="0"
+                                  style={{width:60,padding:'7px 6px',borderRadius:8,border:'1px solid #F1F5F9',fontSize:18,fontWeight:800,textAlign:'center',fontFamily:'inherit',outline:'none',background:'#fff'}}/>
+                                <span style={{fontSize:14,color:'#8C7B6E'}}>명</span>
+                              </div>
+                            )}
                             {surveyCount > 0 && (
                               <div style={{fontSize: isMobile ? 10 : 12,color:'#9395ff',fontWeight:700}}>실시간 {surveyCount}명</div>
                             )}
