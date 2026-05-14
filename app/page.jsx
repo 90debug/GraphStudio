@@ -5,7 +5,7 @@ import { useDevice } from '../lib/DeviceContext'
 import { createSession, createRoomInSession } from '../lib/firestore'
 
 // ▼ 시연 당일 실제 모둠 코드로 교체 (빈 문자열이면 버튼 자동 숨김)
-const DEMO_ROOM_CODE = "DN2XT3"
+const DEMO_ROOM_CODE = "JPZXP6"
 
 // ── 탭 버튼 공용 스타일 (교사/학생 동일) ──────────────────────────────────────
 const TAB_WRAP = { display: 'flex', background: 'var(--color-cool-gray-100)', borderRadius: '8px', height: '48px', overflow: 'hidden' }
