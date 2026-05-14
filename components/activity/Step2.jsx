@@ -248,22 +248,22 @@ export default function Step2({ user, code, selectedPost, dataTable, onChange, s
                             <div style={{width:28,height:28,borderRadius:'50%',flexShrink:0,background:'#5B41EB',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800}}>{i+1}</div>
                             <span style={{fontSize: isMobile ? 13 : 15,fontWeight:700,color:'#334155',textAlign:'center',lineHeight:1.3}}>{item}</span>
                             {isMobile ? (
-                              <div style={{display:'flex',alignItems:'center',gap:4}}>
-                                <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:1}}>
-                                  <button
-                                    onPointerDown={e=>{e.preventDefault();stepValue(i,1)}}
-                                    style={{width:22,height:16,border:'none',background:'transparent',color:'#94A3B8',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',WebkitTapHighlightColor:'transparent',userSelect:'none',padding:0,lineHeight:1}}
-                                    aria-label="올리기"
-                                  >▲</button>
-                                  <button
-                                    onPointerDown={e=>{e.preventDefault();stepValue(i,-1)}}
-                                    style={{width:22,height:16,border:'none',background:'transparent',color:'#94A3B8',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',WebkitTapHighlightColor:'transparent',userSelect:'none',padding:0,lineHeight:1}}
-                                    aria-label="내리기"
-                                  >▼</button>
+                              <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:1}}>
+                                <button
+                                  onPointerDown={e=>{e.preventDefault();stepValue(i,1)}}
+                                  style={{width:60,height:16,border:'none',background:'transparent',color:'#94A3B8',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',WebkitTapHighlightColor:'transparent',userSelect:'none',padding:0,lineHeight:1}}
+                                  aria-label="올리기"
+                                >▲</button>
+                                <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                  <input type="number" min="0" max="999" value={dataTable[i]?.value||''} onChange={e=>updateValue(i,e.target.value)} placeholder="0"
+                                    style={{width:60,padding:'7px 6px',borderRadius:8,border:'1px solid #F1F5F9',fontSize:18,fontWeight:800,textAlign:'center',fontFamily:'inherit',outline:'none',background:'#fff'}}/>
+                                  <span style={{fontSize:12,color:'#8C7B6E'}}>명</span>
                                 </div>
-                                <input type="number" min="0" max="999" value={dataTable[i]?.value||''} onChange={e=>updateValue(i,e.target.value)} placeholder="0"
-                                  style={{width:60,padding:'7px 6px',borderRadius:8,border:'1px solid #F1F5F9',fontSize:18,fontWeight:800,textAlign:'center',fontFamily:'inherit',outline:'none',background:'#fff'}}/>
-                                <span style={{fontSize:12,color:'#8C7B6E'}}>명</span>
+                                <button
+                                  onPointerDown={e=>{e.preventDefault();stepValue(i,-1)}}
+                                  style={{width:60,height:16,border:'none',background:'transparent',color:'#94A3B8',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',WebkitTapHighlightColor:'transparent',userSelect:'none',padding:0,lineHeight:1}}
+                                  aria-label="내리기"
+                                >▼</button>
                               </div>
                             ) : (
                               <div style={{display:'flex',alignItems:'center',gap:4}}>
